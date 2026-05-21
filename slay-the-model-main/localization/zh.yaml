@@ -1,0 +1,3649 @@
+ui:
+  room_entered: 进入房间：{room_type}（第 {floor} 层，位置 {position}）
+  game_welcome: 欢迎来到杀戮尖塔！
+  game_awaken: 你在尖塔中醒来，准备开始攀登...
+  seed_display: '种子: {seed}'
+  character_display: '角色: {character}'
+  choose_enemy: '选择敌人:'
+  select_prompt: '选择 (1-{count}): '
+  select_move: 选择你的下一步
+  floor_position: 第 {act} 幕 - 第 {floor} 层，位置 {position}
+  act_complete: 第 {act} 幕完成!
+  entering_act: 进入第 {act} 幕
+  entering_act4: 集齐三把钥匙后，你解锁通往心脏的道路...
+  map_move_option: '{floor_pos} - {room_type}'
+  invalid_option: 无效选项!
+  invalid_number: 请输入有效数字
+  room_type:
+    NORMAL: 普通
+    MONSTER: 怪物
+    ELITE: 精英
+    BOSS: 首领
+    REST: 休息
+    MERCHANT: 商店
+    TREASURE: 宝藏
+    EVENT: 事件
+    NEO: 尼奥
+    UNKNOWN: '?'
+    VICTORY: 胜利
+  rarity:
+    starter: 初始
+    common: 普通
+    uncommon: 罕见
+    rare: 稀有
+    special: 特殊
+    curse: 诅咒
+  choose_blessings: 选择祝福
+  potion_full_title: 选择一瓶药水交换
+  skip_potion: 跳过
+  replace_potion_option: 替换 {name}
+  game_over: 游戏结束！你在尖塔中倒下了。=
+  game_won: 恭喜！你征服了尖塔！<
+  player_hp: 生命值
+  player_block: 格挡
+  player_energy: 能量
+  stance: 姿态
+  orbs: 充能球
+  passive: 被动
+  evoke: 主动
+  hand: 手牌
+  powers: 能力
+  enemy: 敌人
+  enemy_hp: 生命值
+  enemy_block: 格挡
+  intention: 意图
+  player_turn: === 玩家回合 ===
+  enemy_turn: === 敌人回合 ===
+  end_turn: 结束回合
+  healed: 回复 {amount} 点生命值
+  selected: 已选择
+  max_hp_changed: 最大生命值改变 {amount} 点！
+  draw_pile: 抽牌堆
+  discard_pile: 弃牌堆
+  draw_cards: 抽 {count} 张牌
+  choose_random_card_to_add: 选择一张随机卡牌加入牌组
+  choose_cards_to_upgrade: 选择一张卡牌升级
+  upgrade_comparison_header: === 升级前 ===
+  upgrade_comparison_separator: '
+
+    === 升级后 ==='
+  choose_cards_to_transform: 选择一张卡牌转化
+  choose_cards_to_remove: 选择一张卡牌移除
+  skip_potion_option: 跳过
+  combat_enter: === 战斗开始 ===
+  map_view: 地图 - 第 {act} 幕（第 {floor} 层）
+  legend: '图例:'
+  legend_monster: '[M]=怪物'
+  legend_elite: '[E]=精英'
+  legend_merchant: '[$]=商店'
+  legend_event: '[?]=事件'
+  legend_rest: '[R]=休息'
+  legend_treasure: '[T]=宝藏'
+  legend_boss: '[B]=首领'
+  legend_neo: '[N]=涅奥'
+  legend_current: '*=当前位置'
+  legend_available: '>=可前往'
+  legend_visited: ^=已访问
+  map_connection_help: 节点上方为索引。连线精确表示通往下一层的位置。
+  connections: '连接:'
+  conn_left: /=左
+  conn_center: '|=中'
+  conn_right: \\=右
+  floor_label: '第 {num} 层:'
+  rarity_label: '稀有度: {rarity}'
+  type_label: '类型: {type}'
+  category_label: '类别: {category}'
+  duration_label: '持续: {duration}'
+  amount_label: '数值: {amount}'
+  buff: 增益
+  debuff: 减益
+  permanent: 永久
+  neo_welcome: 欢迎你，旅行者。我是涅奥。
+  neo_intro: 我将赐予你一个祝福来开始你的旅程。
+  neo_goodbye: 你的旅程现在开始。祝你好运！
+  neo_max_hp_change: 最大生命值改变 {amount} 点！
+  open_menu: 打开菜单
+  empty: 空
+  cost_label: 费用
+  event_skip_to_boss: '[事件] 直接前往首领！'
+  act3_victory: === 尖塔崩塌！ ===
+  act3_victory_message: 你击败了第三幕首领，征服了尖塔！
+  keys_hint: （收集三把钥匙后，可在第四幕挑战心脏）
+  keys_collected: === 三把钥匙共鸣！ ===
+  keys_collected_message: 当你手握红、绿、蓝三把钥匙时，
+  heart_entrance: 你解锁了通往腐化之心的道路……
+  heart_defeated: === 腐化之心陨落！ ===
+  heart_defeated_message: 尖塔腐化的源头已被摧毁！
+  true_victory: 你获得了真正的胜利！
+  card_type:
+    attack: 攻击
+    skill: 技能
+    power: 能力
+    status: 状态
+    curse: 诅咒
+  status:
+    neutral: 中立
+    calm: 平静
+    wrath: 愤怒
+    divinity: 神性
+  ssserpent_head_gold: 蛇头：获得 {amount} 金币！
+  received_relic: 获得遗物：{name}！
+  received_potion: 获得药水：{name}！
+  shop_bought_item: 购买了 {item_name}，花费 {final_price} 金币！
+  character:
+    ironclad: 铁甲战士
+    silent: 静默猎人
+    defect: 故障机器人
+    watcher: 观者
+  shop_removed_card: 已从牌组中移除 {card}，花费 {price} 金币
+  choose_relic: 选择 {name}
+  skip_relic: 跳过
+  choose_boss_relic: 选择一个 Boss 遗物
+  done: 完成
+blessing:
+  title: 选择祝福
+  upgrade_card_option: 升级一张卡牌
+  choose_card_option: 选择一张卡牌加入牌组
+  uncommon_colorless_option: 选择一张无色普通卡牌
+  random_rare_card_option: 获得一张随机稀有卡牌
+  max_hp_option: 获得 {amount} 点最大生命值
+  neow_option: 获得涅奥的祝福遗物：下三个敌人生命值为1
+  random_common_relic_option: 获得一个随机普通遗物
+  receive_100_gold_option: 获得 100 金币
+  three_random_potions_option: 获得 3 瓶随机药水
+  lose_max_hp_option: 失去 {amount} 点最大生命值
+  take_damage_option: 受到 {amount} 点伤害
+  obtain_curse_option: 获得一个随机诅咒
+  lose_all_gold_option: 失去所有金币
+  remove_two_cards_option: 从牌组中移除 2 张卡牌
+  transform_two_cards_option: 转化牌组中的 2 张卡牌
+  gain_250_gold_option: 获得 250 金币
+  choose_rare_card_option: 选择一张稀有卡牌加入牌组
+  choose_rare_colorless_card_option: 选择一张稀有无色卡牌
+  random_rare_relic_option: 获得一个随机稀有遗物
+  big_max_hp_option: 获得 {amount} 点最大生命值
+  remove_card_option: 从牌组中移除一张卡牌
+  transform_card_option: 转化牌组中的一张卡牌
+  replace_starter_relic_option: 失去你的初始遗物。获得一个随机 Boss 遗物
+events:
+  neo:
+    welcome: 你又来了...
+  ancient_writing:
+    title: 古老文字
+    elegance: 优雅
+    simplicity: 简洁
+    description: '在攀爬城市区时，你注意到一面墙壁上写满了 先古之民 的文字。你正在努力推理这些奇怪的符号和图案可能的意思，却发现文字开始 发起了光
+      。
+
+      突然之间，文字的意义变得清晰了……'
+  augmenter:
+    title: 增益研究者
+    test_jax: 测试JAX
+    transform: 转化
+    mutagens: 变异剂
+    description: '一个戴着眼罩的邪笑着的男人大摇大摆地走到你面前：
+
+      “嘿陌生人，想不想试试高端的科技？ 可会让你变得比任何训练和祝福都要强哦。 如果你是那种一心求死的英雄的话可不能没有它呢。
+
+      你说怎么样？ 想不想试一下？”'
+  a_note_for_yourself:
+    title: 留给自己的讯息
+    take_and_give: 取舍
+    ignore: 忽略
+    description: 一根柱子吸引了你的注意，你发现上面有一块松动的砖块。
+    take_only: 只拿走
+    give_only: 只留下
+  big_fish:
+    title: 大鱼
+    option1: 香蕉  回复最大生命值的1/3
+    option2: 甜甜圈  最大生命值 +5
+    option3: 盒子  获得一件遗物。被诅咒——诅咒牌(悔恨)
+    description: '当你走过一条长廊时，你看见空中 漂浮 着 一根香蕉 ， 一个甜甜圈 ， 和 一个盒子 。 不……仔细一看，它们都是被用绳子系着，从天花板上的几个洞里悬挂下来的。你在接近这几样东西时，上方似乎传来一阵
+      咯咯 的笑声。
+
+      你会怎么做？'
+  bonfire_spirits:
+    title: 篝火精灵
+    offer: 向精灵献上一张卡牌
+    leave: 离开
+    description: 你遇见一群看似是 紫色火精灵 的东西在一个巨大的篝火堆旁 起舞 。
+  council_of_ghosts:
+    title: 幽灵议会
+    accept: 接受
+    refuse: 拒绝
+    description: '在你向上攀升时，突然四周的墙壁和地面开始冒出 浓重的黑烟 ，逐渐聚成了三个戴着面具的形状，它们交头接耳地说起话来。 “看来这又是一个
+      涅奥 的玩偶。”
+
+      “我看也是！ 她总能做出最有趣的玩具！”
+
+
+      你注意到第三个存在有着巨大的嘴，它露出了一个大到夸张的微笑对你说：
+
+      “别管那两个家伙……总之，你想不想尝试一下我们的 力量 呢？”'
+  cursed_tome:
+    title: 诅咒书本
+    continue: 继续
+    take: 拿取
+    stop: 停止
+    leave: 离开
+    description: '在一所被遗弃的神庙里，你找到一本翻开着的巨大书本，里面满是 神秘的文字 。
+
+
+      你刚试着想要解读这些复杂的文本，它就自己开始 移动变化 成了你熟悉的文字。'
+  dead_adventurer:
+    title: 冒险者尸体
+    search: 搜索
+    leave: 离开
+    description: 在搜刮冒险者时你被偷袭了！
+    elite_appears: 一名精英从阴影中现身！
+    nothing: 你什么有价值的东西都没有找到。
+  designer_in_spire:
+    title: “尖端”设计师
+    adjustments: 调整
+    clean_up: 清理
+    full_service: 全面服务
+    punch: 拳击
+    description: '你发现一家 五彩斑斓 的店，横幅上挂着大大的“尖端”两个字，就走进去想看看里面有什么。
+
+      “等等，别，不行。你不能进来！”
+
+
+      一个穿着打扮无比荒唐的男人出现在门口把你拦了下来。'
+  divine_fountain:
+    title: 神圣泉水
+    drink: 喝泉水
+    leave: 离开
+    description: 你经过墙壁上的一处饮水池，里面流淌着源源不断 闪着光的水 。
+  duplicator:
+    title: 复制祭坛
+    pray: 祈祷
+    leave: 离开
+    description: 在你面前是一个用来崇拜某种古老存在的华丽祭坛。
+  face_trader:
+    title: 换脸商
+    touch: 触摸
+    trade: 交易
+    leave: 离开
+    description: '你经过一尊举着许多不同的面具的奇怪雕像，但没走几步……
+
+      你就听见身后传来一个轻柔的声音：
+
+      “请留步。”'
+  falling:
+    title: 坠落
+    land: 着陆
+    channel: 引导
+    strike: 打击
+    description: '你在悬浮在空中的平台上往上跳跃时，不慎滑了一跤。
+
+
+      你开始坠落。'
+  forgotten_altar:
+    title: 被遗忘的祭坛
+    offer_golden_idol: 献上金神像
+    sacrifice: 献祭
+    desecrate: 亵渎
+    leave: 离开
+    description: '在你面前是一个早已被遗忘的神祇的祭坛。
+
+      在祭坛上方，是一尊双手伸出的精致女性雕像。
+
+      她呼唤着你，要求你献上祭品。'
+  GoldenIdol:
+    title: 金神像
+    take: 拿走神像
+    trap: 陷阱
+    outrun: 逃脱
+    smash: 粉碎
+    hide: 躲藏
+    leave: 离开
+    description: '在一个不引人注意的小高台上，你发现了一个 闪闪发光的金神像 安然放置在上面，看起来非常值钱。
+
+
+      周围看起来完全没有什么陷阱的样子。'
+  golden_shrine:
+    title: 金色神龛
+    pray: 在神龛祈祷
+    desecrate: 亵渎神龛
+    leave: 离开
+    description: 在你面前是一座古老神灵的精巧神龛。
+  hypnotizing_mushrooms:
+    title: 蘑菇
+    stomp: 踩扁
+    stomp_effect: 与 3 只真菌兽战斗。获得怪异蘑菇。
+    eat: 吃下
+    eat_effect: 恢复 25% 生命值。获得寄生诅咒。
+    description: '你顺从了这份不自然的食欲，吃下一个又一个蘑菇后，你觉得自己有点晕晕的，然后就失去了意识。当你醒来时，你觉得有点怪怪的
+
+      你 回复 生命值的 25% ，但同时被 感染 了。'
+  knowing_skull:
+    title: 全知头骨
+    potion: 药水
+    riches: 财富
+    success: 成功
+    leave: 离开
+    description: 你发现自己在一个古老的有装饰的房间里，在房间正中央，有一个巨大的头骨被放在精致的高台上，在你靠近时，头骨 迸发出火焰 转向了你。
+  lab:
+    title: 实验室
+    search: 搜索实验室
+    description: '你发现了一个满是试管、烧杯、烧瓶、药瓶、钳子、夹子、玻璃棒、手术钳、眼镜、漏斗、吸液管、玻璃筒、冷凝器甚至还有螺旋玻璃管的房间。
+
+
+      你怎么会知道这些工具都叫什么名字的？这不重要，你四处翻找了起来。'
+  living_wall:
+    title: 活墙壁
+    forget: 遗忘
+    change: 改变
+    grow: 成长
+    description: '你走进一条死路，正准备要回头时，四周突然有墙壁从天花板上 哐 地一下 砸了下来 ！
+
+
+      三张脸出现在墙壁上，开始对你说话：
+
+      “忘记你所知道的，我就让你走。”
+
+      “有所改变，我就让你看见新的道路。”
+
+      “如果你想要从我这里通过，你就必须有所成长。”'
+  masked_bandits:
+    title: 蒙面强盗
+    pay: 付钱
+    fight: 战斗
+    description: '嘿嘿嘿……谢谢你的 金币 啦！
+
+      哎呀，我最喜欢 金币 了，那是多好的东西啊。
+
+      闪闪亮的 小可爱们！'
+  match_and_keep:
+    title: 对对碰！
+    play: 玩游戏
+    leave: 离开
+    description: '“ 十二张牌！ 搭对就拿走！ 五次机会，没有重来！
+
+      准备好了吗？开始！”'
+    select_card: 选择一张卡牌翻开。剩余尝试次数：{tries}
+    no_matches: 你没有配对成功任何卡牌。
+    won_cards: 你配对成功：{cards}
+  mind_bloom:
+    title: 心灵绽放
+    i_am_war: 我必凯旋
+    i_am_awake: 我已觉醒
+    i_am_rich: 我将富有
+    i_am_healthy: 我无伤痛
+    description: '你在高塔的混沌深处不断攀行，不知不觉间，你愕然发现自己的思绪开始变得非常…… 真实……
+
+
+      各种 怪物 与 财宝 的影像开始有了实体。
+
+      这些感觉稍纵即逝，你准备怎么做？'
+  mysterious_sphere:
+    title: 神秘圆球
+    open_sphere: 打开圆球
+    leave: 离开
+    description: '在四周混乱的地形中间，一个骨质圆球伫立在地上，似乎包裹着一样神秘的发光物体。
+
+      你很好奇里面有什么东西，但你注意到圆球周围有一些哨兵正在看守。'
+  nloth:
+    title: 恩洛斯
+    leave: 离开
+    description: '一个驼着背、背后长出几条触手的奇怪生物正在你面前的垃圾堆和废墟里来回地翻找些什么。当你靠近时，他可怜巴巴地拖着脚走到了你面前。
+
+      “恩洛斯好饿，喂喂恩洛斯。”'
+  old_beggar:
+    title: 老乞丐
+    offer_gold: 给金币
+    leave: 离开
+    description: 一个裹着毛衣的老乞丐在你经过时向你伸出了双手，他对你说：“施舍点钱吧，孩子？”
+  pleading_vagrant:
+    title: 流浪汉的恳求
+    offer_gold: 给金币
+    rob: 抢劫
+    leave: 离开
+    description: '你想要从一群披着斗篷的人旁边偷偷潜行过去，其中一个跑到了你面前。
+
+      “你能给我点儿什么吗，朋友？ 求求你了……一点 小钱 就好？”
+
+      “我只是需要找个地方过夜，我身上有财宝可以交换……”
+
+      他看起来有点疯疯癫癫的，但似乎并不危险。'
+  ominous_forge:
+    title: 邪恶熔炉
+    forge: 锻造卡牌
+    rummage: 翻找
+    leave: 离开
+    description: 你钻进一个小屋，在里面似乎有一个锻造熔炉，旁边的铁匠工具都已经布满了灰尘，可是炉中的火却仍然熊熊燃烧。你觉得有些不安……
+  purifier:
+    title: 净化
+    pray: 祈祷
+    leave: 离开
+    description: 在你面前是一个被遗忘神灵的精致神龛。
+  scrap_ooze:
+    title: 破烂软泥
+    reach: 伸手
+    leave: 离开
+    description: 你刚走进房间，就听见奇怪的 咕嘟声 和金属的 摩擦声 。在你面前的是一个史莱姆状的生物，它显然是吃了太多的破铜烂铁，消化不良了。
+      你在这个生物的中央见到了奇怪的光芒，或许是什么有魔法的物品？看起来只要你愿意把手伸进这东西的……开口，你就能得到什么 财宝 。当然，酸液和尖锐的破烂有可能会让你
+      受伤。
+  secret_portal:
+    title: 秘密传送门
+    description: '在你面前有一样与周围奇异景观完全不符合的东西：在深处地区一面活墙壁上，奇怪地出现了一道石做的拱门，里面有一个 旋转的魔法传送门
+      。
+
+
+      你不知道它会通向哪里，但它应该能够节约你爬塔的时间。'
+    enter: 进入传送门
+    leave: 离开
+  sensory_stone:
+    title: 感知石
+    recall_1: 回忆1
+    recall_2: 回忆2
+    recall_3: 回忆3
+    description: 你在高塔深处前进时，你遇到一个悬浮在空中缓慢 旋转 且 变幻 着的 发光超立方体 。
+  shining_light:
+    title: 闪耀之光
+    enter: 进入
+    leave: 离开
+    description: '你发现在房间中央围绕着 一束很粗的光柱 。
+
+
+      光柱上有着 温暖而闪烁的美丽花纹 仿佛在邀请你进入。'
+  the_cleric:
+    title: 牧师
+    option1: 选项1
+    option2: 选项2
+    option3: 选项3
+    description: '一个戴着金头盔（？）的奇怪蓝色人形生物脸上带着大大的微笑走到了你面前。
+
+      “ 你好啊朋友！ 我是 牧师 ！你想不想试试我的服务呐？！”那个生物大声喊叫起来。'
+  the_colosseum:
+    title: 竞技场
+    fight: 为荣誉而战
+    leave: 离开
+    victory: 胜利
+    cowardice: 懦弱
+    description: '哐！！！
+
+      …
+
+      ………
+
+      ……
+
+      你被 打晕了 ……'
+  the_joust:
+    title: 长枪决斗
+    murderer: 凶手
+    owner: 主人
+    description: '你在巨大的建筑物间穿行时，遇见了一条长长的窄桥，两头似乎都有一名骑士彼此对望着。你走上前去……
+
+      “停步！”
+
+
+      一名骑士用手中的长枪对你比划着，强硬地让你停下。'
+  the_library:
+    title: 大图书馆
+    read: 阅读书籍
+    sleep: 睡觉
+    description: '你经过一栋被遗弃的华美建筑物。
+
+      墙上的标牌掉在了地上，上面写着 “大图书馆” 几个大字。
+
+      你走进建筑物中，看见了无数卷轴、手稿和书籍。
+
+      你拿起一本，舒服地坐在沙发椅上看了好一会儿。'
+  the_mausoleum:
+    title: 陵墓
+    open_coffin: 打开棺材
+    leave: 离开
+    description: '你在一系列坟墓间穿行，前方出现了一个圆形房间，中间是一口 镶嵌着许多宝石的 巨大石棺。
+
+      你辨认不出石棺上的字迹，但你能注意到有 黑色的雾气 从石棺的两侧渗透出来。'
+  the_moai_head:
+    title: 摩艾石像
+    offer_golden_idol: 献上金神像
+    jump_inside: 跳进去
+    leave: 离开
+    description: '你遇到了一个和四周*完全不搭*的东西。在你面前有一道与周围不同，没有在移动和变化的墙壁，一个巨大的石制头像从墙壁上凸出来。
+
+      石像的嘴大张着，里面有许多巨大的染着血迹的牙齿。石像表面上写着许多象形文字，似乎是说有许多人会自己跳进嘴里被石像吞噬。为什么会有人这样做呢？'
+  the_nest:
+    title: 巢穴
+    smash_and_grab: 砸碎并抢夺
+    stay_in_line: 排队
+    description: 你看见一长串 戴着兜帽的人们 正鱼贯走进一座 看起来没什么特别的大教堂。
+  the_ssssserpent:
+    title: 蛇～
+    agree: 同意
+    disagree: 不同意
+    description: '你走进一间房间，看见地上有一个大洞。当你靠近洞时，一条巨大的蛇形生物从里面钻了出来。
+
+
+      “嚯嚯嚯！你好，你好啊！这是谁呀？ 哎呀呀，你好冒险者，我就问一个简单的问题。
+
+      最幸福的人生当然就是 什么东西都能买得起 的土豪生活了！　
+
+      你同意吗？”'
+  tomb_of_lord_red_mask:
+    title: 红面具大人之墓
+    don_mask: 戴上面具
+    leave: 离开
+    offer_gold: 给金币
+    description: 在一条悬浮道路的尽头，你可以看见一处装饰华丽的古墓，当你到达古墓时，你看到有一个可以投放 金币 的开口，但上面的铭文已经被划得看不清楚了。
+  transmogrifier:
+    title: 转化神龛
+    pray: 祈祷
+    leave: 离开
+    description: 在你面前是一个被遗忘神灵的精致神龛。
+  upgrade_shrine:
+    title: 升级神龛
+    pray: 升级卡牌
+    leave: 离开
+    upgraded: 你的 {card_name} 已升级！
+    description: 在你面前是一个被遗忘神灵的精致神龛。
+  vampires:
+    title: 吸血鬼（？）
+    offer_blood_vial: 献上血瓶
+    accept: 接受
+    refuse: 拒绝
+    description: '在一条昏暗的街上，你遇见几个戴着兜帽的人在进行某种黑暗的仪式。当你靠近时，他们全都同时转身面对你，让你觉得十分诡异。 其中个子最高的一个微微一笑，露出了长长的尖牙，向你伸出了一只苍白而瘦长的手：
+
+      “加入我们，兄弟。一起来感受高塔的温暖吧。”'
+  wheel_of_change:
+    title: 变化大转盘
+    play: 玩
+    result_gold: 获得 {amount} 金币。
+    result_relic: 获得 1 件随机遗物。
+    result_heal: 回满生命值。
+    result_decay: 获得 1 张腐朽诅咒。
+    result_remove: 从牌组中移除 1 张牌。
+    result_damage: 失去 {percent}% 生命值。
+    description: '你见到一位穿着帅气、满面笑容的地精。
+
+      “是时候转动转盘了！ 你准备好了吗？ 你当然准备好了！”'
+  we_meet_again:
+    title: 我们又见面了！
+    give_potion: 给药水
+    give_potion_effect: 失去 1 瓶药水。获得 1 件随机遗物。
+    give_gold: 给金币
+    give_gold_effect: 失去 {amount} 金币。获得 1 件随机遗物。
+    give_card: 给卡牌
+    give_card_effect: 移除 1 张非初始、非诅咒卡牌。获得 1 件随机遗物。
+    attack: 攻击
+    attack_effect: 他会逃走。你什么也得不到。
+    description: '“我们又见面了！”
+
+      一个蓬头垢面的男子欢快地出现在你面前向你问好。你不认识这个男人。
+
+
+      “是我， 兰伟德 啊！所以今天有什么好东西给我吗？和往常一样？哎呀呀，像我这样的人，独自一个可实在不好混啊，对不对？”
+
+      你满腹狐疑地打量着他，开始思考应该怎么做……'
+  winding_halls:
+    title: 蜿蜒走廊
+    embrace_madness: 拥抱疯狂
+    focus: 专注
+    retrace: 回溯
+    description: '你沿着弯曲的道路慢慢前进，却多次发现自己迷失了方向，仿佛墙壁和地面就在你的眼前突然移动了位置。
+
+
+      更糟糕的是，你的脑中似乎还有许多声音在对你轻声低语。'
+  wing_statue:
+    title: 翅膀雕像
+    pray: 向雕像祈祷
+    destroy: 摧毁
+    leave: 离开
+    description: '在形状不同的巨石之间，你看见一尊做工精细的翅膀形状的蓝色雕像。
+
+      你可以看见雕像的裂缝中有 金币 掉出来。或许里面还有更多……'
+  woman_in_blue:
+    title: 蓝衣女子
+    option1: 选项1
+    option2: 选项2
+    option3: 选项3
+    option4: 选项4
+    description: '从黑暗中，一只手伸出来把你拉进了一家小店。眼睛适应了这里的亮度之后，你看见一个穿着鲜艳衣服的苍白女子正伸手展示整整一墙壁的药水。
+
+      “来买药水，快点！”她对你说。'
+  world_of_goop:
+    title: 黏液世界
+    gather: 收集
+    leave: 离开
+    description: '你掉进了一个水坑里。
+
+      可是坑里 全是 史莱姆黏液 ！
+
+      你感觉到这黏液似乎会灼伤你，便拼命想要从坑中脱身。
+
+      你的耳朵、鼻子和全身都被黏液给浸透了。
+
+
+      爬出来后，你发现自己的 金币 似乎变少了。你回头一看，发现水坑里不但有你掉落的钱，还有不少其他不幸的冒险者们落下的 金币 。'
+  golden_idol:
+    title: 金色偶像
+    description: 你面前站着一座献给遭遗忘精魂的精致神龛。
+    take: 拿走
+    leave: 离开
+    trap: 陷阱被触发了！选择你的逃脱方式：
+    outrun: 逃离
+    smash: 砸碎
+    hide: 躲藏
+combat:
+  title: 战斗
+  choose_action: 选择行动
+  enter: === 战斗开始 ===
+  display: '--- 战斗状态 ---'
+  enemies: === 敌人 ===
+  player_turn: === 玩家回合 ===
+  enemy_turn: === 敌人回合 ===
+  end_turn: 结束回合
+  draw_pile: 抽牌堆
+  discard_pile: 弃牌堆
+  exhaust_pile: 消耗堆
+  enemy_defeated: '{enemy} 已被击败！'
+  artifact_blocked: '[人工制品] 阻止了减益效果！'
+  artifact_remaining: '剩余层数: {count}'
+  deal_damage_enemy: 对 {target_name} 造成 {amount} 点伤害
+  deal_damage_random: 对随机敌人造成 {amount} 点伤害
+  deal_damage_all: 对所有敌人造成 {damage} 点伤害
+  deal_damage_self: 对自己造成 {damage} 点伤害
+  gain_block: '{source} 获得 {amount} 点格挡'
+  gain_block_per_energy: 获得 {block_value} 点格挡 {count} 次（共 {total} 点）。
+  gain_block_no_block: 获得 {amount} 点格挡，因为你没有格挡。
+  remove_enemy_block: 移除 {target} 的所有格挡。
+  gain_focus: 获得 {amount} 点专注。
+  lose_focus: 失去 {amount} 点专注。
+  deal_damage_by_orb: 对 {target} 造成 {amount} 点伤害（{orb_count} {orb_type}）。
+  heal: 恢复 {amount} 点生命值
+  draw_cards: 抽 {count} 张牌
+  enemy_intends: 敌人
+  intends_to: 意图是
+  select_target: === 选择目标 ===
+  enemy_killed: '{target_name} 已被击败！'
+  deck: 牌组
+  hand: 手牌
+  hand_full: 已满
+  hand_full_no_draw: 手牌已满，无法继续抽牌。
+  discard_non_zero_cost_drawn: 弃掉 {count} 张抽出的卡牌（消耗为 0）。
+  gain_energy: 获得 {amount} 点能量
+  double_energy: 双倍能量增加 {amount} 点能量（共 {total} 点）。
+  trigger_orb_passives: 触发 {count} 个 {orb_type} 球的被动能力。
+  gain_artifact: 获得 {amount} 点人工制品。
+  evoke_orb: 激发 {amount} 个球。
+  evoke_all_orbs: 激发 {amount} 个球。
+  remove_orbs: 移除 {amount} 个球。
+  channel_random_orb: 充能 {amount} 个随机球。
+  evoke_and_channel: 激发并充能 {amount} 个球。
+  apply_power: 对 {target} 施加 {power}（持续 {duration} 回合）。
+  apply_power_random: 对随机敌人施加 {power}（持续 {duration} 回合）{count} 次。
+  multiply_enemy_poison: '{target} 的中毒被乘以 {factor}。'
+  add_strength: 力量改变 {amount}
+  gain_strength: 获得 {amount} 点力量
+  double_strength: 双倍力量（{amount} → {total}）
+  spot_weakness_no_attack: 敌人不打算攻击。
+  remove_card: 从牌组移除 {card}
+  no_cards_to_remove: 没有卡牌可移除
+  exhaust_card: 移除此卡牌
+  play_card: 打出 {card}
+  upgrade_card: 升级此卡牌
+  modify_card_value: 修改 {card} 的 {key} {amount} 点
+  increase_card_stat_bonus: '{card} 的 {stat} 加成增加 {amount} 点（共 {total} 点）。'
+  create_card: 在 {location} 创建 {card}
+  create_random_card: 在 {location} 创建随机卡牌 {card}
+  gain_potion: '获得药水: {name}'
+  discard_hand_add_card: 弃掉 {count} 张牌并向手牌添加 {count} 张 {card} 的复制。
+  add_card_to_pile: 将 {card} 加入 {location}。
+  retain_hand: 本回合保留你的手牌。
+  white_noise_add: 将 {card}（本回合消耗 0）加入你的手牌。
+  transform_card: 将卡牌转化为 {card}
+  multiply_block: 格挡乘以 {factor}
+  move_card: 将 {card} 从 {source} 移动到 {destination}
+  copy_card: 复制 {card} 到 {destination}（{count} 次）
+  night_terror_schedule: 夜惊将在下一回合添加 {count} 张 {card} 的复制。
+  gain_max_health: 获得 {amount} 点最大生命值
+  apply_stance: 进入 {stance} 姿态
+  foresight: '窥视 {amount} 张牌: {cards}'
+  apply_mark: 对 {target} 施加 {amount} 点印记
+  retain_card: 保留 {card}
+  gain_gold: 获得 {amount} 金币
+  deal_damage_all_heal: 对所有敌人造成 {damage} 点伤害
+  place_card_on_top: 你本回合打出的下一张牌将被放置在你的抽牌堆顶端。
+  reduce_card_cost: '{card} 本战斗消耗减少 {amount} 点（共 {total} 点）。'
+  gain_energy_if_discarded: 获得 {amount} 点能量（弃牌奖励）
+  calculated_gamble: 弃掉手牌并抽 {count} 张牌。
+  calculated_gamble_no_hand: 计算赌博弃掉了手牌什么，什么也没抽。
+  exhaust_single: 从 {source} 移除 {card}
+  exhaust_hand: 从手牌移除 {count} 张卡牌
+  discard_cards: 弃掉 {count} 张牌{random}
+  discard_cards_missing: 弃掉 {count} 张牌（玩家 API 缺失）
+  retrieve_zero_cost: 从弃牌堆取回 {count} 张零消耗卡牌到手牌。
+  discard_non_attack: 弃掉 {count} 张非攻击牌
+  gain_energy_next_turn: 下一回合获得 {amount} 点能量
+  gain_energy_next_turn_scheduled: 计划下一回合获得 {amount} 点能量（存储在 player.pending_energy
+    中）
+  gain_block_next_turn: 下一回合获得 {block} 点格挡
+  gain_block_next_turn_scheduled: 计划下一回合获得 {block} 点格挡（存储在 player.pending_block 中）
+  reboot_shuffle: 重启动你的手牌和弃牌堆，将它们洗入抽牌堆。
+  thievery_steal: '{enemy} 偷走了 {amount} 金币！'
+  thievery_return: 追回 {amount} 枚被偷的金币！
+  looter_escape: '{enemy} 带着你的金币逃跑了！'
+  powers: 能力
+  relics: 遗物
+  potions: 药水
+  details:
+  - 详细信息
+  card_details: 卡牌
+  power_details: 能力
+  relic_details: 遗物
+  card_added: 添加
+  to_pile: 到
+  reward: 奖励
+  enemy: 敌人
+  used_potion: 使用药水
+  received_potion: 获得药水
+  gained_gold: 获得金币
+  added_to_deck: 添加到牌组
+  on_target: 对
+cards:
+  ironclad:
+    Strike:
+      name: 打击
+      description: 造成 {damage} 点伤害。
+    Defend:
+      name: 防御
+      description: 获得 {block} 点格挡。
+    Bash:
+      name: 痛击
+      description: 造成 {damage} 点伤害。施加 {magic.vulnerable} 易伤。
+    Anger:
+      name: 愤怒
+      description: 造成 {damage} 点伤害。向弃牌堆添加此卡牌的复制。
+    IronWave:
+      name: 铁斩波
+      description: 获得 {block} 点格挡。造成 {damage} 点伤害。
+    PommelStrike:
+      name: 剑柄打击
+      description: 造成 {damage} 点伤害。抽 {draw} 张牌。
+    HeavyBlade:
+      name: 重刃
+      description: 造成 {damage} 点伤害。力量影响此牌 {magic.strength_mult} 倍。
+    Armaments:
+      name: 武装
+      description: 获得 {block} 点格挡。本战斗升级你手牌中的一张卡牌。
+      upgrade_description: 获得 {block} 点格挡。本战斗升级你的所有手牌。
+    Flex:
+      name: 活动肌肉
+      description: 获得 {magic.temp_strength} 点力量。回合结束时失去 {magic.temp_strength} 点力量。
+    Clothesline:
+      name: 金刚臂
+      description: 造成 {damage} 点伤害。施加 {magic.weak} 虚弱。
+    Inflame:
+      name: 燃烧
+      description: 获得 {magic.strength} 点力量。
+    BodySlam:
+      name: 全身撞击
+      description: 造成等同于你当前格挡的伤害。
+      combat_description: 造成等同于你当前格挡的伤害。（造成 {damage} 点伤害）
+    Carnage:
+      name: 残杀
+      description: 对敌人造成 {damage} 点伤害。虚无。
+    Bludgeon:
+      name: 重锤
+      description: 造成 {damage} 点伤害。
+    LimitBreak:
+      name: 突破极限
+      description: 双倍你的力量。消耗。
+      upgrade_description: 双倍你的力量。
+    Pummel:
+      name: 连续拳
+      description: 造成 {damage} 点伤害，{attack_times} 次。
+    Uppercut:
+      name: 上勾拳
+      description: 造成 {damage} 点伤害。施加 {magic.vulnerable} 易伤和 {magic.weak} 虚弱。
+    Offering:
+      name: 祭品
+      description: 失去 6 点生命值。获得 {energy_gain} 点能量。获得 2 点力量。抽 {draw} 张牌。
+    Barricade:
+      name: 壁垒
+      description: 格挡在回合开始时不再消失。
+      upgrade_description: Block no longer expires at the start of your turn. Costs
+        2.
+    BattleTrance:
+      name: 战斗专注
+      description: 抽 {draw} 张牌。本回合无法再抽牌。
+    Berserk:
+      name: 狂暴
+      description: 获得 {magic.vulnerable} 易伤。回合开始时获得 1 点能量。
+    BloodForBlood:
+      name: 以血还血
+      description: 造成 {damage} 点伤害。本场战斗中每失去 1 点生命值，消耗减少 1。
+    Bloodletting:
+      name: 放血
+      description: 失去 2 点生命值。获得 {energy_gain} 点能量。
+    Brutality:
+      name: 残暴
+      description: 回合开始时失去 1 点生命值并抽 1 张牌。
+      upgrade_description: 回合开始时失去 1 点生命值并抽 1 张牌。固有。
+    BurningPact:
+      name: 燃烧契约
+      description: 消耗 1 张牌。抽 {draw} 张牌。
+    Clash:
+      name: 交锋
+      description: 只有手牌中全部是攻击牌时才能打出。造成 {damage} 点伤害。
+    Cleave:
+      name: 顺劈斩
+      description: 对所有敌人造成 {damage} 点伤害。
+    Combust:
+      name: 自燃
+      description: 回合结束时失去 1 点生命值并对所有敌人造成 {magic.damage} 点伤害。
+    Corruption:
+      name: 腐化
+      description: 技能牌消耗为 0。每当打出技能牌，消耗它。
+    DarkEmbrace:
+      name: 黑暗之拥
+      description: 每当一张牌被消耗时，抽 1 张牌。
+    DemonForm:
+      name: 恶魔形态
+      description: 回合结束时获得 {magic.strength} 点力量。
+    Disarm:
+      name: 缴械
+      description: 敌人失去 {magic.strength} 点力量。
+    DoubleTap:
+      name: 双发
+      description: 接下来的 {magic.double_tap} 张攻击牌打出两次。
+      upgrade_description: 接下来的 {magic.double_tap} 张攻击牌打出两次。
+    Dropkick:
+      name: 飞身踢
+      description: 造成 {damage} 点伤害。如果敌人有易伤，获得 1 点能量并抽 1 张牌。
+    DualWield:
+      name: 双持
+      description: 选择手牌中的一张牌。向手牌添加一张它的复制。
+      upgrade_description: 选择手牌中的一张牌。向手牌添加两张它的复制。
+    Entrench:
+      name: 巩固
+      description: 将当前格挡翻倍。
+    Evolve:
+      name: 进化
+      description: 每当抽到状态牌时，抽 {draw} 张牌。
+    Exhume:
+      name: 发掘
+      description: 从消耗堆选择一张牌加入手牌。消耗。
+    Feed:
+      name: 狂宴
+      description: 造成 {damage} 点伤害。如果斩杀，获得 {magic.max_hp} 点最大生命值。
+    FeelNoPain:
+      name: 无惧疼痛
+      description: 每当一张牌被消耗时，获得 {block} 点格挡。
+    FiendFire:
+      name: 恶魔之焰
+      description: 消耗手牌中的所有牌。每张造成 {damage} 点伤害。消耗。
+    FireBreathing:
+      name: 火焰吐息
+      description: 每当抽到状态牌或诅咒牌时，对所有敌人造成 {magic.damage} 点伤害。
+    FlameBarrier:
+      name: 火焰屏障
+      description: 获得 {block} 点格挡。本回合每当被攻击时，造成 {magic.damage} 点伤害。
+    GhostlyArmor:
+      name: 幽灵铠甲
+      description: 虚无。获得 {block} 点格挡。
+    Havoc:
+      name: 破灭
+      description: 打出抽牌堆顶的牌并消耗它。
+    Headbutt:
+      name: 头槌
+      description: 造成 {damage} 点伤害。将弃牌堆中的一张牌放到抽牌堆顶。
+    Hemokinesis:
+      name: 御血术
+      description: 失去 2 点生命值。造成 {damage} 点伤害。
+    Immolate:
+      name: 燔祭
+      description: 对所有敌人造成 {damage} 点伤害。向弃牌堆添加一张灼伤。
+    Impervious:
+      name: 岿然不动
+      description: 获得 {block} 点格挡。消耗。
+      upgrade_description: 获得 {block} 点格挡。消耗。
+    InfernalBlade:
+      name: 地狱之刃
+      description: 向手牌添加一张随机攻击牌。本回合消耗为 0。消耗。
+    Intimidate:
+      name: 威吓
+      description: 对所有敌人施加 {magic.weak} 虚弱。
+    Juggernaut:
+      name: 势不可当
+      description: 每当获得格挡时，对随机敌人造成 {magic.damage} 点伤害。
+    Metallicize:
+      name: 金属化
+      description: 回合结束时获得 {block} 点格挡。
+    PerfectedStrike:
+      name: 完美打击
+      description: 造成 {damage} 点伤害。牌组中每张含“打击”的牌额外造成 {magic.strike_damage} 点伤害。
+    PowerThrough:
+      name: 硬撑
+      description: 获得 {block} 点格挡。向手牌添加 2 张伤口。
+    Rage:
+      name: 狂怒
+      description: 本回合每当打出攻击牌时，获得 {block} 点格挡。
+    Rampage:
+      name: 暴走
+      description: 造成 {damage} 点伤害。本场战斗中每次打出此牌，伤害增加 {magic.damage_increase} 点。
+    Reaper:
+      name: 死亡收割
+      description: 对所有敌人造成 {damage} 点伤害。恢复等于未格挡伤害的生命值。消耗。
+    RecklessCharge:
+      name: 无谋冲锋
+      description: 造成 {damage} 点伤害。向抽牌堆洗入一张晕眩。
+    Rupture:
+      name: 撕裂
+      description: 每当因卡牌失去生命值时，获得 {magic.strength} 点力量。
+    SearingBlow:
+      name: 灼热攻击
+      description: 造成 {damage} 点伤害。可以升级任意次数。
+    SecondWind:
+      name: 重振精神
+      description: 消耗手牌中所有非攻击牌。每张获得 {block} 点格挡。
+    SeeingRed:
+      name: 盛怒
+      description: 获得 {energy_gain} 点能量。消耗。
+    Sentinel:
+      name: 哨卫
+      description: 获得 {block} 点格挡。如果此牌被消耗，获得 {magic.energy} 点能量。
+    SeverSoul:
+      name: 断魂斩
+      description: 消耗手牌中所有非攻击牌。造成 {damage} 点伤害。
+    Shockwave:
+      name: 震荡波
+      description: 对所有敌人施加 {magic.vulnerable} 易伤和 {magic.weak} 虚弱。消耗。
+    ShrugItOff:
+      name: 耸肩无视
+      description: 获得 {block} 点格挡。抽 1 张牌。
+      upgrade_description: 获得 {block} 点格挡。抽 1 张牌。
+    SpotWeakness:
+      name: 观察弱点
+      description: 如果敌人打算攻击，获得 {magic.strength} 点力量。
+      upgrade_description: 如果敌人打算攻击，获得 {magic.strength} 点力量。
+    SwordBoomerang:
+      name: 飞剑回旋镖
+      description: 对随机敌人造成 {damage} 点伤害，{attack_times} 次。
+    Thunderclap:
+      name: 闪电霹雳
+      description: 造成 {damage} 点伤害。对所有敌人施加 1 易伤。
+    TrueGrit:
+      name: 坚毅
+      description: 获得 {block} 点格挡。消耗手牌中一张随机牌。
+      upgrade_description: 获得 {block} 点格挡。选择消耗手牌中一张牌。
+    TwinStrike:
+      name: 双重打击
+      description: 造成 {damage} 点伤害两次。
+    WarCry:
+      name: 战吼
+      description: 抽 {draw} 张牌。将手牌中的一张牌放到抽牌堆顶。
+    Whirlwind:
+      name: 旋风斩
+      description: 对所有敌人造成 {damage} 点伤害 X 次。
+    WildStrike:
+      name: 狂野打击
+      description: 造成 {damage} 点伤害。向抽牌堆洗入一张伤口。
+  silent:
+    Strike:
+      name: 打击
+      description: 造成 {damage} 点伤害。
+    Defend:
+      name: 防御
+      description: 获得 {block} 点格挡。
+    Neutralize:
+      name: 中和
+      description: 造成 {damage} 点伤害。施加 {magic.weak} 层虚弱。
+    Survivor:
+      name: 幸存者
+      description: 获得 {block} 点格挡。弃 1 张牌。
+    Accuracy:
+      name: 精准
+      description: 小刀额外造成 {magic.damage} 点伤害。
+    Adrenaline:
+      name: 肾上腺素
+      description: 抽 {draw} 张牌。获得 {energy_gain} 点能量。消耗。
+    AllOutAttack:
+      name: 全力攻击
+      description: 对所有敌人造成 {damage} 点伤害。随机弃 1 张牌。
+    BladeDance:
+      name: 刀刃之舞
+      description: 将 {magic.shivs} 张小刀加入手牌。
+    CloakAndDagger:
+      name: 披风与匕首
+      description: 获得 {block} 点格挡。将 {magic.shivs} 张小刀加入手牌。
+    Backflip:
+      name: 后空翻
+      description: 获得 {block} 点格挡。抽 {draw} 张牌。
+    Backstab:
+      name: 背刺
+      description: 固有。造成 {damage} 点伤害。
+    Caltrops:
+      name: 蒺棘
+      description: 每当被攻击时，反弹 {magic.thorns} 点伤害。
+    Choke:
+      name: 锁喉
+      description: 造成 {damage} 点伤害。本回合你每打出一张牌，该敌人失去 {magic.followup} 点 HP。
+    CripplingCloud:
+      name: 致残毒雾
+      description: 对所有敌人施加 {magic.weak} 层虚弱和 {magic.poison} 层中毒。消耗。
+    DaggerThrow:
+      name: 匕首投掷
+      description: 造成 {damage} 点伤害。抽 {draw} 张牌。弃 1 张牌。
+    Deflect:
+      name: 偏斜
+      description: 获得 {block} 点格挡。
+    DodgeAndRoll:
+      name: 闪转腾挪
+      description: 获得 {block} 点格挡。下回合，再获得 {block} 点格挡。
+    FlyingKnee:
+      name: 飞膝击
+      description: 造成 {damage} 点伤害。下回合获得 1 点能量。
+    HeelHook:
+      name: 勾脚
+      description: 造成 {damage} 点伤害。若目标处于虚弱，获得 1 点能量并抽 1 张牌。
+    Outmaneuver:
+      name: 迂步后撤
+      description: 下回合获得 {magic.energy} 点能量。
+    Prepared:
+      name: 有备而来
+      description: 抽 {draw} 张牌。弃 {magic.discard} 张牌。
+    Predator:
+      name: 捕食者
+      description: 造成 {damage} 点伤害。下回合抽 {magic.draw_next_turn} 张牌。
+    QuickSlash:
+      name: 迅捷斩击
+      description: 造成 {damage} 点伤害。抽 {draw} 张牌。
+    Slice:
+      name: 切割
+      description: 造成 {damage} 点伤害。
+    SuckerPunch:
+      name: 暗棍
+      description: 造成 {damage} 点伤害。施加 {magic.weak} 层虚弱。
+    Acrobatics:
+      name: 杂技
+      description: 抽 {draw} 张牌。弃 1 张牌。
+    DeadlyPoison:
+      name: 致命毒药
+      description: 施加 {magic.poison} 层中毒。
+    PoisonedStab:
+      name: 淀毒刺击
+      description: 造成 {damage} 点伤害。施加 {magic.poison} 层中毒。
+    Bane:
+      name: 灾祸
+      description: 造成 {damage} 点伤害。若目标有中毒，再造成 {damage} 点伤害。
+    BouncingFlask:
+      name: 反复摇晃的瓶子
+      description: 将 {magic.poison} 层中毒随机施加给敌人 {magic.hits} 次。
+    Catalyst:
+      name: 催化剂
+      description: 将一名敌人的中毒翻倍。
+      upgrade_description: 将一名敌人的中毒变为三倍。
+    DaggerSpray:
+      name: 飞刀风暴
+      description: 对所有敌人造成 {damage} 点伤害两次。
+    Dash:
+      name: 冲刺
+      description: 获得 {block} 点格挡。造成 {damage} 点伤害。
+    DieDieDie:
+      name: 死吧死吧死吧
+      description: 对所有敌人造成 {damage} 点伤害。消耗。
+    InfiniteBlades:
+      name: 无尽刀锋
+      description: 在你的回合开始时，将 1 张小刀加入手牌。
+    Footwork:
+      name: 脚步
+      description: 获得 {magic.dexterity} 点敏捷。
+    LegSweep:
+      name: 绊腿
+      description: 获得 {block} 点格挡。施加 {magic.weak} 层虚弱。
+    NoxiousFumes:
+      name: 毒雾
+      description: 在你的回合开始时，对所有敌人施加 {magic.poison} 层中毒。
+    PiercingWail:
+      name: 穿心尖啸
+      description: 所有敌人本回合失去 {magic.strength_loss} 点力量。消耗。
+    RiddleWithHoles:
+      name: 乱刃穿心
+      description: 造成 {damage} 点伤害 {attack_times} 次。
+    AfterImage:
+      name: 余像
+      description: 每当你打出一张牌，获得 {magic.block} 点格挡。
+    Alchemize:
+      name: 炼金术
+      description: 获得一瓶随机药水。消耗。
+    Distraction:
+      name: 声东击西
+      description: 从 3 张随机技能牌中选 1 张加入手牌。本回合消耗为 0。消耗。
+    Envenom:
+      name: 涼毒
+      description: 每当攻击造成未被格挡的伤害，施加 {magic.poison} 层中毒。
+    Expertise:
+      name: 老练
+      description: 抽牌，直到手牌为 6 张。
+    GlassKnife:
+      name: 玻璃小刀
+      description: 造成 {damage} 点伤害 {attack_times} 次。本场战斗中，本牌的伤害降低 {magic.decay}。
+    Terror:
+      name: 恐惧
+      description: 施加 {magic.vulnerable} 层易伤。
+    ThousandCuts:
+      name: 千刀万剐
+      description: 每当你打出一张牌，对所有敌人造成 {magic.damage} 点伤害。
+    Blur:
+      name: 模糊
+      description: 获得 {block} 点格挡。下回合不移除格挡。
+    Concentrate:
+      name: 专注
+      description: 弃 {magic.discard} 张牌。获得 {magic.energy} 点能量。
+    Eviscerate:
+      name: 开膛破肚
+      description: 本回合每弃一张牌，消耗减 1。造成 {damage} 点伤害 {attack_times} 次。
+    Finisher:
+      name: 终结技
+      description: 本回合每打出一张攻击牌，造成 {damage} 点伤害。
+    Flechettes:
+      name: 飞镖
+      description: 手牌中每有一张技能牌，造成 {damage} 点伤害。
+    Skewer:
+      name: 串刺
+      description: 造成 {damage} 点伤害 X 次。
+    SneakyStrike:
+      name: 卑鄙打击
+      description: 造成 {damage} 点伤害。如果本回合弃过牌，获得 2 点能量。
+    EndlessAgony:
+      name: 无尽痛苦
+      description: 当你抽到这张牌时，将一张复制加入手牌。造成 {damage} 点伤害。消耗。
+    EscapePlan:
+      name: 逃脱计划
+      description: 抽 1 张牌。如果它是技能牌，获得 {magic.block} 点格挡。
+    PhantasmalKiller:
+      name: 幻影杀手
+      description: 下回合，你的攻击造成双倍伤害。
+    Reflex:
+      name: 反射
+      description: 无法打出。如果这张牌从手牌被弃掉，抽 {magic.draw} 张牌。
+    Tactician:
+      name: 战术家
+      description: 无法打出。如果这张牌从手牌被弃掉，获得 {magic.energy} 点能量。
+    WraithForm:
+      name: 幽魂形态
+      description: 获得 {magic.intangible} 层虚无。在你的回合结束时，失去 {magic.dex_down} 点敏捷。消耗。
+    BulletTime:
+      name: 子弹时间
+      description: 你手中的牌本回合费用变为 0。本回合你不能再抽牌。
+    Burst:
+      name: 爆发
+      description: 本回合，你接下来打出的 {magic.copies} 张技能牌会额外触发一次。
+      upgrade_description: 本回合，你接下来打出的 {magic.copies} 张技能牌会额外触发一次。
+    CalculatedGamble:
+      name: 精心谋划
+      description: 弃掉你的手牌，然后抽等量的牌。消耗。
+    CorpseExplosion:
+      name: 尸爆术
+      description: 施加 {magic.poison} 层中毒。当该敌人死亡时，对所有敌人造成等同其最大生命值的伤害。
+    Doppelganger:
+      name: 分身
+      description: 下回合，抽 X 张牌并获得 X 点能量。
+    GrandFinale:
+      name: 盛大终幕
+      description: 只有在你的抽牌堆为空时才能打出。对所有敌人造成 {damage} 点伤害。
+    Malaise:
+      name: 萎靡
+      description: 目标失去 X 点力量，并施加 X 层虚弱。消耗。
+    MasterfulStab:
+      name: 娴熟刺击
+      description: 本场战斗中每当你失去生命，此牌费用增加 1。造成 {damage} 点伤害。
+    Nightmare:
+      name: 梦魇
+      description: 选择一张牌。下回合，将它的 3 张复制加入你的手牌。
+    Setup:
+      name: 布局
+      description: 将一张手牌放到抽牌堆顶。它在被打出前费用变为 0。
+    StormOfSteel:
+      name: 钢铁风暴
+      description: 弃掉你的手牌。每弃 1 张牌，向手牌加入 1 张小刀。
+    ToolsOfTheTrade:
+      name: 交易工具
+      description: 在你的回合开始时，抽 1 张牌，然后弃 1 张牌。
+    Unload:
+      name: 卸载
+      description: 造成 {damage} 点伤害。弃掉你手中所有非攻击牌。
+    WellLaidPlans:
+      name: 周密计划
+      description: 在你的回合结束时，保留至多 {magic.retain} 张牌。
+      upgrade_description: 在你的回合结束时，保留至多 {magic.retain} 张牌。
+  defect:
+    Aggregate:
+      name: 聚合
+      description: 你的抽牌堆中每有 {magic.per} 张牌，获得 1 点能量。
+    AllForOne:
+      name: 万物归一
+      description: 造成 {damage} 点伤害。将弃牌堆中所有 0 费牌加入手牌。
+    Amplify:
+      name: 增幅
+      description: 本回合你打出的下 {magic.copies} 张能力牌会额外触发一次。
+    AutoShields:
+      name: 自动护盾
+      description: 如果你没有格挡，获得 {block} 点格挡。
+    BallLightning:
+      name: 球状闪电
+      description: 造成 {damage} 点伤害。生成 1 个闪电球。
+    Barrage:
+      name: 弹幕齐射
+      description: 每有一个充能球，造成 {damage} 点伤害。
+    BeamCell:
+      name: 光束电池
+      description: 造成 {damage} 点伤害。施加 {magic.vulnerable} 层锁定。
+    BiasedCognition:
+      name: 偏差认知
+      description: 获得 {magic.focus} 点集中。每回合开始时失去 1 点集中。
+    Blizzard:
+      name: 暴风雪
+      description: 对所有敌人造成伤害。本场战斗中每生成过 1 个冰霜球，伤害增加 {magic.per_frost}。
+    BootSequence:
+      name: 启动序列
+      description: 固有。获得 {block} 点格挡。消耗。
+    Buffer:
+      name: 缓冲
+      description: 防止你接下来 {magic.stacks} 次失去生命值。
+    Bullseye:
+      name: 靶眼
+      description: 造成 {damage} 点伤害。施加 {magic.lock_on} 层锁定。
+    Capacitor:
+      name: 电容器
+      description: 获得 {magic.slots} 个充能球栏位。
+    Chaos:
+      name: 混沌
+      description: 生成 {magic.orbs} 个随机充能球。
+    ChargeBattery:
+      name: 充能电池
+      description: 获得 {block} 点格挡。下回合获得 1 点能量。
+    Chill:
+      name: 寒意
+      description: 每有一个敌人，生成 1 个冰霜球。消耗。
+    Claw:
+      name: 利爪
+      description: 造成 {damage} 点伤害。本场战斗中所有利爪的伤害提高 {magic.bonus} 点。
+    ColdSnap:
+      name: 冷速瞬击
+      description: 造成 {damage} 点伤害。生成 1 个冰霜球。
+    CompileDriver:
+      name: 编译驱动
+      description: 造成 {damage} 点伤害。若造成未被格挡的伤害，则抽 {draw} 张牌。
+    Consume:
+      name: 消耗
+      description: 获得 {magic.focus} 点集中。失去一个充能球栏位。
+    Coolheaded:
+      name: 冷静头脑
+      description: 生成 1 个冰霜球。抽 {draw} 张牌。
+    CoreSurge:
+      name: 核心涌动
+      description: 造成 {damage} 点伤害。获得 1 层神器。
+    CreativeAI:
+      name: 创造性 AI
+      description: 在你的回合开始时，将一张随机能力牌加入手牌。
+    Darkness:
+      name: 黑暗
+      description: 生成 1 个黑暗球。升级后会让所有黑暗球额外触发一次被动。
+    Defend:
+      name: 防御
+      description: 获得 {block} 点格挡。
+    Defragment:
+      name: 碎片整理
+      description: 获得 {magic.focus} 点集中。
+    DoomAndGloom:
+      name: 厄运阴霾
+      description: 对所有敌人造成 {damage} 点伤害。生成 1 个黑暗球。
+    DoubleEnergy:
+      name: 双倍能量
+      description: 将你的能量翻倍。
+    Dualcast:
+      name: 双重施放
+      description: 激发你最前面的充能球两次。
+    EchoForm:
+      name: 回响形态
+      description: 每回合你打出的第一张牌会额外触发一次。
+    Electrodynamics:
+      name: 电动力学
+      description: 你的闪电球会命中所有敌人。生成 {magic.lightning} 个闪电球。
+    Equilibrium:
+      name: 均衡
+      description: 获得 {block} 点格挡。本回合保留你的手牌。
+    Fission:
+      name: 裂变
+      description: 激发你的所有充能球。每激发一个球都会获得对应收益。消耗。
+    ForceField:
+      name: 力场
+      description: 获得 {block} 点格挡。本场战斗中每打出一张能力牌，此牌消耗降低 1。
+    FTL:
+      name: 超光速
+      description: 造成 {damage} 点伤害。若这是你本回合打出的前 {magic.limit} 张牌之一，则抽 1 张牌。
+    Fusion:
+      name: 聚变
+      description: 生成 1 个等离子球。
+    GeneticAlgorithm:
+      name: 遗传算法
+      description: 获得 {block} 点格挡。每次打出后永久增加 {magic.growth} 点格挡。
+    Glacier:
+      name: 冰川
+      description: 获得 {block} 点格挡。生成 2 个冰霜球。
+    GoForTheEyes:
+      name: 直击要害
+      description: 造成 {damage} 点伤害。若敌人打算攻击，则施加 {magic.weak} 层虚弱。
+    Heatsinks:
+      name: 散热片
+      description: 每当你打出一张能力牌，抽 {magic.draw} 张牌。
+    HelloWorld:
+      name: 你好世界
+      description: 在你的回合开始时，将一张随机普通牌加入手牌。
+    Hologram:
+      name: 全息影像
+      description: 获得 {block} 点格挡。从弃牌堆将 1 张牌加入手牌。消耗。
+    Hyperbeam:
+      name: 超光束
+      description: 对所有敌人造成 {damage} 点伤害。失去 3 点集中。
+    Leap:
+      name: 跃迁
+      description: 获得 {block} 点格挡。
+    Loop:
+      name: 回路
+      description: 在你的回合开始时，让最前面的充能球额外触发 {magic.loops} 次被动。
+    MachineLearning:
+      name: 机器学习
+      description: 在你的回合开始时，抽 {magic.draw} 张牌。
+    Melter:
+      name: 熔化
+      description: 移除一名敌人的所有格挡。造成 {damage} 点伤害。
+    MeteorStrike:
+      name: 陨石打击
+      description: 造成 {damage} 点伤害。生成 3 个等离子球。
+    MultiCast:
+      name: 多重施放
+      description: 将你最前面的充能球激发 X 次。消耗。
+    Overclock:
+      name: 超频
+      description: 抽 {draw} 张牌。将 1 张灼伤洗入你的抽牌堆。
+    Rainbow:
+      name: 彩虹
+      description: 生成 1 个闪电球、1 个冰霜球和 1 个黑暗球。消耗。
+    Reboot:
+      name: 重启
+      description: 将你的手牌洗回抽牌堆，然后重新抽一手牌。消耗。
+    Rebound:
+      name: 反弹
+      description: 造成 {damage} 点伤害。你下一次从抽牌堆打出的牌会回到抽牌堆顶。
+    Recursion:
+      name: 递归
+      description: 激发你最前面的充能球，然后再次生成同类型的球。
+    Recycle:
+      name: 回收
+      description: 消耗一张牌。获得等同于其消耗的能量。消耗。
+    ReinforcedBody:
+      name: 强化躯体
+      description: 获得 {magic.block} 点格挡 X 次。
+    Reprogram:
+      name: 重编程
+      description: 失去 {magic.focus_loss} 点集中。获得 {magic.gain} 点力量和 {magic.gain} 点敏捷。
+    RipAndTear:
+      name: 撕裂
+      description: 对随机敌人造成两次 {damage} 点伤害。
+    Scrape:
+      name: 刮削
+      description: 造成 {damage} 点伤害。抽 {magic.draw} 张牌，并弃掉其中所有消耗大于 0 的牌。
+    Seek:
+      name: 检索
+      description: 从抽牌堆将牌加入手牌。消耗。
+    SelfRepair:
+      name: 自我修复
+      description: 战斗结束时，回复 {magic.heal} 点生命值。
+    Skim:
+      name: 略读
+      description: 抽 {draw} 张牌。
+    Stack:
+      name: 堆叠
+      description: 根据你的弃牌堆数量获得格挡。
+    StaticDischarge:
+      name: 静电释放
+      description: 每当你受到攻击伤害时，生成 {magic.lightning} 个闪电球。
+    SteamBarrier:
+      name: 蒸汽壁垒
+      description: 获得 {block} 点格挡。本场战斗中每次打出后提供的格挡会减少 1 点。
+    Storm:
+      name: 风暴
+      description: 每当你打出一张能力牌，生成 {magic.lightning} 个闪电球。
+    Streamline:
+      name: 流线型
+      description: 造成 {damage} 点伤害。本场战斗中消耗减少 1。
+    Strike:
+      name: 打击
+      description: 造成 {damage} 点伤害。
+    Sunder:
+      name: 劈裂
+      description: 造成 {damage} 点伤害。若斩杀，则获得 3 点能量。
+    SweepingBeam:
+      name: 扫荡光束
+      description: 对所有敌人造成 {damage} 点伤害。抽 {draw} 张牌。
+    Tempest:
+      name: 暴风雨
+      description: 生成闪电球 X 次。消耗。
+    ThunderStrike:
+      name: 雷霆一击
+      description: 按本场战斗生成过的闪电球次数，对随机敌人重复造成 {damage} 点伤害。
+    TURBO:
+      name: TURBO
+      description: 获得 {magic.energy} 点能量。向弃牌堆加入 1 张虚无。
+    WhiteNoise:
+      name: 白噪声
+      description: 将 1 张随机能力牌加入手牌。本回合其消耗为 0。消耗。
+    Zap:
+      name: 电击
+      description: 生成 1 个闪电球。
+  colorless:
+    Shiv:
+      name: 小刀
+      description: 造成 {damage} 点伤害。消耗。
+    Slimed:
+      name: 黏液
+      description: 消耗
+      rarity: special
+    Dazed:
+      name: 晕眩
+      description: 无法打出。虚无。
+      rarity: common
+    Wound:
+      name: 伤口
+      description: 无法打出。每当打出另一张牌，受到 1 点伤害。
+      rarity: common
+    Pain:
+      name: 疼痛
+      description: 无法打出。每当打出另一张牌，受到 1 点伤害。
+      rarity: curse
+    DeepBreath:
+      name: 深呼吸
+      description: 将所有卡牌洗入抽牌堆，抽 {draw} 张牌。
+    HandOfGreed:
+      name: 贪婪之手
+      description: 造成 {damage} 点伤害。如果斩杀，获得 {gold} 金币。
+    Impatience:
+      name: 急躁
+      description: 如果你手牌中没有技能牌，抽 {draw_amount} 张牌。
+    Madness:
+      name: 疯狂
+      description: 手牌中一张随机牌本回合消耗变为 0。
+    Mayhem:
+      name: 乱战
+      description: 回合开始时打出抽牌堆顶的牌。
+    Apotheosis:
+      name: 神化
+      description: 本场战斗中升级手牌中的所有牌。消耗。
+    Apparition:
+      name: 灵体
+      description: 虚无。获得 1 层虚无。消耗。
+      upgrade_description: 获得 1 层虚无。消耗。
+    AscendersBane:
+      name: 进阶之灾
+      description: 无法打出。虚无。无法移除。
+    BandageUp:
+      name: 包扎
+      description: 回复 {heal} 点生命值。消耗。
+    Bite:
+      name: 噬咬
+      description: 造成 {damage} 点伤害。回复 {heal} 点生命值。
+    Blind:
+      name: 致盲
+      description: 对一名敌人施加 2 层虚弱。
+      upgrade_description: 对所有敌人施加 2 层虚弱。
+    Burn:
+      name: 灼伤
+      description: 无法使用。回合结束时受到 {damage} 点伤害。
+    Miracle:
+      name: 奇迹
+      description: 获得 {energy_gain} 点能量。消耗。
+    Smite:
+      name: 惩恶
+      description: 保留。造成 {damage} 点伤害。消耗。
+    Safety:
+      name: 平安
+      description: 保留。获得 {block} 点格挡。消耗。
+    Insight:
+      name: 洞见
+      description: 保留。抽 {draw} 张牌。消耗。
+    ThroughViolence:
+      name: 以暴易暴
+      description: 保留。造成 {damage} 点伤害。消耗。
+    Expunger:
+      name: 灭除之刃
+      description: 造成 {damage} 点伤害 X 次。消耗。
+    Beta:
+      name: 贝塔
+      description: 将一张欧米伽洗入你的抽牌堆。消耗。
+    Omega:
+      name: 欧米伽
+      description: 在你的回合结束时，对所有敌人造成 50 点伤害。
+    Chrysalis:
+      name: 结茧
+      description: 向抽牌堆洗入 {magic.cards} 张随机技能牌。本场战斗中消耗为 0。消耗。
+    Clumsy:
+      name: 笨拙
+      description: 无法打出。虚无。
+    CurseOfTheBell:
+      name: 铃铛的诅咒
+      description: 无法打出。无法移除。
+    DarkShackles:
+      name: 黑暗镣铐
+      description: 敌人本回合失去 {magic.strength_loss} 点力量。消耗。
+    Decay:
+      name: 腐朽
+      description: 无法打出。回合结束时受到 2 点伤害。
+    Discovery:
+      name: 发现
+      description: 从 3 张随机牌中选择 1 张加入手牌。本回合消耗为 0。消耗。
+      upgrade_description: 从 3 张随机牌中选择 1 张加入手牌。本回合消耗为 0。
+    Doubt:
+      name: 疑虑
+      description: 无法使用。回合结束时获得 1 层虚弱。
+    DramaticEntrance:
+      name: 闪亮登场
+      description: 对所有敌人造成 {damage} 点伤害。固有。消耗。
+    Enlightenment:
+      name: 开悟
+      description: 本回合手牌中所有牌消耗变为 1。
+      upgrade_description: 本场战斗中手牌中所有牌消耗变为 1。
+    Finesse:
+      name: 妙计
+      description: 获得 {block} 点格挡。抽 1 张牌。
+    FlashOfSteel:
+      name: 亮剑
+      description: 造成 {damage} 点伤害。抽 1 张牌。
+    Forethought:
+      name: 预谋
+      description: 将手牌中的一张攻击牌放到抽牌堆底。直到打出前消耗为 0。
+      upgrade_description: 将手牌中的任意张牌放到抽牌堆底。直到打出前消耗为 0。
+    GoodInstincts:
+      name: 优秀直觉
+      description: 获得 {block} 点格挡。
+      upgrade_description: 获得 {block} 点格挡。
+    Injury:
+      name: 受伤
+      description: 无法打出。
+    JackOfAllTrades:
+      name: 花样百出
+      description: 向手牌添加 {magic.cards} 张随机无色牌。消耗。
+    JAX:
+      name: J.A.X.
+      description: 失去 3 点生命值。获得 {magic.strength} 点力量。
+    Magnetism:
+      name: 磁力
+      description: 回合开始时向手牌添加一张随机无色牌。
+    MasterOfStrategy:
+      name: 战略大师
+      description: 抽 {draw} 张牌。消耗。
+    Metamorphosis:
+      name: 羽化
+      description: 向抽牌堆洗入 {magic.cards} 张随机攻击牌。本场战斗中消耗为 0。消耗。
+    MindBlast:
+      name: 心灵震慑
+      description: 造成等同于抽牌堆牌数的伤害。固有。
+    Necronomicurse:
+      name: 死灵诅咒
+      description: 无法打出。无法移除。
+    Normality:
+      name: 凡庸
+      description: 无法打出。本回合无法打出超过 3 张牌。
+    Panacea:
+      name: 万能药
+      description: 获得 {magic.artifact} 层人工制品。消耗。
+    Panache:
+      name: 神气制胜
+      description: 每打出第 5 张牌，对所有敌人造成 {damage} 点伤害。
+    PanicButton:
+      name: 应急按钮
+      description: 获得 {block} 点格挡。接下来的 {magic.turns} 回合内无法获得格挡。消耗。
+    Parasite:
+      name: 寄生
+      description: 无法使用。如果从牌组中移除，失去 3 点最大生命值。
+    Purify:
+      name: 净化
+      description: 消耗手牌中最多 {magic.cards} 张牌。消耗。
+    Regret:
+      name: 悔恨
+      description: 无法使用。回合结束时每有一张手牌，失去 1 点生命值。
+    RitualDagger:
+      name: 仪式匕首
+      description: 造成 {damage} 点伤害。如果斩杀，永久增加此牌 {magic.damage_increase} 点伤害。消耗。
+    SadisticNature:
+      name: 残虐天性
+      description: 每当对敌人施加负面效果时，造成 {magic.damage_on_debuff} 点伤害。
+    SecretTechnique:
+      name: 秘密技法
+      description: 从抽牌堆将一张技能牌加入手牌。消耗。
+      upgrade_description: 从抽牌堆将一张技能牌加入手牌。
+    SecretWeapon:
+      name: 秘密武器
+      description: 从抽牌堆将一张攻击牌加入手牌。消耗。
+      upgrade_description: 从抽牌堆将一张攻击牌加入手牌。
+    Shame:
+      name: 羞耻
+      description: 无法使用。回合结束时获得 1 层脆弱。
+    SwiftStrike:
+      name: 迅捷打击
+      description: 造成 {damage} 点伤害。
+    TheBomb:
+      name: 炸弹
+      description: 3 回合后，对所有敌人造成 {damage} 点伤害。
+    ThinkingAhead:
+      name: 深谋远虑
+      description: 抽 2 张牌。将手牌中的一张牌放到抽牌堆顶。消耗。
+      upgrade_description: 抽 2 张牌。将手牌中的一张牌放到抽牌堆顶。
+    Transmutation:
+      name: 转化
+      description: 向手牌添加 X 张随机无色牌。本回合消耗为 0。消耗。
+      upgrade_description: 向手牌添加 X 张升级后的随机无色牌。本回合消耗为 0。消耗。
+    Trip:
+      name: 绊倒
+      description: 施加 2 层易伤。
+      upgrade_description: 对所有敌人施加 2 层易伤。
+    Violence:
+      name: 暴力
+      description: 从抽牌堆将 {magic.cards} 张随机攻击牌加入手牌。消耗。
+    Void:
+      name: 虚空
+      description: 无法打出。虚无。抽到此牌时，失去 1 点能量。
+    Writhe:
+      name: 苦恼
+      description: 无法打出。固有。
+  watcher:
+    Alpha:
+      name: 阿尔法
+      description: 将一张贝塔放入你的抽牌堆中。消耗。
+    BattleHymn:
+      name: 战歌
+      description: 在每回合开始时，将一张惩恶加入你的手牌。
+    Beta:
+      name: 贝塔
+      description: 将一张欧米伽放入你的抽牌堆中。消耗。
+    Blasphemy:
+      name: 渎神
+      description: 进入神格。在下回合死亡。消耗。
+    BowlingBash:
+      name: 碰撞连击
+      description: 当前每有一名敌人，便造成{damage}点伤害。
+    Brilliance:
+      name: 光辉
+      description: 造成{damage}点伤害。额外造成本场战斗中获得的真言总层数的伤害。
+    CarveReality:
+      name: 改造现实
+      description: 造成{damage}点伤害。将一张惩恶加入你的手牌。
+    Collect:
+      name: 收集
+      description: 在你的下X个回合开始时，将一张奇迹+加入你的手牌。消耗。
+    Conclude:
+      name: 结末
+      description: 对所有敌人造成{damage}点伤害。结束你的回合。
+    ConjureBlade:
+      name: 聚能成刃
+      description: 将一张灭除之刃放入你的抽牌堆中。消耗。
+    Consecrate:
+      name: 供奉
+      description: 对所有敌人造成{damage}点伤害。
+    Crescendo:
+      name: 渐强
+      description: 保留。进入愤怒。消耗。
+    CrushJoints:
+      name: 粉碎关节
+      description: 造成{damage}点伤害。如果本回合打出的上一张牌是技能牌，给予{magic.vuln}层易伤。
+    CutThroughFate:
+      name: 斩破命运
+      description: 造成{damage}点伤害。预见{magic.scry}。抽{draw}张牌。
+    DeceiveReality:
+      name: 欺瞒现实
+      description: 获得{block}点格挡。将一张平安加入你的手牌。
+    Defend:
+      name: 防御（紫）
+      description: 获得{block}点格挡。
+    DeusExMachina:
+      name: 机械降神
+      description: 不能被打出。当你抽到这张牌时，将{magic.count}张奇迹加入你的手牌。消耗。
+    DevaForm:
+      name: 天人形态
+      description: 虚无。在你的回合开始时获得能量，并使此效果增强。
+    Devotion:
+      name: 虔信
+      description: 在你的回合开始时，获得{magic.mantra}层真言。
+    EmptyBody:
+      name: 化体为空
+      description: 获得{block}点格挡。退出当前姿态。
+    EmptyFist:
+      name: 化拳为空
+      description: 造成{damage}点伤害。退出当前姿态。
+    EmptyMind:
+      name: 化智为空
+      description: 退出当前姿态。抽{draw}张牌。
+    Eruption:
+      name: 暴怒
+      description: 造成{damage}点伤害。进入愤怒。
+    Establishment:
+      name: 确立基础
+      description: 在你的回合结束时，每有一张被保留的牌，便将其本场战斗中的耗能减少1。
+    Evaluate:
+      name: 评估
+      description: 获得{block}点格挡。在你的抽牌堆中加入一张洞见。
+    Expunger:
+      name: 灭除之刃
+      description: 造成{damage}点伤害X次。消耗。
+    Fasting:
+      name: 斋戒
+      description: 获得{magic.stat}点力量和敏捷。每回合开始时少获得1点能量。
+    FearNoEvil:
+      name: 不惧妖邪
+      description: 造成{damage}点伤害。如果敌人的意图是攻击，则获得2点能量。
+    FlurryOfBlows:
+      name: 疾风连击
+      description: 造成{damage}点伤害。每当你转换姿态时，将这张牌从弃牌堆放回你的手牌。
+    FlyingSleeves:
+      name: 流云飞袖
+      description: 保留。造成{damage}点伤害{attack_times}次。
+    FollowUp:
+      name: 追击
+      description: 造成{damage}点伤害。如果本回合打出的上一张牌是攻击牌，获得1点能量。
+    ForeignInfluence:
+      name: 他山之石
+      description: 从3张任意颜色的攻击牌中选择1张加入你的手牌。本回合其耗能变为0。消耗。
+    Foresight:
+      name: 先见之明
+      description: 在你的回合开始时，预见{magic.scry}。
+    Halt:
+      name: 停顿
+      description: 获得{block}点格挡。如果你处于愤怒，则额外获得{magic.wrath_block}点格挡。
+    Indignation:
+      name: 义愤填膺
+      description: 给予{magic.vuln}层易伤。
+    InnerPeace:
+      name: 内心宁静
+      description: 进入平静。如果你已经处于平静，则抽{draw}张牌。
+    Insight:
+      name: 洞见
+      description: 保留。抽{draw}张牌。消耗。
+    Judgment:
+      name: 审判
+      description: 如果敌人的生命值小于等于{magic.threshold}点，则将其消灭。
+    JustLucky:
+      name: 幸运一击
+      description: 造成{damage}点伤害。预见1。获得{block}点格挡。
+    LessonLearned:
+      name: 勤学精进
+      description: 造成{damage}点伤害。若造成斩杀，则升级你牌组中的一张牌。
+    LikeWater:
+      name: 如水
+      description: 在你的回合结束时，如果你处于平静，则获得{magic.block}点格挡。
+    MasterReality:
+      name: 操控现实
+      description: 每当有牌在战斗中被创造时，将其升级。
+    Meditate:
+      name: 冥想
+      description: 将至多{magic.pick}张弃牌堆中的牌放入你的手牌。进入平静。消耗。
+    MentalFortress:
+      name: 心灵堡垒
+      description: 每当你转换姿态时，获得{magic.block}点格挡。
+    Miracle:
+      name: 奇迹
+      description: 获得{energy_gain}点能量。消耗。
+    Nirvana:
+      name: 涅槃
+      description: 每当你预见时，获得{magic.block}点格挡。
+    Omega:
+      name: 欧米伽
+      description: 在你的回合结束时，对所有敌人造成50点伤害。
+    Omniscience:
+      name: 通晓万物
+      description: 选择你手牌中的一张牌。将其打出两次。消耗。
+    Perseverance:
+      name: 坚韧
+      description: 保留。获得{block}点格挡。每当这张牌被保留时，其格挡增加{magic.retain_gain}点。
+    Pray:
+      name: 祈祷
+      description: 获得{block}点格挡。获得3层真言。
+    PressurePoints:
+      name: 点穴
+      description: 给予{magic.mark}层印记。所有敌人失去等同于其印记层数的生命。
+    Prostrate:
+      name: 五体投地
+      description: 获得{block}点格挡。获得2层真言。消耗。
+    Protect:
+      name: 护身
+      description: 保留。获得{block}点格挡。
+    Ragnarok:
+      name: 诸神之黄昏
+      description: 随机对一名敌人造成{damage}点伤害{attack_times}次。
+    ReachHeaven:
+      name: 立地升天
+      description: 造成{damage}点伤害。在你的抽牌堆中加入一张以暴易暴。
+    Rushdown:
+      name: 猛虎下山
+      description: 每当你进入愤怒时，抽{magic.draw}张牌。
+    Safety:
+      name: 平安
+      description: 保留。获得{block}点格挡。消耗。
+    Sanctity:
+      name: 圣洁
+      description: 获得{block}点格挡。如果你处于平静，则抽2张牌。
+    SandsOfTime:
+      name: 时之沙
+      description: 保留。造成{damage}点伤害。每当这张牌被保留时，其耗能减少1。
+    SashWhip:
+      name: 腰带抽打
+      description: 造成{damage}点伤害。如果本回合打出的上一张牌是攻击牌，给予{magic.weak}层虚弱。
+    Scrawl:
+      name: 潦草急就
+      description: 抽牌直到你的手牌已满。消耗。
+    SignatureMove:
+      name: 招牌技
+      description: 只有当这张牌是你手中唯一的攻击牌时才能打出。造成{damage}点伤害。
+    SimmeringFury:
+      name: 怒火中烧
+      description: 进入愤怒。下回合抽{magic.next_draw}张牌。
+    Smite:
+      name: 惩恶
+      description: 保留。造成{damage}点伤害。消耗。
+    SpiritShield:
+      name: 精神护盾
+      description: 你每有一张手牌，便获得{magic.per_card}点格挡。
+    Strike:
+      name: 打击（紫）
+      description: 造成{damage}点伤害。
+    Study:
+      name: 研习
+      description: 在你的回合结束时，在你的抽牌堆中加入{magic.amount}张洞见。
+    Swivel:
+      name: 旋身
+      description: 获得{block}点格挡。你本回合打出的下一张攻击牌耗能变为0。
+    TalkToTheHand:
+      name: 以手拒之
+      description: 造成{damage}点伤害。施加一个减益，使你每次攻击该敌人时获得{magic.block}点格挡。
+    Tantrum:
+      name: 发泄
+      description: 造成{damage}点伤害{attack_times}次。进入愤怒。
+    ThirdEye:
+      name: 天眼
+      description: 获得{block}点格挡。预见{magic.scry}。
+    ThroughViolence:
+      name: 以暴易暴
+      description: 保留。造成{damage}点伤害。消耗。
+    Tranquility:
+      name: 安宁
+      description: 保留。进入平静。消耗。
+    Vault:
+      name: 腾跃
+      description: 结束你的回合。在这之后再进行一个回合。
+    Vigilance:
+      name: 警惕
+      description: 获得{block}点格挡。进入平静。
+    Wallop:
+      name: 当头棒喝
+      description: 造成{damage}点伤害。获得等同于造成伤害的格挡。
+    WaveOfTheHand:
+      name: 摆手
+      description: 每当你在本回合获得格挡时，给予所有敌人{magic.weak}层虚弱。
+    Weave:
+      name: 迂回
+      description: 造成{damage}点伤害。每当你预见时，将这张牌从弃牌堆放回你的手牌。
+    WheelKick:
+      name: 回环踢
+      description: 造成{damage}点伤害。抽{draw}张牌。
+    WindmillStrike:
+      name: 旋转打击
+      description: 保留。造成{damage}点伤害。每当这张牌被保留时，其伤害增加{magic.gain}点。
+    Wish:
+      name: 许愿
+      description: 选择一项：获得金币、力量或多层护甲。消耗。
+    Worship:
+      name: 敬拜
+      description: 获得5层真言。
+    WreathOfFlame:
+      name: 火焰纹
+      description: 你的下一张攻击牌额外造成{magic.bonus}点伤害。
+powers:
+  EnragePower:
+    name: 激怒
+    description: 当玩家打出技能牌时，获得 {amount} 点力量。
+  StrengthPower:
+    name: 力量
+    description: 攻击伤害增加 {amount} 点。
+  VulnerablePower:
+    name: 易伤
+    description: 受到的伤害增加 50%。
+  FrailPower:
+    name: 脆弱
+    description: 来自卡牌的格挡减少 25%。
+  WeakPower:
+    name: 虚弱
+    description: 攻击伤害减少 25%。
+  Constricted:
+    name: 缠绕
+    description: 在你的回合结束时，失去等同于紧缚层数的生命值。
+  ConfusedPower:
+    name: 混乱
+    description: 回合开始时随机化卡牌消耗。
+  EntangledPower:
+    name: 缠身
+    description: 本回合无法打出攻击牌。
+  BufferPower:
+    name: 缓冲
+    description: 防止下次 {amount} 次受到伤害。
+  ArtifactPower:
+    name: 人工制品
+    description: 阻止下次 {amount} 次受到的减益效果。
+  CurlUpPower:
+    name: 蜷身
+    description: 受到伤害时获得 {amount} 点格挡。
+  curl_up:
+    name: 蜷身
+    description: 受到伤害时获得 {amount} 点格挡。
+  MetallicizePower:
+    name: 金属化
+    description: 回合结束时获得 {amount} 点格挡。
+  ThieveryPower:
+    name: 偷窃
+    description: 攻击时偷取 {amount} 金币。死亡时追回。
+  ThornsPower:
+    name: 荆棘
+    description: 每受到一次 攻击 ，造成 {amount} 点反伤。
+  SlowPower:
+    name: 缓慢
+    description: 每当你打出一张牌，本回合该敌人受到的攻击伤害增加 10%。
+  DrawReductionPower:
+    name: 抽牌变少
+    description: 每回合开始少抽 1 张牌，持续 {amount} 回合。
+  TimeWarpPower:
+    name: 时间扭曲
+    description: 每打出 12 张牌，结束回合并获得 1 点力量。
+    counter: '时间扭曲: {counter}/{threshold}'
+    trigger: 时间扭曲触发！回合结束，时间吞噬者获得力量！
+  FlyingPower:
+    name: 飞行
+    description: 受到的伤害减少 {amount} 点。被攻击时失去 1 层。
+  StrengthDownPower:
+    name: 力量衰减
+    description: 回合结束时失去 {amount} 点力量。
+  FlexPower:
+    name: 活动肌肉
+    description: Gain {amount} Strength. Lose equal amount at end of turn.
+  HeavyBladePower:
+    name: Heavy Blade
+    description: Gain {amount} Strength. Lose equal amount at end of turn.
+  PlatedArmorPower:
+    name: 多层护甲
+    description: At the end of your turn, gain {amount} Block.
+  AmplifyPower:
+    name: 增幅
+    description: 本回合你打出的下一张能力牌会额外触发一次。
+  BiasedCognitionPower:
+    name: 偏差认知
+    description: 在你的回合开始时失去 1 点集中。
+  CreativeAIPower:
+    name: 创造性 AI
+    description: 在你的回合开始时，将 1 张随机能力牌加入手牌。
+  EchoFormPower:
+    name: 回响形态
+    description: 每回合你打出的第一张牌会额外触发一次。
+  ElectroPower:
+    name: 电动力学
+    description: 你的闪电球会命中所有敌人。
+  EquilibriumPower:
+    name: 均衡
+    description: 在你的回合结束时，保留你的手牌。
+  FocusPower:
+    name: 集中
+    description: 你的闪电球、冰霜球和黑暗球获得 {amount} 点强化。
+  HeatsinksPower:
+    name: 散热片
+    description: 每当你打出一张能力牌，抽 {amount} 张牌。
+  HelloWorldPower:
+    name: 你好世界
+    description: 在你的回合开始时，将 1 张随机普通牌加入手牌。
+  LockOnPower:
+    name: 锁定
+    description: 该目标受到的充能球效果提高 50%。
+  LoopPower:
+    name: 回路
+    description: 在你的回合开始时，最前面的充能球额外触发 {amount} 次被动。
+  MachineLearningPower:
+    name: 机器学习
+    description: 在你的回合开始时，额外抽 {amount} 张牌。
+  SelfRepairPower:
+    name: 自我修复
+    description: 战斗结束时，回复 {amount} 点生命值。
+  StaticDischargePower:
+    name: 静电释放
+    description: 每当你受到攻击伤害时，生成 {amount} 个闪电球。
+  StormPower:
+    name: 风暴
+    description: 每当你打出一张能力牌，生成 {amount} 个闪电球。
+potions:
+  HeartOfIron:
+    name: 铁之心
+    description: 获得 {amount} 点金属化。
+  BloodPotion:
+    name: 鲜血药水
+    description: 回复你最大生命值的 {amount}% 。
+  Elixir:
+    name: 万灵药
+    description: 消耗你手牌中的所有卡牌。
+  PoisonPotion:
+    name: 毒药水
+    description: 施加 {magic_number} 层中毒。
+  CunningPotion:
+    name: 狡诈药水
+    description: 获得 {block} 点格挡。
+  GhostInAJar:
+    name: 罐装幽灵
+    description: 获得 1 层虚无。
+  FocusPotion:
+    name: 集中药水
+    description: 获得 {magic_number} 点专注。
+  EssenceOfDarkness:
+    name: 黑暗精华
+    description: 充能 {amount} 个暗球。
+  PotionOfCapacity:
+    name: 容量药水
+    description: 获得 {amount} 个球槽。
+  BottledMiracle:
+    name: 瓶中奇迹
+    description: 向你的手牌添加 2 个奇迹。
+  StancePotion:
+    name: 姿态药水
+    description: 进入你选择的姿态。
+  Ambrosia:
+    name: 神格药水
+    description: 进入神格。
+  AttackPotion:
+    name: 攻击药水
+    description: 向你的手牌添加一张随机攻击牌。本回合消耗 0。
+  BlockPotion:
+    name: 格挡药水
+    description: 获得 {block} 点格挡。
+  ColorlessPotion:
+    name: 无色药水
+    description: 向你的手牌添加一张随机无色牌。本回合消耗 0。
+  DexterityPotion:
+    name: 敏捷药水
+    description: 获得 {magic_number} 点敏捷。
+  EnergyPotion:
+    name: 能量药水
+    description: 获得 {energy_gain} 点能量。
+  ExplosivePotion:
+    name: 爆炸药水
+    description: 对所有敌人造成 {damage} 点伤害。
+  FearPotion:
+    name: 恐惧药水
+    description: 对所有敌人施加 {magic_number} 层易伤。
+  FirePotion:
+    name: 火焰药水
+    description: 造成 {damage} 点伤害。
+  FlexPotion:
+    name: 肾上腺素
+    description: 本回合获得 {strength} 点力量。
+  PowerPotion:
+    name: 力量药水
+    description: 向你的手牌添加一张随机能力牌。本回合消耗 0。
+  SkillPotion:
+    name: 技能药水
+    description: 向你的手牌添加一张随机技能牌。本回合消耗 0。
+  SpeedPotion:
+    name: 速度药水
+    description: 本回合获得 {dexterity} 点敏捷。
+  StrengthPotion:
+    name: 力量药水
+    description: 获得 {magic_number} 点力量。
+  SwiftPotion:
+    name: 迅捷药水
+    description: 抽 {amount} 张牌。
+  WeakPotion:
+    name: 虚弱药水
+    description: 对一个敌人施加 {magic_number} 层虚弱。
+  AncientPotion:
+    name: 古老药水
+    description: 获得 1 点人工制品。
+  BlessingOfTheForge:
+    name: 熔炉祝福
+    description: 升级你手牌中的一张卡牌。
+  DistilledChaos:
+    name: 精炼混沌
+    description: 从你的抽牌堆打出 {amount} 张随机卡牌。
+  DuplicationPotion:
+    name: 复制药水
+    description: 本回合中，你打出的下一张牌会额外触发一次。
+  EssenceOfSteel:
+    name: 钢铁精华
+    description: 获得 {block} 点格挡。
+  GamblersBrew:
+    name: 赌徒酿造
+    description: 抽 {amount} 张牌，然后弃掉 {amount} 张牌。
+  LiquidBronze:
+    name: 流动铜液
+    description: 获得 {plated_armor} 层镀层护甲。
+  LiquidMemories:
+    name: 液态记忆
+    description: 从你的弃牌堆返回一张卡牌到手牌。
+  RegenPotion:
+    name: 再生药水
+    description: 获得 {regeneration} 层再生。
+  SmokeBomb:
+    name: 烟雾炸弹
+    description: 从非 Boss 战斗中逃脱。
+  FairyInABottle:
+    name: 瓶中精灵
+    description: 当你濒死时，恢复到 {heal}% 生命值。
+  FruitJuice:
+    name: 果汁
+    description: 最大生命值增加 {max_hp} 点。
+  SneckoOil:
+    name: 蛇油
+    description: 获得 {energy} 点能量。混乱 {turns} 回合。
+  CultistPotion:
+    name: 邪教徒药水
+    description: 获得 {strength} 点力量。
+  EntropicBrew:
+    name: 混沌药水
+    description: 向你的空物品栏添加随机药水。
+  BattleHymnPower:
+    name: 战歌
+    description: 在每回合开始时，将一张惩恶加入你的手牌。
+  BlasphemerPower:
+    name: 渎神
+    description: 在你的下一回合开始时，死亡。
+  CollectPower:
+    name: 收集
+    description: 在你的回合开始时，将一张奇迹+加入你的手牌。
+  DevaPower:
+    name: 天人
+    description: 在你的回合开始时，获得能量，然后使该效果增加1。
+  DevotionPower:
+    name: 虔信
+    description: 在你的回合开始时，获得{amount}层真言。
+  EstablishmentPower:
+    name: 确立基础
+    description: 在你的回合结束时，将被保留牌的耗能减少1。
+  FastingPower:
+    name: 斋戒
+    description: 每回合开始时少获得1点能量。
+  ForesightPower:
+    name: 先见之明
+    description: 在你的回合开始时，预见{amount}。
+  LikeWaterPower:
+    name: 如水
+    description: 在你的回合结束时，如果你处于平静，则获得{amount}点格挡。
+  MantraPower:
+    name: 真言
+    description: 当达到10层时，进入神格。
+  MarkPower:
+    name: 印记
+    description: 触发时，失去等同于印记层数的生命。
+  MasterRealityPower:
+    name: 操控现实
+    description: 每当有牌在战斗中被创造时，将其升级。
+  MentalFortressPower:
+    name: 心灵堡垒
+    description: 每当你转换姿态时，获得{amount}点格挡。
+  NirvanaPower:
+    name: 涅槃
+    description: 每当你预见时，获得{amount}点格挡。
+  OmegaPower:
+    name: 欧米伽
+    description: 在你的回合结束时，对所有敌人造成{amount}点伤害。
+  RushdownPower:
+    name: 猛虎下山
+    description: 每当你进入愤怒时，抽{amount}张牌。
+  StudyPower:
+    name: 研习
+    description: 在你的回合结束时，在你的抽牌堆中加入{amount}张洞见。
+  TalkToTheHandPower:
+    name: 以手拒之
+    description: 每当你攻击该敌人时，获得{amount}点格挡。
+  TemporaryDexterityPower:
+    name: 临时敏捷
+    description: 本回合的敏捷。
+  WaveOfTheHandPower:
+    name: 摆手
+    description: 每当你在本回合获得格挡时，给予所有敌人{amount}层虚弱。
+  WreathOfFlamePower:
+    name: 火焰纹
+    description: 你的下一张攻击牌额外造成{amount}点伤害。
+relics:
+  PureWater:
+    name: 至纯之水
+    description: 在每场战斗开始时，将一张奇迹放入你的手牌。
+  Damaru:
+    name: 手摇鼓
+    description: 在你的回合开始时，获得1层真言。
+  Duality:
+    name: 两仪
+    description: 每当你打出一张攻击牌时，获得1点临时敏捷。
+  TeardropLocket:
+    name: 泪滴吊坠盒
+    description: 每场战斗开始时进入平静。
+  CloakClasp:
+    name: 斗篷扣
+    description: 在你的回合结束时，你每有一张手牌便获得1点格挡。
+  GoldenEye:
+    name: 黄金眼
+    description: 每当你预见时，额外预见2。
+  HolyWater:
+    name: 圣水
+    description: 在每场战斗开始时，将3张奇迹放入你的手牌。
+  VioletLotus:
+    name: 紫色莲花
+    description: 每次你离开平静时，获得1点额外能量。
+  Melange:
+    name: 美琅脂
+    description: 使用时，预见3。
+  AncientTeaSet:
+    name: 古茶具套装
+    description: 每当你进入休息点时，下场战斗的第一个回合获得 2 点额外能量。
+  Akabeko:
+    name: 赤牛
+    description: 你每场战斗首次攻击额外造成 8 点伤害。
+  Anchor:
+    name: 锚
+    description: 每场战斗开始时获得 10 点格挡。
+  ArtOfWar:
+    name: 孙子兵法
+    description: 如果你回合不打出任何攻击牌，下一回合获得 1 点额外能量。
+  BagOfMarbles:
+    name: 弹珠袋
+    description: 每场战斗开始时对所有敌人施加 1 层易伤。
+  BloodVial:
+    name: 小血瓶
+    description: 每场战斗开始时恢复 2 点生命值。
+  BronzeScales:
+    name: 铜制鳞片
+    description: 每场战斗开始时获得 3 层荆棘。
+  CentennialPuzzle:
+    name: 百年积木
+    description: 每次战斗失去生命值时，抽 3 张牌。
+  CeramicFish:
+    name: 陶瓷小鱼
+    description: 每当你向牌组添加一张卡牌，获得 9 金币。
+  DreamCatcher:
+    name: 捕梦网
+    description: 每次休息时，你可以向牌组添加一张卡牌。
+  HappyFlower:
+    name: 开心小花
+    description: 每 3 回合获得 1 点能量。
+  JuzuBracelet:
+    name: 佛珠手链
+    description: 普通敌人战斗不再在事件房间遇到。
+  Lantern:
+    name: 灯笼
+    description: 每场战斗第一回合获得 1 点能量。
+  MawBank:
+    name: 巨口储蓄罐
+    description: 每爬一层获得 12 金币。当你在商店花费任何金币时不再生效。
+  MealTicket:
+    name: 餐券
+    description: 每次进入商店房间时恢复 15 点生命值。
+  Nunchaku:
+    name: 双节棍
+    description: 每打出 10 次攻击，获得 1 点能量。
+  OddlySmoothStone:
+    name: 意外光滑的石头
+    description: 每场战斗开始时获得 1 点敏捷。
+  Omamori:
+    name: 御守
+    description: 获得的下 2 个诅咒将变成正效果。
+  Orichalcum:
+    name: 奥利哈钢
+    description: 如果你在回合结束时没有格挡，获得 6 点格挡。
+  PenNib:
+    name: 钢笔尖
+    description: 每 10 次攻击造成双倍伤害。
+  PotionBelt:
+    name: 药水腰带
+    description: 拾取时获得 2 个药水槽。
+  PreservedInsect:
+    name: 昆虫标本
+    description: 精英房间的敌人生命值减少 25%。
+  RegalPillow:
+    name: 皇家枕头
+    description: 休息时额外恢复 15 点生命值。
+  SmilingMask:
+    name: 微笑面具
+    description: 商人的移牌服务现在总是花费 50 金币。
+  Strawberry:
+    name: 草莓
+    description: 拾取时最大生命值增加 7 点。
+  TheBoot:
+    name: 发条靴
+    description: 每当造成 4 点或更少的未格挡攻击伤害时，将其增加到 5 点。
+  TinyChest:
+    name: 小宝箱
+    description: 每 4 个事件房间是宝藏房间。
+  ToyOrnithopter:
+    name: 玩具扑翼飞机
+    description: 每次饮用药水时恢复 5 点生命值。
+  WarPaint:
+    name: 战纹涂料
+    description: 拾取时升级 2 张随机技能。
+  Whetstone:
+    name: 磨刀石
+    description: 拾取时升级 2 张随机攻击。
+  HornCleat:
+    name: 船夹板
+    description: 第二回合开始时获得 14 点格挡。
+  BlueCandle:
+    name: 蓝蜡烛
+    description: 诅咒卡牌现在可以打出。打出诅咒牌会使你失去 1 点生命值并移除卡牌。
+  BottledFlame:
+    name: 瓶装火焰
+    description: 拾取时，选择一张攻击。每场战斗以该卡在手牌开始。
+  BottledLightning:
+    name: 瓶装闪电
+    description: 拾取时，选择一张技能。每场战斗以该卡在手牌开始。
+  BottledTornado:
+    name: 瓶装旋风
+    description: 拾取时，选择一个能力。每场战斗以该能力在手牌开始。
+  DarkstonePeriapt:
+    name: 黑石护符
+    description: 每当你获得一个诅咒时，最大生命值增加 6。
+  EternalFeather:
+    name: 永恒羽毛
+    description: 每 5 张牌在牌组中，当你进入休息点时恢复 3 点生命值。
+  FrozenEgg:
+    name: 冻结之蛋
+    description: 每当你向牌组添加一个能力时，它被升级。
+  GremlinHorn:
+    name: 地精之角
+    description: 每当一个敌人死亡，获得 1 点能量并抽 1 张牌。
+  InkBottle:
+    name: 墨水瓶
+    description: 每打出 10 张牌，抽 1 张牌。
+  Kunai:
+    name: 苦无
+    description: 每在单回合打出 3 次攻击，获得 1 点敏捷。
+  LetterOpener:
+    name: 开信刀
+    description: 每在单回合打出 3 次技能，对所有敌人造成 5 点伤害。
+  Matryoshka:
+    name: 套娃
+    description: 你打开的下 2 个宝箱包含 2 个遗物。
+  MeatOnBone:
+    name: 带骨肉
+    description: 如果战斗结束时你的生命值在或低于 50%，恢复 12 点生命值。
+  MercuryHourglass:
+    name: 水银沙漏
+    description: 回合开始时对所有敌人造成 3 点伤害。
+  MoltenEgg:
+    name: 熔火之蛋
+    description: 每当你向牌组添加一个攻击，它被升级。
+  MummifiedHand:
+    name: 干瘪之手
+    description: 每当你打出一张能力牌，你手牌中的一张随机卡牌消耗变为 0 能量，持续回合。
+  NinjaScroll:
+    name: 忍术卷轴
+    description: 每场战斗开始时手牌中有 3 把小刀。
+  OrnamentalFan:
+    name: 精致折扇
+    description: 每在单回合打出 3 次攻击，获得 4 点格挡。
+  Pantograph:
+    name: 缩放仪
+    description: Boss 战斗开始时恢复 25 点生命值。
+  PaperKrane:
+    name: 纸鹤
+    description: 虚弱敌人造成 50% 伤害，而不是 25%。
+  PaperPhrog:
+    name: 纸蛙
+    description: 易伤敌人受到 75% 伤害，而不是 50%。
+  Pear:
+    name: 梨子
+    description: 最大生命值增加 10 点。
+  QuestionCard:
+    name: 问号牌
+    description: 在未来的卡牌奖励屏幕上，你有 1 个额外卡牌可选择。
+  SelfFormingClay:
+    name: 自成型黏土
+    description: 战斗中失去生命值时，下一回合获得 3 点格挡。
+  Shuriken:
+    name: 手里剑
+    description: 每在单回合打出 3 次攻击，获得 1 点力量。
+  SingingBowl:
+    name: 颂钵
+    description: 向牌组添加卡牌时，可以改为 +2 点最大生命值。
+  StrikeDummy:
+    name: 打击木偶
+    description: 包含"打击"的卡牌额外造成 3 点伤害。
+  Sundial:
+    name: 日晷
+    description: 每 3 次洗牌时获得 2 点能量。
+  TheCourier:
+    name: 送货员
+    description: 商人不再出售卡牌、遗物或药水，价格降低 20%。
+  ToxicEgg:
+    name: 毒素之蛋
+    description: 每当你向牌组添加一个技能，它被升级。
+  WhiteBeastStatue:
+    name: 白兽雕像
+    description: 战斗后总是掉落药水。
+  BirdFacedUrn:
+    name: 鸟面瓮
+    description: 每当你打出一张能力牌，恢复 2 点生命值。
+  Calipers:
+    name: 外卡钳
+    description: 回合开始时失去 15 点格挡，而不是全部格挡。
+  CaptainsWheel:
+    name: 舵盘
+    description: 第三回合开始时获得 18 点格挡。
+  DeadBranch:
+    name: 枯木树枝
+    description: 每当你消耗一张卡牌，向手牌添加一张随机卡牌。
+  DuVuDoll:
+    name: 毒巫娃娃
+    description: 牌组中的每个诅咒使每场战斗开始时获得 1 点额外力量。
+  FossilizedHelix:
+    name: 螺类化石
+    description: 防止战斗中第一次失去生命值。
+  Ginger:
+    name: 生姜
+    description: 你不再能被激怒。
+  Girya:
+    name: 壶铃
+    description: 你现在可以在休息点获得力量（最多 3 次）。
+  IceCream:
+    name: 冰淇淋
+    description: 能量在回合之间得到保留。
+  LizardTail:
+    name: 蜥蜴尾巴
+    description: 当你濒死时，恢复到你最大生命值的 50%（只生效一次）。
+  MagicFlower:
+    name: 魔法花
+    description: 战斗期间治疗效果提升 50%。
+  Mango:
+    name: 芒果
+    description: 拾取时最大生命值增加 14 点。
+  OldCoin:
+    name: 古钱币
+    description: 获得 300 金币。
+  PeacePipe:
+    name: 宁静烟斗
+    description: 你现在可以在休息点从牌组移除卡牌。
+  Pocketwatch:
+    name: 怀表
+    description: 每在回合打出 3 张或更少的牌时，下一回合开始额外抽 3 张牌。
+  PrayerWheel:
+    name: 转经轮
+    description: 普通敌人掉落额外卡牌奖励。
+  Shovel:
+    name: 铲子
+    description: 你现在可以在休息点挖掘遗物。
+  StoneCalendar:
+    name: 历石
+    description: 回合 7 结束时对所有敌人造成 52 点伤害。
+  TheSpecimen:
+    name: 生物样本
+    description: 每当一个敌人死亡，将它的任何中毒转移给随机敌人。
+  ThreadAndNeedle:
+    name: 针线
+    description: 每场战斗开始时获得 4 点镀层护甲。
+  Tingsha:
+    name: 铜钹
+    description: 每回合弃一张牌时，对随机敌人造成 3 点伤害。
+  Torii:
+    name: 鸟居
+    description: 每当你要受到 5 点或更少的未格挡攻击伤害时，将其减少到 1 点。
+  ToughBandages:
+    name: 结实绷带
+    description: 每回合弃一张牌时，获得 3 点格挡。
+  TungstenRod:
+    name: 钨合金棍
+    description: 每当你要失去生命值时，失去 1 点。
+  Turnip:
+    name: 萝卜
+    description: 你不会被脆弱。
+  UnceasingTop:
+    name: 不休陀螺
+    description: 回合期间手中没有卡牌时，抽一张牌。
+  SneckoEye:
+    name: 异蛇之眼
+    description: 每回合多抽 2 张牌。每场战斗开始时混乱。
+  Astrolabe:
+    name: 星盘
+    description: 拾取时，选择并转化 3 张卡牌，然后升级它们。
+  BlackStar:
+    name: 黑星
+    description: 精英掉落额外遗物。
+  BlackBlood:
+    name: 黑暗之血
+    description: 替代燃烧之血。战斗结束时恢复 12 点生命值。
+  BustedCrown:
+    name: 破碎金冠
+    description: 每回合开始时获得 1 点能量。在卡牌奖励屏幕上，你有 2 张更少卡牌可选择。
+  CallingBell:
+    name: 召唤铃铛
+    description: 拾取时，获得一个独特诅咒和 3 个遗物。
+  CoffeeDripper:
+    name: 咖啡滤杯
+    description: 每回合开始时获得 1 点能量。你不能再在休息点休息。
+  CursedKey:
+    name: 诅咒钥匙
+    description: 每回合开始时获得 1 点能量。打开非 Boss 宝箱时获得诅咒。
+  Ectoplasm:
+    name: 灵体外质
+    description: 每回合开始时获得 1 点能量。你不能再获得金币。
+  EmptyCage:
+    name: 空鸟笼
+    description: 拾取时，从你的牌组移除 2 张卡牌。
+  FusionHammer:
+    name: 融合之锤
+    description: 每回合开始时获得 1 点能量。你不能再在休息点打铁。
+  HoveringKite:
+    name: 悬浮风筝
+    description: 每回合第一张弃牌时获得 1 点能量。
+  MarkOfPain:
+    name: 痛楚印记
+    description: 每回合开始时获得 1 点能量。战斗开始时手牌中有 2 把创伤。
+  PandorasBox:
+    name: 潘多拉的魔盒
+    description: 转化所有的打击和防御。
+  PhilosophersStone:
+    name: 贤者之石
+    description: 每回合开始时获得 1 点能量。所有敌人开始时有 1 点力量。
+  RingOfSerpent:
+    name: 长蛇戒指
+    description: 替代巨蛇戒指。回合开始时额外抽 1 张牌。
+  RunicCube:
+    name: 符文立方体
+    description: 每当失去生命值时，抽 1 张牌。
+  RunicDome:
+    name: 符文圆顶
+    description: 每回合开始时获得 1 点能量。你不再看到敌人意图。
+  RunicPyramid:
+    name: 符文金字塔
+    description: 回合结束时，你不再弃掉手牌。
+  SacredBark:
+    name: 神圣树皮
+    description: 大多数药水的效果翻倍。
+  SlaversCollar:
+    name: 奴隶贩子颈环
+    description: Boss 和精英战斗回合开始时获得 1 点能量。
+  Sozu:
+    name: 添水
+    description: 每回合开始时获得 1 点能量。你不能再获得药水。
+  TinyHouse:
+    name: 小屋子
+    description: 获得 1 瓶药水。获得 50 金币。最大生命值增加 5 点。获得 1 张卡牌。升级 1 张随机卡牌。
+  VelvetChoker:
+    name: 天鹅绒颈圈
+    description: 每回合开始时获得 1 点能量。你每回合不能打出超过 6 张牌。
+  WristBlade:
+    name: 袖剑
+    description: 消耗 0 能量的攻击额外造成 4 点伤害。
+  Cauldron:
+    name: 大锅
+    description: 拾取时，酿造 5 瓶随机药水。
+  ChemicalX:
+    name: 化学物X
+    description: 每当你打出一张消耗 X 的卡牌，其效果增加 2 倍。
+  ClockworkSouvenir:
+    name: 齿轮工艺品
+    description: 每场战斗开始时获得 1 点人工制品。
+  DollysMirror:
+    name: 多利之镜
+    description: 拾取时，获得你牌组中一张卡牌的额外复制。
+  FrozenEye:
+    name: 冻结之眼
+    description: 查看你的抽牌堆时，卡牌现在按顺序显示。
+  HandDrill:
+    name: 手钻
+    description: 每当你破坏一个敌人的格挡，施加 2 层易伤。
+  LeesWaffle:
+    name: 李家华夫饼
+    description: 最大生命值增加 7 点并恢复所有生命值。
+  MedicalKit:
+    name: 医药箱
+    description: 状态卡现在可以打出。打出状态牌会移除卡牌。
+  MembershipCard:
+    name: 会员卡
+    description: 商店所有产品 50% 折扣！
+  PrismaticShard:
+    name: 棱镜碎片
+    description: 战斗奖励屏幕现在包含无色卡牌和其他颜色的卡牌。
+  Orrery:
+    name: 星系仪
+    description: 选择并向你的牌组添加 5 张卡牌。
+  SlingOfCourage:
+    name: 勇气投石索
+    description: 每场精英战斗开始时获得 2 点力量。（对 Boss 无效）。
+  StrangeSpoon:
+    name: 奇怪的勺子
+    description: 打出的卡牌消耗时，50% 的机会将其移除而不是弃掉。
+  TheAbacus:
+    name: 算盘
+    description: 每当洗牌时获得 6 点格挡。
+  TwistedFunnel:
+    name: 扭曲漏斗
+    description: 回合开始时对所有敌人施加 4 层中毒。
+  CultistHeadpiece:
+    name: 邪教徒头套
+    description: CAW CAW CAW CAW WAWWWW!
+  FaceOfCleric:
+    name: 牧师的脸
+    description: 每次战斗后最大生命值增加 1 点。
+  GoldenIdol:
+    name: 金神像
+    description: 敌人掉落 25% 更多金币。
+  BloodyIdol:
+    name: 鲜血神像
+    description: 每当你获得金币时，恢复 5 点生命值。
+  GremlinVisage:
+    name: 地精容貌
+    description: 每场战斗开始时获得 1 层虚弱。
+  MarkOfBloom:
+    name: 绽放印记
+    description: 你不能再治疗。
+  MutagenicStrength:
+    name: 突变之力
+    description: 每场战斗开始时获得 3 点力量，回合结束时失去。
+  Necronomicon:
+    name: 死灵之书
+    description: 每回合打出的第一张消耗 2 或更多的牌时被播放两次。获得此遗物时，你被诅咒。
+  NilrysCodex:
+    name: 尼利的宝典
+    description: 回合结束时，你可以从 3 张随机卡牌中选择 1 张洗入你的抽牌堆。
+  Enchiridion:
+    name: 英雄宝典
+    description: 回合开始时，向你的手牌添加一个随机能力，持续到回合结束。
+  NeowsLament:
+    name: 涅奥的悲恸
+    description: 你最初 3 场战斗中的敌人有 1 点生命值。
+  NlothHungryFace:
+    name: 恩洛斯的饥饿的脸
+    description: 下一个非 Boss 宝箱是空的。
+  OddMushroom:
+    name: 奇怪蘑菇
+    description: 易伤时受到 50% 更多伤害，而不是 75%。
+  SsserpentHead:
+    name: 蛇的头
+    description: 每当你进入事件房间时，获得 50 金币。
+  WarpedTongs:
+    name: 弯曲铁钳
+    description: 回合开始时，为休息回合升级你手牌中的一张随机卡牌。
+  RedMask:
+    name: 红面具
+    description: 每场战斗开始时，对所有敌人施加 1 层虚弱。
+  NlothGift:
+    name: 恩洛斯的礼物
+    description: 作为怪物奖励获得稀有卡牌的几率x3。
+  RedKey:
+    name: 红钥匙
+    description: 你需要获得红、绿和蓝钥匙才能开启通往心的道路。为什么？自己找吧！
+  BlueKey:
+    name: 蓝钥匙
+    description: 你需要获得红、绿和蓝钥匙才能开启通往心的道路。为什么？自己找吧！
+  GreenKey:
+    name: 绿钥匙
+    description: 你需要获得红、绿和蓝钥匙才能开启通往心的道路。为什么？自己找吧！
+  BurningBlood:
+    name: 燃烧之血
+    description: 战斗结束时恢复 6 点生命值。
+  RedSkull:
+    name: 红头骨
+    description: 当你的生命值在或低于 50% 时，你有 3 点额外力量。
+  PaperFrog:
+    name: 纸蛙
+    description: 易伤敌人受到 75% 更多伤害，而不是 50%。
+  ChampionBelt:
+    name: 冠军腰带
+    description: 每当你施加易伤时，同时也施加 1 层虚弱。
+  CharonsAshes:
+    name: 卡戎之灰
+    description: 每当你消耗一张卡牌时，对所有敌人造成 3 点伤害。
+  Brimstone:
+    name: 硫磺
+    description: 回合开始时获得 2 点力量，所有敌人获得 1 点力量。
+  OrangePellets:
+    name: 橙色药丸
+    description: 每当你打出能力牌、攻击牌和技能牌，移除所有你的减益。
+  PotionBeltShop:
+    name: 药水腰带
+    description: 获得 2 个额外药水栏位。
+  StrangeSpoonShop:
+    name: 奇怪的勺子
+    description: Cards which Exhaust when played will instead discard 50% of time.
+  PaperPhrogIronclad:
+    name: 纸蛙
+    description: Enemies with Vulnerable take 75% more damage rather than 50%.
+  CrackedCore:
+    name: 破裂核心
+    description: 每场战斗开始时，生成 1 个闪电球。
+  DataDisk:
+    name: 数据磁盘
+    description: 每场战斗开始时，获得 1 点集中。
+  EmotionChip:
+    name: 情绪芯片
+    description: 每场战斗中首次失去生命时，每有一个空球槽就生成 1 个随机充能球。
+  FrozenCore:
+    name: 冰冻核心
+    description: 如果你在回合结束时有空球槽，生成 1 个冰霜球。
+  GoldPlatedCables:
+    name: 镀金线缆
+    description: 你最前面的充能球每回合会额外触发一次被动。
+  Inserter:
+    name: 插入器
+    description: 每 2 回合获得 1 个充能球栏位。
+  NuclearBattery:
+    name: 核电池
+    description: 每场战斗开始时，生成 1 个等离子球。
+  RunicCapacitor:
+    name: 符文电容器
+    description: 每场战斗开始时，额外获得 3 个充能球栏位。
+  SymbioticVirus:
+    name: 共生病毒
+    description: 每场战斗开始时，生成 1 个黑暗球。
+enemies:
+  Cultist:
+    name: 邪教徒
+    intentions:
+      ritual:
+        name: 仪式
+        description: 获得 3 层仪式。
+      cultist_attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害。
+      attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害。
+  JawWorm:
+    name: 大颚虫
+    intentions:
+      chomp:
+        name: 撕咬
+        description: 造成 {damage} 点伤害。
+      bellow:
+        name: 吼叫
+        description: 获得 {strength_gain} 点力量和 {block} 点格挡。
+      thrash:
+        name: 践踏
+        description: 造成 {damage} 点伤害。获得 {block} 点格挡。
+  FungiBeast:
+    name: 真菌兽
+    intentions:
+      bite:
+        name: 撕咬
+        description: 造成 {damage} 点伤害。
+      grow:
+        name: 生长
+        description: 获得 {strength_gain} 点力量。
+  RedLouse:
+    name: 虱虫
+    intentions:
+      bite:
+        name: 撕咬
+        description: 造成 {damage} 点伤害。
+      grow:
+        name: 生长
+        description: 获得 {strength_gain} 点力量。
+  GreenLouse:
+    name: 虱虫
+    intentions:
+      bite:
+        name: 撕咬
+        description: 造成 {damage} 点伤害。
+      spit_web:
+        name: 吐丝
+        description: 对你施加 1 层虚弱。
+  BlueSlaver:
+    name: 奴隶贩子
+    intentions:
+      stab:
+        name: 刺击
+        description: 造成 {damage} 点伤害。
+      rake:
+        name: 耙击
+        description: 造成 {damage} 点伤害。对你施加 1 层虚弱。
+  RedSlaver:
+    name: 奴隶贩子
+    intentions:
+      stab:
+        name: 刺击
+        description: 造成 {damage} 点伤害。
+      scrape:
+        name: 刮击
+        description: 造成 {damage} 点伤害。
+      entangle:
+        name: 纠缠
+        description: 对你施加 1 层纠缠。
+  AcidSlimeL:
+    name: 酸液史莱姆（大）
+    intentions:
+      corrosive_spit:
+        name: 腐蚀唾液
+        description: 造成 {damage} 点伤害。将 {cards} 张粘液牌加入弃牌堆。
+      lick:
+        name: 舔舐
+        description: 对你施加 {amount} 层虚弱。
+      tackle:
+        name: 冲撞
+        description: 造成 {damage} 点伤害。
+      split:
+        name: 分裂
+        description: 分裂成两个较小的史莱姆。
+  AcidSlimeM:
+    name: 酸液史莱姆（中）
+    intentions:
+      corrosive_spit:
+        name: 腐蚀唾液
+        description: 造成 {damage} 点伤害。将 {cards} 张粘液牌加入弃牌堆。
+      lick:
+        name: 舔舐
+        description: 对你施加 {amount} 层虚弱。
+      tackle:
+        name: 冲撞
+        description: 造成 {damage} 点伤害。
+      split:
+        name: 分裂
+        description: 分裂成两个较小的史莱姆。
+  AcidSlimeS:
+    name: 酸液史莱姆（小）
+    intentions:
+      corrosive_spit:
+        name: 腐蚀唾液
+        description: 造成 {damage} 点伤害。将 {cards} 张粘液牌加入弃牌堆。
+      lick:
+        name: 舔舐
+        description: 对你施加 {amount} 层虚弱。
+      tackle:
+        name: 冲撞
+        description: 造成 {damage} 点伤害。
+  SpikeSlimeM:
+    name: 尖刺史莱姆（中）
+    intentions:
+      lick:
+        name: 舔舐
+        description: 对你施加 {amount} 层脆弱。
+      flame_tackle:
+        name: 火焰冲撞
+        description: 造成 {damage} 点伤害。将 2 张粘液牌加入弃牌堆。
+      split:
+        name: 分裂
+        description: 分裂成两个较小的史莱姆。
+      tackle:
+        description: 造成 {damage} 点伤害
+  SpikeSlimeS:
+    name: 尖刺史莱姆（小）
+    intentions:
+      lick:
+        name: 舔舐
+        description: 对你施加 {amount} 层脆弱。
+      flame_tackle:
+        name: 火焰冲撞
+        description: 造成 {damage} 点伤害。将 2 张粘液牌加入弃牌堆。
+      tackle:
+        description: 造成 {damage} 点伤害
+  Spiker:
+    name: 钉刺机
+    intentions:
+      spike_attack:
+        name: 尖刺攻击
+        description: 造成 {damage} 点伤害。
+      buff_thorns:
+        name: 强化尖刺
+        description: 获得 {amount} 层尖刺。
+      attack:
+        description: 造成 {damage} 点伤害
+      spike:
+        description: 施加 {amount} 层尖刺
+  Repulsor:
+    name: 反冲机
+    intentions:
+      repulsor_attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害。
+      repulsor_debuff:
+        name: 减益
+        description: 施加 1 届虚弱和 1 层脆弱。
+      attack:
+        description: 造成 {damage} 点伤害
+      push:
+        description: 将手牌推回抽牌堆
+  Exploder:
+    name: 爆炸机
+    intentions:
+      explode:
+        name: 爆炸
+        description: 即将爆炸！
+      exploder_attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害。
+      attack:
+        description: 造成 {damage} 点伤害
+  TheMaw:
+    name: 巨口
+    intentions:
+      roar:
+        name: 咆哮
+        description: 施加 3 层虚弱和 3 层脆弱。
+      slam:
+        name: 猛击
+        description: 造成 {damage} 点伤害。
+      nom_nom:
+        name: 吞噬
+        description: 造成 {damage} 点伤害。
+      drool:
+        name: 流口水
+        description: 获得 3 点力量。
+  BookOfStabbing:
+    name: 扎人的书
+    intentions:
+      multi_stab:
+        name: 多重刺击
+        description: 造成 {damage} 点伤害 X 次
+      stab:
+        name: 刺击
+        description: 造成 {damage} 点伤害
+  Byrd:
+    name: 异鸟
+    intentions:
+      peck:
+        name: 啄击
+        description: 造成 {damage} 点伤害 X 次
+      headbutt:
+        name: 头槌
+        description: 造成 {damage} 点伤害
+      fly:
+        name: 飞行
+        description: 起飞
+      swoop:
+        name: 俯冲
+        description: 造成 {damage} 点伤害
+  Centurion:
+    name: 百夫长
+    intentions:
+      slash:
+        name: 斩击
+        description: 造成 {damage} 点伤害
+      fury:
+        name: 狂暴
+        description: 造成 {damage} 点伤害 X 次
+      defend:
+        name: 防御
+        description: 获得 {block} 点格挡
+  Chosen:
+    name: 被拣选者
+    intentions:
+      poke:
+        name: 戳刺
+        description: 造成 {damage} 点伤害
+      hex:
+        name: 诅咒
+        description: 施加诅咒
+      decrepify:
+        name: 衰弱
+        description: 施加 {amount} 层虚弱
+  Mystic:
+    name: 神秘术士
+    intentions:
+      attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害
+      heal:
+        name: 治疗
+        description: 为盟友恢复 {heal} 点生命值
+      buff:
+        name: 强化
+        description: 强化盟友
+  OrbWalker:
+    name: 圆球行者
+    intentions:
+      laser:
+        name: 激光
+        description: 造成 {damage} 点伤害
+      spawn:
+        name: 生成
+        description: 生成一个球
+  ShelledParasite:
+    name: 带壳寄生怪
+    intentions:
+      double_strike:
+        name: 双重打击
+        description: 造成 {damage} 点伤害两次
+      life_suck:
+        name: 吸取生命
+        description: 造成 {damage} 点伤害并恢复 {heal} 点生命值
+      sleep:
+        name: 睡眠
+        description: 无所作为
+      shell:
+        name: 壳
+        description: 获得 {block} 点格挡
+  Snecko:
+    name: 异蛇
+    intentions:
+      bite:
+        name: 咬击
+        description: 造成 {damage} 点伤害
+      perplexing_glare:
+        name: 迷惑凝视
+        description: 施加混乱
+  TheCollector:
+    name: 收藏家
+    intentions:
+      attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害
+      spawn:
+        name: 召唤
+        description: 召唤火把
+      debuff:
+        name: 减益
+        description: 施加 {amount} 层虚弱和易伤
+  TheGuardian:
+    name: 守护者
+    intentions:
+      charging_up:
+        name: 蓄力
+        description: 获得 {block} 点格挡。
+      fierce_bash:
+        name: 猛击
+        description: 造成 {damage} 点伤害。
+      vent_steam:
+        name: 喷吐蒸汽
+        description: 施加 1 层虚弱和 1 层易伤。
+      whirlwind:
+        name: 旋风
+        description: 对所有角色造成 {damage} 点伤害。
+      defensive_mode:
+        name: 防御姿态
+        description: 获得 {block} 点格挡。
+      roll_attack:
+        name: 翻滚攻击
+        description: 造成 {damage} 点伤害。
+      twin_slam:
+        name: 双子重击
+        description: 造成 {damage} 点伤害两次。
+  SlimeBoss:
+    name: 史莱姆老大
+    intentions:
+      preparing:
+        name: 准备
+        description: 准备一次大的攻击下回合。
+      slime_boss_slam:
+        name: 史莱姆猛击
+        description: 造成 {damage} 点伤害。
+      goop_spray:
+        name: 粘液祈求
+        description: 向你弃牌堆添加 3 张消瘦。
+  TheHexaghost:
+    name: 六火亡魂
+    intentions:
+      activate:
+        name: 激活
+        description: 正在蓄力...
+      divider:
+        name: 分割者
+        description: ?? {damage} ??? {attack_times} ??
+      sear:
+        name: 灼烧
+        description: 造成 {damage} 点伤害。向你的弃牌堆添加 1 层燃烧。
+      tackle:
+        name: 擒拿
+        description: 造成 {damage} 点伤害两次。
+      inflame:
+        name: 激怒
+        description: 获得 {strength_gain} 点力量。
+      inferno:
+        name: 地狱火
+        description: 造成 {damage} 点伤害。消耗你手牌和弃牌堆中的所有燃烧。
+  Lagavulin:
+    name: 乐加维林
+    intentions:
+      sleep:
+        name: 睡眠
+        description: 什么都不做。
+      stunned:
+        name: 昏迷
+        description: 什么都不做。
+      attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害。
+      siphon_soul:
+        name: 吸取灵魂
+        description: 你失去 {amount} 点力量与敏捷。
+  GremlinNob:
+    name: 地精大块头
+    intentions:
+      bellow:
+        name: 吼叫
+        description: 获得 2 点激怒。
+      skull_bash:
+        name: 骷髅重击
+        description: 造成 {damage} 点伤害。施加 2 层易伤。
+      bull_rush:
+        name: 蛮牛冲锋
+        description: 造成 {damage} 点伤害。
+  Sentry:
+    name: 哨卫
+    intentions:
+      bolt:
+        name: 闪电
+        description: 向你弃牌堆添加 2 张晕眩。
+      beam:
+        name: 光束
+        description: 造成 {damage} 点伤害。
+  FatGremlin:
+    name: 胖地精
+    intentions:
+      fat_gremlin_smash:
+        name: 猛击
+        description: 造成 {damage} 点伤害。施加 1 层虚弱。
+  SneakyGremlin:
+    name: 卑鄙地精
+    intentions:
+      sneaky_gremlin_stab:
+        name: 偷袭
+        description: 造成 {damage} 点伤害。
+  MadGremlin:
+    name: 火大地精
+    intentions:
+      mad_gremlin_scratch:
+        name: 抓挠
+        description: 造成 {damage} 点伤害。
+  ShieldGremlin:
+    name: 持盾地精
+    intentions:
+      shield_gremlin_protect:
+        name: 保护
+        description: 获得 {block} 点格挡。
+      shield_gremlin_bash:
+        name: 重击
+        description: 造成 {damage} 点伤害。
+  GremlinWizard:
+    name: 地精法师
+    intentions:
+      gremlin_wizard_charge:
+        name: 充能
+        description: 正在蓄力...
+      gremlin_wizard_ultimate_blast:
+        name: 终极轰炸
+        description: 造成 {damage} 点伤害。
+  Looter:
+    name: 抢劫的
+    intentions:
+      mug:
+        name: 抢劫
+        description: 造成 {damage} 点伤害。
+      lunge:
+        name: 猛扑
+        description: 造成 {damage} 点伤害。
+      smoke_bomb:
+        name: 烟雾弹
+        description: 获得 {block} 点格挡。
+      escape:
+        name: 逃跑
+        description: 带着偷来的金币逃跑。
+  TheChamp:
+    name: 第一勇士
+    intentions:
+      heavy_slash:
+        name: 重斩
+        description: 造成 {damage} 点伤害。
+      face_slap:
+        name: 面击
+        description: 造成 {damage} 点伤害。施加 2 层易伤和 2 层虚弱。
+      defensive_stance:
+        name: 防御姿态
+        description: 获得 {block} 点格挡和 {metallicize} 金属化。
+      gloat:
+        name: 炫耀
+        description: 获得 {strength_gain} 点力量。
+      taunt:
+        name: 嘲弄
+        description: 施加 2 层虚弱和 2 层易伤。
+      anger:
+        name: 激怒
+        description: 移除所有减益效果。获得 {strength_gain} 点力量。
+      execute:
+        name: 处决
+        description: 造成 {damage} 点伤害两次。
+  Donu:
+    name: 甜圈
+    intentions:
+      Circle of Power:
+        name: 力量圆环
+        description: 所有敌人获得 {strength_gain} 点力量。
+      Beam:
+        name: 光束
+        description: 造成 {damage} 点伤害两次。
+      Square of Protection:
+        name: 防护方阵
+        description: 所有敌人获得 {block} 点格挡。
+  Deca:
+    name: 八体
+    intentions:
+      Beam:
+        name: 光束
+        description: 造成 {damage} 点伤害两次。向你的弃牌堆添加 2 张迷茫。
+      Square of Protection:
+        name: 防护方阵
+        description: 所有敌人获得 {block} 点格挡。
+  TimeEater:
+    name: 时间吞噬者
+    intentions:
+      Reverberate:
+        name: 回响
+        description: 造成 {damage} 点伤害，共 3 次。
+      HeadSlam:
+        name: 头槌
+        description: 造成 {damage} 点伤害。施加 1 层抽牌减少。
+      Ripple:
+        name: 涟漪
+        description: 获得 {block} 点格挡。施加 1 层易伤和 1 层虚弱。
+      Haste:
+        name: 急速
+        description: 移除所有减益。恢复至 50% 生命值。
+  AwakenedOne:
+    name: 觉醒者
+    intentions:
+      Slash:
+        name: 斩击
+        description: 造成 {damage} 点伤害。
+      SoulStrike:
+        name: 灵魂打击
+        description: 造成 {damage} 点伤害，共 3 次。
+      Rebirth:
+        name: 重生
+        description: 恢复至满生命值。移除所有减益。
+      DarkEcho:
+        name: 黑暗回响
+        description: 造成 {damage} 点伤害。向你的弃牌堆添加 2 张迷茫。
+      Sludge:
+        name: 淤泥
+        description: 造成 {damage} 点伤害。向你的弃牌堆添加 2 张消瘦。
+      Tackle:
+        name: 冲撞
+        description: 造成 {damage} 点伤害。
+  GiantHead:
+    name: 大脑袋
+    intentions:
+      Nod:
+        name: 点头
+        description: 什么都不做。
+      criticism:
+        name: 批评
+        description: 造成 {damage} 点伤害。
+      ItIsTime:
+        name: 时候到了
+        description: 造成 {damage} 点伤害。
+      Count:
+        name: 计数
+        description: 造成 {damage} 点伤害。
+      Glare:
+        name: 凝视
+        description: 施加 {amount} 层虚弱。
+  Nemesis:
+    name: 天罚
+    intentions:
+      Tri Attack:
+        name: 三连击
+        description: 造成 {damage} 点伤害，3 次。
+      Tri Burn:
+        name: 三重燃烧
+        description: 向你的弃牌堆加入 {amount} 张燃烧。
+      Scythe:
+        name: 镰刀
+        description: 造成 {damage} 点伤害。
+  Reptomancer:
+    name: 拜蛇术士
+    intentions:
+      SnakeStrike:
+        name: 蛇击
+        description: 造成 {damage} 点伤害，共 2 次。
+      Bite:
+        name: 咬击
+        description: 造成 {damage} 点伤害。
+      Summon:
+        name: 召唤
+        description: 召唤匕首。
+  SpireGrowth:
+    name: 扭曲团块
+    intentions:
+      Attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害。
+      Constrict:
+        name: 紧箍
+        description: 对你施加紧箍。
+      QuickGrow:
+        name: 快速生长
+        description: 获得 1 点力量。
+  Transient:
+    name: 倏忽魔
+    intentions:
+      Attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害。
+      Fade:
+        name: 消散
+        description: 逐渐消失...
+  Darkling:
+    name: 小黑
+    intentions:
+      Nip:
+        name: 轻咬
+        description: 造成 {damage} 点伤害。
+      Chomp:
+        name: 猛咬
+        description: 造成 {damage} 点伤害。
+      Harden:
+        name: 硬化
+        description: 获得 {block} 点格挡。
+      Rebirth:
+        name: 重生
+        description: 复活所有死亡的黑暗雏鸟。
+  SpireShield:
+    name: 高塔之盾
+    intentions:
+      Bash:
+        name: 重击
+        description: 造成 {damage} 点伤害。施加 1 层易伤。
+      ShieldBash:
+        name: 盾击
+        description: 造成 {damage} 点伤害。
+      Defend:
+        name: 防御
+        description: 获得 {block} 点格挡。
+  SpireSpear:
+    name: 高塔之矛
+    intentions:
+      Skewer:
+        name: 穿刺
+        description: 造成 {damage} 点伤害，共 4 次。
+      Sear:
+        name: 灼烧
+        description: 造成 {damage} 点伤害。向你的弃牌堆添加 2 张燃烧。
+      Pierce:
+        name: 刺穿
+        description: 造成 {damage} 点伤害。
+  CorruptHeart:
+    name: 腐化之心
+    intentions:
+      BloodShot:
+        name: 血弹
+        description: 造成 {damage} 点伤害，共 12 次。
+      Debilitate:
+        name: 削弱
+        description: 施加 2 层易伤、2 层虚弱和 2 层脆弱。
+      Buff:
+        name: 强化
+        description: 获得 2 点力量。获得 2 层人工制品。
+      Echo:
+        name: 回声
+        description: 造成 {damage} 点伤害。
+      Invincible:
+        name: 无敌
+        description: Cannot take more than 200 damage per turn.
+  SpikeSlimeL:
+    name: 尖刺史莱姆（大）
+    intentions:
+      lick:
+        name: 舔舐
+        description: 施加 {amount} 层脆弱。
+      split:
+        name: 分裂
+        description: 分裂成 2 个尖刺史莱姆 (中)
+      tackle:
+        name: 冲撞
+        description: 造成 {damage} 点伤害
+  TorchHead:
+    name: 火炬头
+    intentions:
+      tackle:
+        name: 冲撞
+        description: 造成 {damage} 点伤害
+  Mugger:
+    name: 打劫的
+    intentions:
+      mug:
+        name: 抢劫
+        description: 造成 {damage} 点伤害并偷走 {amount} 金币
+      lunge:
+        name: 猛扑
+        description: 造成 {damage} 点伤害
+      smoke_bomb:
+        name: 烟雾弹
+        description: 获得 {block} 点格挡并下回合逃跑
+      escape:
+        name: 逃跑
+        description: 逃离战斗
+  SphericGuardian:
+    name: 圆球守护者
+    intentions:
+      activate:
+        name: 激活
+        description: 获得 {block} 点格挡
+      debuff_attack:
+        name: 减益
+        description: 施加 {amount} 层脆弱
+      slam:
+        name: 猛击
+        description: 造成 {damage} 点伤害
+  SnakePlant:
+    name: 蛇花
+    intentions:
+      thorns:
+        name: 荆棘
+        description: 获得 {block} 点格挡
+      chomp:
+        name: 猛咬
+        description: 造成 {damage} 点伤害
+  GremlinLeader:
+    name: 地精首领
+    intentions:
+      Encourage:
+        name: 鼓舞
+        description: 所有敌人获得 {strength_gain} 点力量。其他敌人获得 {block} 点格挡。
+      Stab:
+        name: 刺击
+        description: 造成 {damage} 点伤害，共 {hits} 次。
+      Rally!:
+        name: 召集！
+        description: 召唤 2 个随机地精。
+  Taskmaster:
+    name: 奴隶头子
+    intentions:
+      scythe:
+        name: 镰刀
+        description: 造成 {damage} 点伤害
+      attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害
+      protect:
+        name: 保护
+        description: 获得 {block} 点格挡
+  BronzeAutomaton:
+    name: 铜制机械人偶
+    intentions:
+      hyperbeam:
+        name: 超级光束
+        description: 对所有敌人造成 {damage} 点伤害
+      stasis:
+        name: 停滞
+        description: 获得 {block} 点格挡
+      bronze_orb:
+        name: 青铜球
+        description: 生成一个青铜球
+      attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害
+  BronzeOrb:
+    name: 铜球
+    intentions:
+      stasis:
+        name: 停滞
+        description: 获得 {block} 点格挡
+      hyperbeam:
+        name: 超级光束
+        description: 对所有敌人造成 {damage} 点伤害
+      attack:
+        name: 攻击
+        description: 造成 {damage} 点伤害
+  WrithingMass:
+    name: 扭曲团块
+    intentions:
+      whim:
+        name: 随意
+        description: 造成 {damage} 点伤害
+      slam:
+        name: 猛击
+        description: 造成 {damage} 点伤害
+      multi_slam:
+        name: 多重猛击
+        description: 造成 {damage} 点伤害 {hits} 次
+      debuff:
+        name: 减益
+        description: 施加 {amount} 层易伤和虚弱
+  Dagger:
+    name: 匕首
+    intentions:
+      wound:
+        name: 创伤
+        description: 造成 {damage} 点伤害并洗入创伤牌
+      explode:
+        name: 爆炸
+        description: 造成 {damage} 点伤害
+ai:
+  decision_system_prompt: "你是《杀戮尖塔》游戏的AI玩家。\n根据当前游戏状态，从给定选项中做出最优选择。\n\n## 思维链约束（极其重要）:\n\
+    - 思考过程必须精简，控制在3-5个短句内\n- 直接聚焦关键决策因素，不要冗余分析\n- 采用\"问题→关键因素→结论\"的简洁逻辑\n- 禁止重复描述已知信息\n\
+    - 禁止列举所有选项的详细分析\n- 示例好思维：\"血量30%低，精英风险大，选休息点回血\"（仅1句）\n- 示例坏思维：\"让我分析一下当前情况...首先我有30%血量...然后精英有这些风险...选项1是...选项2是...\"\
+    （冗长）\n\n游戏背景:\n- 这是一款Roguelike卡牌构建游戏\n- 目标是生存并击败敌人\n- 管理生命值、能量、卡牌、遗物和其他资源\n\n\
+    ## 地图选择风险评估（极其重要）:\n\n**精英房间(ELITE)是高风险高回报的选择！**\n- 精英敌人比普通敌人强得多，可能导致大量生命值损失甚至死亡\n\
+    - 奖励：遗物和更好的卡牌奖励\n\n**在以下情况下，不要选择精英房间：**\n- 当前生命值低于50%或低于30点\n- 牌组中缺乏高质量攻击牌（如打击牌伤害不足）\n\
+    - 牌组中缺乏防御牌（格挡牌太少）\n- 没有强力遗物（如燃烧之血只能回复6点）\n- 刚经历多场战斗，状态不佳\n- 当前楼层有更安全的选择（如休息点、商店）\n\
+    \n**只有在以下情况下才考虑精英房间：**\n- 生命值充足（>60%或>40点）\n- 牌组已经有一定战斗力\n- 有回复手段（药水、遗物、吸血卡牌）\n\
+    - 有强力的遗物加成\n- 没有更紧急的需求（如不需要立即休息回血）\n\n**优先级排序（生存第一）：**\n1. 休息点（低血量时必须优先）> 商店 >\
+    \ 宝藏 > 普通怪物 > 精英\n2. 高血量且牌组强时：可以考虑精英获取遗物\n3. 永远不要在低血量时挑战精英！\n\n## 战斗策略指南:\n- **敌人意图**:\
+    \ 观察敌人下回合会做什么（攻击/防御/增益）\n  - 如果敌人意图造成高伤害，优先打出格挡牌\n  - 如果敌人易伤或低血量，考虑攻击来击杀\n  -\
+    \ 如果敌人在增益，考虑施加减益或快速击杀\n\n- **能量管理（极其重要）**: \n  - **能量每回合结束时会重置为最大值，不能累计到下回合！**\n\
+    \  - **因此，每回合应该尽量把所有能量用完，不要保留能量**\n  - 如果有可打的好牌，一定要打出来，否则能量就浪费了\n  - 只有当剩余牌都不值得打出时才结束回合\n\
+    \  - 优先级（低血量时）: 防御 > 伤害 > 功能牌\n  - 有好牌时高效使用所有能量\n\n- **出牌优先级**:\n  - 敌人即将攻击且你血量低时\
+    \ → 格挡牌\n  - 敌人易伤或低血量时 → 攻击牌\n  - 长期优势 → 能力牌\n  - 功能性（抽牌、获得能量）→ 技能牌\n\n- **何时结束回合**:\n\
+    \  - 没有可打的好牌，或剩余牌不值得打出\n  - 有格挡牌但敌人不攻击\n  - 保留牌到下回合更好\n\n## 输出格式:\n只输出选项编号（从1开始）。不要解释，不要文字。\n\
+    示例: 单选输出\"1\"或\"2\"或\"3\"，多选输出\"1, 3, 5\"。\n"
+  selection_single: '**重要：这是单选任务。**
+
+    你必须且只能选择一个选项。
+
+    输出格式：只需数字（例如"2"）。
+
+    不要输出多个数字如"1, 2"或"2, 3"。
+
+    '
+  selection_multiple: '**这是多选任务。**
+
+    你最多可以选择 {max_select} 个选项。
+
+    输出格式：用逗号分隔的数字（例如"1, 3"）。
+
+    '
+  decision_user_template: '## 决策场景
+
+    {title}
+
+
+    ## 游戏状态
+
+    {context}
+
+
+    ## 选项
+
+    {options}
+
+
+    请输出你的选择（数字）:
+
+    '
+rooms:
+  combat:
+    enter: === 战斗开始 ===
+    victory: 胜利！所有敌人被击败！
+    boss_enter: === 首领战斗 ===
+    rewards:
+      gold: 获得 {amount} 金币
+      card: 将 {card_name} 加入牌组
+    elite_enter: 你进入了一场精英战斗！
+  RestRoom:
+    title: 休息点
+    rest: 休息（恢复 30% 生命值）
+    smith: 锻造（升级一张卡牌）
+    skip: 跳过
+    lift: 举重（获得力量）
+    toke: 吸烟（移除一张卡牌）
+    dig: 挖掘（获得遗物）
+    recall: 回忆（获得红宝石钥匙）
+    enter: 你进入一个安静的休息点。
+  TreasureRoom:
+    title: 宝藏房间
+    open_chest: 打开宝箱
+    skip: 跳过
+    enter: 你发现了一个宝藏房间！
+  ShopRoom:
+    title: 商店
+    buy_card: 购买 {card}（{price} 金币）
+    buy_relic: 购买 {relic}（{price} 金币）
+    buy_potion: 购买 {potion}（{price} 金币）
+    remove_card: 移除一张卡牌（{price} 金币）
+    leave: 离开
+    enter: 你进入了一个神秘的商店。
+  EventRoom:
+    title: 事件
+    enter: 你遇到了一个事件。
+rewards:
+  gold: 获得 {amount} 金币
+ai_context:
+  player_status: 玩家状态
+  hp: 生命值
+  energy: 能量
+  gold: 金币
+  floor: 层数
+  block: 格挡
+  deck: 牌组
+  cards_total: 张牌
+  max_energy: 最大能量
+  relics: 遗物
+  powers_on_you: 身上的能力
+  combat_status: 战斗状态
+  enemies: 敌人
+  no_enemies: 没有敌人
+  hand: 手牌
+  cards: 张牌
+  deck_status: 牌组状态
+  intent: 意图
+  power: 能力
+  dmg: 伤害
+  blk: 格挡
+  current_room: 当前房间
+  shop_items: 商店物品
+  cards_for_sale: 出售的卡牌
+  relics_for_sale: 出售的遗物
+  potions_for_sale: 出售的药水
+  services: 服务
+  remove_card_service: 移除一张卡牌（首次：50金币，每次增加25金币）
+  price: 价格
+  shop_room: 商店房间
+  rest_room: 休息房间
+  rest_options: 选项：休息（恢复30%生命值）或锻造（升级一张卡牌）
+  options: 选项
+  total: 共
+  select_one: 选择一个选项（只输出数字，如'2'）
+  card_stats_note: 注：手牌中的攻击和格挡值已计算玩家和敌人的能力/遗物效果，但尚未应用其它能力（如虚弱、易伤、脆弱等）的影响。
+orbs:
+  LightningOrb:
+    name: 闪电充能球
+  FrostOrb:
+    name: 冰霜充能球
+  DarkOrb:
+    name: 黑暗充能球
+  PlasmaOrb:
+    name: 等离子充能球
+stance:
+  calm: 平静
+  wrath: 愤怒
+  choose_stance: 选择姿态

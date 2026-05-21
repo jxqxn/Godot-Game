@@ -1,0 +1,54 @@
+"""Event: The Ssssserpent - Act 1 Event
+
+Trade for gold at the cost of receiving a curse.
+"""
+from engine.runtime_api import add_action, add_actions, publish_message, request_input, set_terminal_state
+
+from events.base_event import Event
+from events.event_pool import register_event
+from actions.display import InputRequestAction, DisplayTextAction
+from actions.card import AddCardAction
+from actions.reward import AddGoldAction
+from localization import LocalStr
+from utils.option import Option
+from engine.game_state import game_state
+from cards.colorless import Doubt
+
+
+@register_event(event_id='the_ssssserpent', acts=[1], weight=100)
+class TheSsssserpent(Event):
+    """The Ssssserpent - gold for curse."""
+    
+    def trigger(self) -> None:
+        actions = []
+        
+        # Display event description
+        actions.append(DisplayTextAction(
+            text_key='events.the_ssssserpent.description'
+        ))
+        
+        # Gold amount: 175 normal, 150 on A15+
+        gold_amount = 150 if game_state.ascension >= 15 else 175
+        
+        # Build options
+        options = [
+            Option(
+                name=LocalStr('events.the_ssssserpent.agree'),
+                actions=[
+                    AddGoldAction(amount=gold_amount),
+                    AddCardAction(card=Doubt(), dest_pile="deck")
+                ]
+            ),
+            Option(
+                name=LocalStr('events.the_ssssserpent.disagree'),
+                actions=[]
+            )
+        ]
+        
+        actions.append(InputRequestAction(
+            title=LocalStr('events.the_ssssserpent.title'),
+            options=options
+        ))
+        
+        self.end_event()
+        add_actions(actions)

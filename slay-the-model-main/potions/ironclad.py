@@ -1,0 +1,77 @@
+# Ironclad Potions - Character-specific potions for Ironclad
+from actions.card import ExhaustCardAction
+from actions.combat import ApplyPowerAction, HealAction
+from powers.definitions.metallicize import MetallicizePower
+from actions.display import InputRequestAction
+from potions.base import Potion
+from utils.types import RarityType
+from utils.option import Option
+from utils.registry import register
+
+# Common Potions
+@register("potion")
+class BloodPotion(Potion):
+    """Heal 20% max HP (40% with Sacred Bark) - Ironclad only"""
+    rarity = RarityType.COMMON
+    category = "Ironclad"
+    name = "Blood Potion"
+    can_be_used_out_of_combat = True
+
+    def __init__(self):
+        super().__init__()
+        self._amount = 20  # Sacred Bark doubles to 40 (percentage)
+
+    def on_use(self, targets) -> None:
+        from engine.game_state import game_state
+        from actions.combat import HealAction
+        # Calculate heal amount as percentage of max HP
+        heal_amount = int(game_state.player.max_hp * (self.amount / 100.0))
+        self.queue_actions([HealAction(target=game_state.player, amount=heal_amount)])
+
+# Uncommon Potions
+@register("potion")
+class Elixir(Potion):
+    """Exhaust any number of cards from hand - Ironclad only"""
+    rarity = RarityType.UNCOMMON
+    category = "Ironclad"
+
+    def __init__(self):
+        super().__init__()
+
+    def on_use(self, targets) -> None:
+        from actions.card import ExhaustCardAction
+        from actions.display import InputRequestAction
+        from engine.game_state import game_state
+        from localization import LocalStr
+        
+        # Build options for each card in hand
+        options = []
+        for card in list(game_state.player.card_manager.get_pile("hand")):
+            options.append(Option(
+                name=card.display_name,
+                actions=[ExhaustCardAction(card=card, source_pile="hand")]
+            ))
+        
+        # Let player choose which cards to exhaust (multi-select mode)
+        # Use max_select=-1 to allow selecting all hand cards
+        self.queue_actions([InputRequestAction(
+            title=self.local("name").resolve(),
+            options=options,
+            max_select=-1,  # Allow selecting all options
+            must_select=False  # Allow stopping selection early
+        )])
+
+# Rare Potions
+@register("potion")
+class HeartOfIron(Potion):
+    """Gain 6 Metallicize (12 with Sacred Bark) - Ironclad only"""
+    rarity = RarityType.RARE
+    category = "Ironclad"
+
+    def __init__(self):
+        super().__init__()
+        self._amount = 6  # Sacred Bark doubles to 12
+
+    def on_use(self, targets) -> None:
+        from engine.game_state import game_state
+        self.queue_actions([ApplyPowerAction(MetallicizePower(amount=self.amount, owner=game_state.player), game_state.player)])

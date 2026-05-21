@@ -1,0 +1,50 @@
+"""Taskmaster intentions - Act 2 Elite enemy."""
+from engine.runtime_api import add_action, add_actions
+
+from typing import TYPE_CHECKING, List
+
+from actions.combat import AttackAction, ApplyPowerAction
+from enemies.intention import Intention
+from powers.definitions.strength import StrengthPower
+
+if TYPE_CHECKING:
+    from enemies.act2.taskmaster import Taskmaster
+
+
+class ScouringWhip(Intention):
+    """Deals 7 damage. Adds a Wound to discard pile. Gains 1 Strength (Asc 3+)."""
+    
+    def __init__(self, enemy: "Taskmaster"):
+        super().__init__("Scouring Whip", enemy)
+        self.base_damage = 7
+    
+    def execute(self) -> None:
+        """Execute scouring whip attack."""
+        from engine.game_state import game_state
+        from cards.colorless import Wound
+        
+        actions = []
+        
+        # Deal damage
+        actions.append(AttackAction(
+            damage=self.base_damage,
+            target=game_state.player,
+            source=self.enemy,
+            damage_type="attack"
+        ))
+        
+        # Add wound to player's discard pile
+        wound = Wound()
+        game_state.player.card_manager.piles['discard_pile'].append(wound)
+        
+        # Asc 3+: Gain 1 Strength
+        if game_state.ascension >= 3:
+            actions.append(ApplyPowerAction(StrengthPower(amount=1, owner=self.enemy), self.enemy))
+
+        
+        from engine.game_state import game_state
+
+        
+        add_actions(actions)
+
+        
