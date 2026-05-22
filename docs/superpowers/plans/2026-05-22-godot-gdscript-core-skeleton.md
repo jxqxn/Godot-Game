@@ -6,7 +6,7 @@
 
 **Architecture:** 规则层使用 `RefCounted` 类组织，`engine/` 编排流程，`actions/` 执行状态变更，`entities/` 保存共享生物状态，`player/` 管理玩家与牌堆，`cards/` 和 `enemies/` 只放内容行为。第一阶段只实现 Strike、Defend 和 DummyEnemy，`slay-the-model-main/` 始终只读。
 
-**Tech Stack:** Godot 4.6.2、GDScript、GUT 测试入口 `godot -s addons/gut/gut_cmdln.gd`、PowerShell、Git。
+**Tech Stack:** Godot 4.6.2、GDScript、GUT 测试入口 `godot -s addons/gut/gut_cmdln.gd`、PowerShell、Git。实现代理模型固定使用 `gpt-5.3-codex`，spec 审核和代码质量审核代理模型固定使用 `gpt-5.5`。
 
 ---
 
@@ -30,16 +30,72 @@
 - Create: `scripts/stm/engine/combat.gd`：战斗流程。
 - Create: `scripts/stm/engine/game_bootstrap.gd`：测试启动器。
 - Create: `scripts/stm/tests/core_skeleton_test.gd`：GUT/BDD 单元测试。
+- Create: `addons/gut/gut_cmdln.gd` and related GUT addon files：项目测试入口依赖。
 
 ## 执行约束
 
 - 先创建测试方法名和 Given-When-Then 中文行为注释，再写测试断言，再写正式代码。
 - 所有新增代码注释使用中文。
 - 不修改 `slay-the-model-main/`。
-- 不联网安装依赖。
-- 当前仓库尚无 `addons/gut/gut_cmdln.gd`。执行任何测试步骤时仍使用 `godot -s addons/gut/gut_cmdln.gd`；若命令因为该文件缺失而失败，记录为“测试环境阻塞：缺少 `addons/gut/gut_cmdln.gd`”，不得改用其他测试入口，不得声称测试通过。
-- 在 GUT 缺失的状态下，只允许完成文档和测试文件写入；不得进入正式 GDScript 实现任务，除非用户明确允许在测试环境阻塞下继续。
-- 所有“运行测试”步骤只有两类有效结果：命令按预期 PASS/FAIL，或因缺少 `addons/gut/gut_cmdln.gd` 阻塞。其他结果必须先停下记录实际输出。
+- 先补齐 `addons/gut/gut_cmdln.gd`，再进入 BDD/TDD 和正式 GDScript 实现。
+- 允许为补齐 GUT 访问网络和写入 `addons/gut/`；除此之外不联网安装依赖，不新增其他 Godot 插件。
+- 实现任务可以并行派发实现代理，但必须保证写入文件集合互不重叠，并由主代理统一集成和验证。
+- 每个实现代理内部必须走 BDD/TDD：先中文 Given-When-Then 测试注释和测试方法名，再失败测试，再最小实现，再通过测试。
+- 每个实现任务完成后必须双重审核：先 `gpt-5.5` spec compliance review，再 `gpt-5.5` code quality review。审核未通过不得进入最终合并。
+
+### Task 0: 补齐 GUT 测试入口
+
+**Files:**
+- Create: `addons/gut/gut_cmdln.gd`
+- Create: related files under `addons/gut/`
+
+- [ ] **Step 1: 获取 GUT 插件**
+
+Run:
+
+```powershell
+git clone --depth 1 https://github.com/bitwes/Gut.git .gut-download
+```
+
+Expected: `.gut-download/addons/gut/gut_cmdln.gd` 存在。
+
+- [ ] **Step 2: 复制 GUT 到项目插件目录**
+
+Run:
+
+```powershell
+New-Item -ItemType Directory -Force addons | Out-Null
+Copy-Item -Recurse -Force .gut-download\addons\gut addons\gut
+```
+
+Expected: `addons/gut/gut_cmdln.gd` 存在。
+
+- [ ] **Step 3: 删除临时下载目录**
+
+Run:
+
+```powershell
+Remove-Item -Recurse -Force .gut-download
+```
+
+Expected: `.gut-download` 不存在，`addons/gut/gut_cmdln.gd` 仍存在。
+
+- [ ] **Step 4: 运行空项目 GUT 命令**
+
+Run:
+
+```powershell
+godot -s addons/gut/gut_cmdln.gd
+```
+
+Expected: 命令能够启动 GUT。当前尚未创建测试时，可以是 0 tests 或无测试套件；不得出现缺少 `addons/gut/gut_cmdln.gd` 的错误。
+
+- [ ] **Step 5: 提交 GUT 测试入口**
+
+```powershell
+git add addons/gut
+git commit -m "test: add gut test runner"
+```
 
 ### Task 1: 创建 BDD 测试骨架
 
@@ -108,7 +164,7 @@ Run:
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: 二选一结果。结果 A：GUT 存在，命令成功，`scripts/stm/tests/core_skeleton_test.gd` 中 6 个空测试被执行并通过。结果 B：GUT 缺失，命令失败，记录“测试环境阻塞：缺少 `addons/gut/gut_cmdln.gd`”，并在获得用户允许前不进入 Task 3。
+Expected: GUT 存在，命令成功，`scripts/stm/tests/core_skeleton_test.gd` 中 6 个空测试被执行并通过。若仍缺少 `addons/gut/gut_cmdln.gd`，返回 Task 0 修正。
 
 - [ ] **Step 4: 提交测试骨架**
 
@@ -241,7 +297,7 @@ Run:
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: 二选一结果。结果 A：GUT 存在，命令失败，首个失败原因是缺失 `res://scripts/stm/engine/game_bootstrap.gd` 或 `res://scripts/stm/utils/types.gd`。结果 B：GUT 缺失，命令失败，记录“测试环境阻塞：缺少 `addons/gut/gut_cmdln.gd`”，并在获得用户允许前不进入 Task 3。
+Expected: GUT 存在，命令失败，首个失败原因是缺失 `res://scripts/stm/engine/game_bootstrap.gd` 或 `res://scripts/stm/utils/types.gd`。若仍缺少 `addons/gut/gut_cmdln.gd`，返回 Task 0 修正。
 
 - [ ] **Step 3: 提交失败测试**
 
@@ -1109,7 +1165,7 @@ Run:
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: GUT 存在时命令 PASS，`scripts/stm/tests/core_skeleton_test.gd` 中 6 个测试全部通过。若命令失败，执行者只能修改本任务创建的 5 个文件和导致解析失败的前置 `scripts/stm/**/*.gd` 文件；不得删除测试断言，不得改用其他测试命令。修正后重复运行同一命令，直到 PASS 或遇到 GUT 缺失阻塞。
+Expected: GUT 存在时命令 PASS，`scripts/stm/tests/core_skeleton_test.gd` 中 6 个测试全部通过。若命令失败，执行者只能修改本任务创建的 5 个文件和导致解析失败的前置 `scripts/stm/**/*.gd` 文件；不得删除测试断言，不得改用其他测试命令。修正后重复运行同一命令，直到 PASS；若入口文件缺失，返回 Task 0 修正。
 
 - [ ] **Step 8: 提交战斗流程**
 
@@ -1154,7 +1210,7 @@ Run:
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: PASS，覆盖 `scripts/stm/tests/core_skeleton_test.gd` 中所有测试。若 GUT 文件不存在，报告测试环境阻塞并停止实现收尾。
+Expected: PASS，覆盖 `scripts/stm/tests/core_skeleton_test.gd` 中所有测试。若 GUT 文件不存在，返回 Task 0 修正。
 
 - [ ] **Step 4: 查看最终状态**
 
@@ -1179,7 +1235,7 @@ Expected: 如果执行本步骤，提交成功且 `git status --short` 无未提
 
 ## 自检记录
 
-- Spec 覆盖：计划覆盖 `scripts/stm/` 文件结构、ActionQueue 执行模型、Creature/Card/Player/Enemy/Combat/GameState 核心职责、Strike/Defend/DummyEnemy 最小内容、GUT/BDD 测试、安全边界、依赖和验收标准。
+- Spec 覆盖：计划覆盖 GUT 测试入口补齐、`scripts/stm/` 文件结构、ActionQueue 执行模型、Creature/Card/Player/Enemy/Combat/GameState 核心职责、Strike/Defend/DummyEnemy 最小内容、GUT/BDD 测试、安全边界、依赖和验收标准。
 - 占位词扫描：已检查常见未完成标记，计划中没有用于推迟实现的占位描述。
 - 类型一致性：统一使用 `StmTypes.TerminalResult.NONE`、`COMBAT_WIN`、`GAME_LOSE`、`COMBAT_ESCAPE`；统一使用 `card_name`、`current_combat`、`action_queue`、`draw_pile`、`discard_pile`、`exhaust_pile`。
 
@@ -1187,10 +1243,15 @@ Expected: 如果执行本步骤，提交成功且 `git status --short` 无未提
 
 - Task 1 Step 1：无歧义。动作是创建 `scripts\stm\tests`，验收是目录存在。
 - Task 1 Step 2：无歧义。只写测试方法名、中文 Given-When-Then 注释和 `pass`，不写断言和正式代码。
-- Task 1 Step 3：已消除歧义。测试结果限定为 6 个空测试通过，或因缺少 GUT 阻塞。
+- Task 0 Step 1：无歧义。动作是克隆 GUT，验收是 `.gut-download/addons/gut/gut_cmdln.gd` 存在。
+- Task 0 Step 2：无歧义。动作是复制 GUT 到 `addons/gut/`，验收是 `addons/gut/gut_cmdln.gd` 存在。
+- Task 0 Step 3：无歧义。动作是删除临时下载目录，验收是临时目录不存在且 GUT 入口仍存在。
+- Task 0 Step 4：无歧义。必须运行项目约定 GUT 命令，验收是不再报入口文件缺失。
+- Task 0 Step 5：无歧义。只提交 `addons/gut`。
+- Task 1 Step 3：已消除歧义。测试结果限定为 6 个空测试通过；若入口缺失，回到 Task 0。
 - Task 1 Step 4：无歧义。只提交 `scripts\stm\tests\core_skeleton_test.gd`。
 - Task 2 Step 1：无歧义。完整替换测试文件，保留每个测试的中文 Given-When-Then 注释。
-- Task 2 Step 2：已消除歧义。预期失败限定为缺少 `game_bootstrap.gd` 或 `types.gd`，GUT 缺失则阻塞。
+- Task 2 Step 2：已消除歧义。预期失败限定为缺少 `game_bootstrap.gd` 或 `types.gd`；若入口缺失，回到 Task 0。
 - Task 2 Step 3：无歧义。只提交测试文件。
 - Task 3 Step 1：无歧义。动作是创建 `utils` 和 `actions` 两个目录。
 - Task 3 Step 2：无歧义。完整写入 `types.gd` 中列出的枚举。
@@ -1223,6 +1284,6 @@ Expected: 如果执行本步骤，提交成功且 `git status --short` 无未提
 - Task 6 Step 8：无歧义。只提交 Task 6 创建的 5 个文件。
 - Task 7 Step 1：无歧义。`git status --short slay-the-model-main` 必须无输出。
 - Task 7 Step 2：无歧义。`rg` 输出只能是中文注释。
-- Task 7 Step 3：无歧义。必须使用 `godot -s addons/gut/gut_cmdln.gd`，结果必须 PASS 或 GUT 缺失阻塞。
+- Task 7 Step 3：无歧义。必须使用 `godot -s addons/gut/gut_cmdln.gd`，结果必须 PASS；若入口缺失，回到 Task 0。
 - Task 7 Step 4：无歧义。`git status --short` 必须无未提交实现文件。
 - Task 7 Step 5：已消除歧义。只有验证步骤实际产生修正时才提交；没有修正就不运行。
