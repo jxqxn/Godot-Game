@@ -19,22 +19,29 @@ func _init(p_player = null) -> void:
 	action_queue = _try_new_global("StmActionQueue")
 
 
-func add_action(action) -> void:
+func add_action(action, to_front: bool = false) -> void:
 	if action == null:
 		return
 	if action_queue != null:
 		if action_queue.has_method("add_action"):
-			action_queue.add_action(action)
+			action_queue.add_action(action, to_front)
 			return
 		if action_queue.has_method("enqueue"):
 			action_queue.enqueue(action)
 			return
+	if to_front:
+		_pending_actions.push_front(action)
+		return
 	_pending_actions.append(action)
 
 
-func add_actions(actions: Array) -> void:
+func add_actions(actions: Array, to_front: bool = false) -> void:
+	if to_front:
+		for index in range(actions.size() - 1, -1, -1):
+			add_action(actions[index], true)
+		return
 	for action in actions:
-		add_action(action)
+		add_action(action, false)
 
 
 func drive_actions():

@@ -31,7 +31,21 @@ func start_player_turn(game_state) -> void:
 
 
 func play_card(game_state, card, targets: Array = []):
-	if game_state.player == null or card == null:
+	if game_state == null:
+		return _result_none()
+	game_state.add_action(StmCombatActions.PlayCardAction.new(self, card, targets))
+	return game_state.drive_actions()
+
+
+func end_turn(game_state):
+	if game_state == null:
+		return _result_none()
+	game_state.add_action(StmCombatActions.EndTurnAction.new(self))
+	return game_state.drive_actions()
+
+
+func _execute_play_card(game_state, card, targets: Array = []):
+	if game_state == null or game_state.player == null or card == null:
 		return _result_none()
 	var cost: int = int(card.get("cost") if "cost" in card else 0)
 	if game_state.player.energy < cost:
@@ -47,11 +61,10 @@ func play_card(game_state, card, targets: Array = []):
 	return check_combat_end(game_state)
 
 
-func end_turn(game_state):
+func _execute_end_turn(game_state):
 	execute_player_end(game_state)
 	execute_enemy_turn(game_state)
-	var result = check_combat_end(game_state)
-	return result
+	return check_combat_end(game_state)
 
 
 func execute_player_end(game_state) -> void:
@@ -78,12 +91,10 @@ func execute_enemy_turn(game_state) -> void:
 		elif "damage" in enemy:
 			damage = int(enemy.damage)
 		if damage > 0:
-			if game_state.player.has_method("take_damage"):
-				game_state.player.take_damage(damage, enemy)
-			else:
-				_apply_player_damage_with_block(game_state.player, damage)
+			game_state.add_action(StmCombatActions.EnemyAttackAction.new(enemy, game_state.player, damage))
 		if enemy.has_method("end_turn"):
 			enemy.end_turn(game_state, self)
+	game_state.drive_actions()
 	combat_state.current_phase = "player_start"
 
 

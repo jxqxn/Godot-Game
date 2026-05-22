@@ -6,10 +6,12 @@ var draw_pile: Array = []
 var discard_pile: Array = []
 var hand: Array = []
 var exhaust_pile: Array = []
+var rng: RandomNumberGenerator = RandomNumberGenerator.new()
 
 
 func _init(initial_deck: Array = []) -> void:
 	deck = initial_deck.duplicate()
+	rng.seed = 20260522
 
 
 func reset_for_combat() -> void:
@@ -22,7 +24,7 @@ func reset_for_combat() -> void:
 			draw_pile.append(card.copy())
 		else:
 			draw_pile.append(card)
-	draw_pile.shuffle()
+	draw_pile = _shuffled_copy(draw_pile)
 
 
 func get_pile(pile_name: String) -> Array:
@@ -49,7 +51,7 @@ func add_to_pile(pile_name: String, card, pos_type = StmTypes.PilePosType.TOP) -
 		StmTypes.PilePosType.BOTTOM:
 			pile.append(card)
 		StmTypes.PilePosType.RANDOM:
-			var index: int = randi_range(0, pile.size())
+			var index: int = rng.randi_range(0, pile.size())
 			pile.insert(index, card)
 		_:
 			pile.push_front(card)
@@ -91,7 +93,7 @@ func shuffle_discard_to_draw() -> void:
 		return
 	draw_pile.append_array(discard_pile)
 	discard_pile.clear()
-	draw_pile.shuffle()
+	draw_pile = _shuffled_copy(draw_pile)
 
 
 func draw_one():
@@ -140,3 +142,13 @@ func exhaust_card(card) -> bool:
 	remove_from_pile(location, card)
 	exhaust_pile.append(card)
 	return true
+
+
+func _shuffled_copy(source: Array) -> Array:
+	var result: Array = source.duplicate()
+	for i in range(result.size() - 1, 0, -1):
+		var j = rng.randi_range(0, i)
+		var tmp = result[i]
+		result[i] = result[j]
+		result[j] = tmp
+	return result

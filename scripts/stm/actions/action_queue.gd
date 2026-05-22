@@ -4,15 +4,22 @@ extends RefCounted
 var queue: Array = []
 
 
-func add_action(action) -> void:
+func add_action(action, to_front: bool = false) -> void:
 	if action == null:
+		return
+	if to_front:
+		queue.push_front(action)
 		return
 	queue.append(action)
 
 
-func add_actions(actions: Array) -> void:
+func add_actions(actions: Array, to_front: bool = false) -> void:
+	if to_front:
+		for index in range(actions.size() - 1, -1, -1):
+			add_action(actions[index], true)
+		return
 	for action in actions:
-		add_action(action)
+		add_action(action, false)
 
 
 func execute_next(game_state) -> int:

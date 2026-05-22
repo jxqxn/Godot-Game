@@ -2,6 +2,24 @@ extends GutTest
 
 const GameBootstrapScript := preload("res://scripts/stm/engine/game_bootstrap.gd")
 const TypesScript := preload("res://scripts/stm/utils/types.gd")
+const ActionQueueScript := preload("res://scripts/stm/actions/action_queue.gd")
+const GameStateScript := preload("res://scripts/stm/engine/game_state.gd")
+const CreatureScript := preload("res://scripts/stm/entities/creature.gd")
+const EnemyScript := preload("res://scripts/stm/enemies/enemy.gd")
+
+class LabeledAction:
+	extends RefCounted
+
+	var label: String
+	var sink: Array
+
+	func _init(p_label: String, p_sink: Array) -> void:
+		label = p_label
+		sink = p_sink
+
+	func execute(_game_state) -> int:
+		sink.append(label)
+		return TypesScript.TerminalResult.NONE
 
 func _find_card_by_name(cards: Array, card_name: String):
 	for card in cards:
@@ -101,3 +119,68 @@ func test_combat_reports_win_when_all_enemies_reach_zero_hp() -> void:
 	# Then：战斗返回胜利结果。
 	assert_eq(result, TypesScript.TerminalResult.COMBAT_WIN)
 	assert_true(enemy.is_dead())
+
+
+func test_action_queue_and_game_state_support_to_front_order() -> void:
+	# Given：一个 ActionQueue 与 GameState，并准备 A/B/C 三个带标签的动作。
+	var queue = ActionQueueScript.new()
+	var game_state = GameStateScript.new()
+	var executed: Array = []
+	var action_a = _labeled_action("A", executed)
+	var action_b = _labeled_action("B", executed)
+	var action_c = _labeled_action("C", executed)
+	# When：先入队 A/B，再将 C 以前插方式加入并执行全部动作。
+	queue.add_action(action_a)
+	queue.add_action(action_b)
+	queue.add_action(action_c, true)
+	queue.execute_all(game_state)
+	# Then：执行顺序应为 C -> A -> B；GameState 的 to_front 透传也应满足同样顺序。
+	assert_eq(executed, ["C", "A", "B"])
+	executed.clear()
+	game_state.add_actions([action_a, action_b], false)
+	game_state.add_action(action_c, true)
+	game_state.drive_actions()
+	assert_eq(executed, ["C", "A", "B"])
+
+
+func test_player_and_dummy_enemy_use_shared_inheritance() -> void:
+	# Given：创建测试玩家与测试敌人实例。
+	var bootstrap = GameBootstrapScript.new()
+	var game_state = bootstrap.create_test_game()
+	var enemy = bootstrap.create_test_combat(game_state).enemies[0]
+	# When：检查类型与脚本继承路径。
+	var player = game_state.player
+	var enemy_script_path = enemy.get_script().resource_path
+	# Then：玩家应为 StmCreature；DummyEnemy 应为 StmEnemy 的子类并共享 Creature 行为。
+	assert_true(player is CreatureScript)
+	assert_true(enemy is EnemyScript)
+	assert_true(enemy is CreatureScript)
+	assert_eq(enemy_script_path, "res://scripts/stm/enemies/test/dummy_enemy.gd")
+
+
+func test_combat_public_api_drives_state_changes_via_action_queue() -> void:
+	# Given：开始一场战斗并定位手牌中的 Strike/Defend。
+	var bootstrap = GameBootstrapScript.new()
+	var game_state = bootstrap.create_test_game()
+	var combat = bootstrap.create_test_combat(game_state)
+	combat.start(game_state)
+	var enemy = combat.enemies[0]
+	var strike = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "Strike")
+	var defend = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "Defend")
+	var start_hp = game_state.player.hp
+	# When：连续打出 Strike、Defend，然后结束回合。
+	var strike_result = combat.play_card(game_state, strike, [enemy])
+	var defend_result = combat.play_card(game_state, defend, [])
+	var end_result = combat.end_turn(game_state)
+	# Then：公共 API 结果不变，且执行后队列为空并回到玩家回合开始阶段。
+	assert_eq(strike_result, TypesScript.TerminalResult.NONE)
+	assert_eq(defend_result, TypesScript.TerminalResult.NONE)
+	assert_eq(end_result, TypesScript.TerminalResult.NONE)
+	assert_eq(enemy.hp, enemy.max_hp - 6)
+	assert_eq(game_state.player.hp, start_hp - 1)
+	assert_true(game_state.action_queue.is_empty())
+	assert_eq(combat.combat_state.current_phase, "player_start")
+
+
+func _labeled_action(label: String, sink: Array):
+	return LabeledAction.new(label, sink)

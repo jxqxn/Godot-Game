@@ -16,12 +16,12 @@ class AttackAction:
 
 	func execute(_game_state = null):
 		if target == null:
-			return
+			return StmTypes.TerminalResult.NONE
 		if target.has_method("take_damage"):
 			target.take_damage(damage, source)
-			return
-		if "hp" in target:
+		elif "hp" in target:
 			target.hp -= damage
+		return StmTypes.TerminalResult.NONE
 
 
 class EnemyAttackAction:
@@ -38,7 +38,7 @@ class EnemyAttackAction:
 
 	func execute(_game_state = null):
 		var attack = AttackAction.new(enemy, player, damage)
-		attack.execute()
+		return attack.execute()
 
 
 class GainBlockAction:
@@ -53,12 +53,12 @@ class GainBlockAction:
 
 	func execute(_game_state = null):
 		if target == null:
-			return
+			return StmTypes.TerminalResult.NONE
 		if target.has_method("gain_block"):
 			target.gain_block(amount)
-			return
-		if "block" in target:
+		elif "block" in target:
 			target.block += amount
+		return StmTypes.TerminalResult.NONE
 
 
 class DrawCardsAction:
@@ -73,9 +73,10 @@ class DrawCardsAction:
 
 	func execute(_game_state = null):
 		if player == null or player.card_manager == null:
-			return
+			return StmTypes.TerminalResult.NONE
 		if player.card_manager.has_method("draw_many"):
 			player.card_manager.draw_many(amount)
+		return StmTypes.TerminalResult.NONE
 
 
 class DiscardCardAction:
@@ -90,9 +91,10 @@ class DiscardCardAction:
 
 	func execute(_game_state = null):
 		if player == null or player.card_manager == null:
-			return
+			return StmTypes.TerminalResult.NONE
 		if player.card_manager.has_method("discard_card"):
 			player.card_manager.discard_card(card)
+		return StmTypes.TerminalResult.NONE
 
 
 class PlayCardAction:
@@ -109,10 +111,10 @@ class PlayCardAction:
 
 	func execute(game_state = null):
 		if combat == null:
-			return
-		if combat.has_method("play_card"):
-			return combat.play_card(game_state, card, targets)
-		return null
+			return StmTypes.TerminalResult.NONE
+		if combat.has_method("_execute_play_card"):
+			return combat._execute_play_card(game_state, card, targets)
+		return StmTypes.TerminalResult.NONE
 
 
 class EndTurnAction:
@@ -125,7 +127,7 @@ class EndTurnAction:
 
 	func execute(game_state = null):
 		if combat == null:
-			return
-		if combat.has_method("end_turn"):
-			return combat.end_turn(game_state)
-		return null
+			return StmTypes.TerminalResult.NONE
+		if combat.has_method("_execute_end_turn"):
+			return combat._execute_end_turn(game_state)
+		return StmTypes.TerminalResult.NONE
