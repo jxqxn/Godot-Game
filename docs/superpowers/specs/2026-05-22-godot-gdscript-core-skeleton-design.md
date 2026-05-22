@@ -31,6 +31,46 @@ The directory and class model should remain close to the Python project, but imp
 - Keep script files focused and small so later content expansion does not require moving core logic again.
 - Avoid porting Python-only patterns such as decorators, dynamic imports, broad global module side effects, and TUI printing.
 
+## Safety Model
+
+This stage is intentionally local, deterministic, and low-risk:
+
+- Treat `slay-the-model-main/` as read-only reference material. Do not edit, delete, rename, or mechanically rewrite files inside it.
+- Do not run or embed the Python engine from Godot. The new GDScript rules layer must stand on its own.
+- Do not add network calls, API keys, model calls, telemetry, save upload, or remote content loading.
+- Do not add external Godot addons or package dependencies.
+- Do not write outside the Godot project directory.
+- Do not create destructive editor tooling, code generators, or bulk file rewrite scripts in this stage.
+- Keep tests deterministic: no unseeded random assertions, no dependency on wall-clock time, and no dependency on user input.
+- Keep rule tests headless so they can run without launching an interactive Godot editor window.
+
+## Boundary Contracts
+
+The first implementation should make boundaries explicit enough that future systems can plug in without moving core logic:
+
+- `scripts/stm/engine/` owns game and combat orchestration. It may coordinate player, enemies, cards, and actions, but should not contain per-card or per-enemy content rules.
+- `scripts/stm/actions/` owns executable mutations. Actions may mutate `GameState`, `Player`, `Creature`, card piles, and combat phase through explicit references.
+- `scripts/stm/entities/` owns shared creature state only. It should not know about card piles, combat phase, UI, or encounter selection.
+- `scripts/stm/cards/` owns card data and card behavior. Cards can validate playability and enqueue or return actions, but should not own the combat loop.
+- `scripts/stm/player/` owns player-specific state and card pile movement. It should not know enemy intention selection.
+- `scripts/stm/enemies/` owns enemy state and simple intention behavior. It should not know player card pile internals.
+- `scripts/stm/tests/` may use test-only content directly. Production-facing core files should not depend on test files.
+- Future UI scenes may read state and call public combat/game methods, but UI must not become the owner of rules logic.
+- Future full systems such as powers, relics, potions, rooms, map, rewards, localization, and message bus are extension points, not hidden requirements for this stage.
+
+## Dependencies
+
+The skeleton depends only on the existing local Godot project and built-in Godot/GDScript features:
+
+- Godot version: 4.6.2, matching the current project metadata.
+- Language/runtime: GDScript only for the new rules skeleton.
+- Required external tools for verification: the local Godot executable used by the project.
+- No Python runtime dependency for the new GDScript skeleton.
+- No third-party Godot addons.
+- No network access.
+- No external assets required for the headless rules tests.
+- No autoload singleton requirement in the first stage; `GameBootstrap` can construct `GameState` directly for tests. A future implementation may add an autoload after the rules layer is stable.
+
 ## Initial Godot File Structure
 
 Create a `scripts/stm/` package-like folder for the converted rules engine:
