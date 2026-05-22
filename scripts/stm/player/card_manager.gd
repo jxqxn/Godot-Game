@@ -1,0 +1,142 @@
+class_name StmCardManager
+extends RefCounted
+
+var deck: Array = []
+var draw_pile: Array = []
+var discard_pile: Array = []
+var hand: Array = []
+var exhaust_pile: Array = []
+
+
+func _init(initial_deck: Array = []) -> void:
+	deck = initial_deck.duplicate()
+
+
+func reset_for_combat() -> void:
+	draw_pile.clear()
+	discard_pile.clear()
+	hand.clear()
+	exhaust_pile.clear()
+	for card in deck:
+		if card != null and card.has_method("copy"):
+			draw_pile.append(card.copy())
+		else:
+			draw_pile.append(card)
+	draw_pile.shuffle()
+
+
+func get_pile(pile_name: String) -> Array:
+	match pile_name:
+		"deck":
+			return deck
+		"draw_pile":
+			return draw_pile
+		"discard_pile":
+			return discard_pile
+		"hand":
+			return hand
+		"exhaust_pile":
+			return exhaust_pile
+		_:
+			return []
+
+
+func add_to_pile(pile_name: String, card, pos_type = StmTypes.PilePosType.TOP) -> bool:
+	var pile = get_pile(pile_name)
+	if pile.is_empty() and pile_name not in ["deck", "draw_pile", "discard_pile", "hand", "exhaust_pile"]:
+		return false
+	match int(pos_type):
+		StmTypes.PilePosType.BOTTOM:
+			pile.append(card)
+		StmTypes.PilePosType.RANDOM:
+			var index := randi_range(0, pile.size())
+			pile.insert(index, card)
+		_:
+			pile.push_front(card)
+	return true
+
+
+func get_card_location(card) -> String:
+	if deck.has(card):
+		return "deck"
+	if draw_pile.has(card):
+		return "draw_pile"
+	if discard_pile.has(card):
+		return "discard_pile"
+	if hand.has(card):
+		return "hand"
+	if exhaust_pile.has(card):
+		return "exhaust_pile"
+	return ""
+
+
+func remove_from_pile(pile_name: String, card) -> bool:
+	var pile = get_pile(pile_name)
+	var index := pile.find(card)
+	if index < 0:
+		return false
+	pile.remove_at(index)
+	return true
+
+
+func move_to(card, to_pile: String, pos_type = StmTypes.PilePosType.TOP) -> bool:
+	var from_pile := get_card_location(card)
+	if from_pile != "":
+		remove_from_pile(from_pile, card)
+	return add_to_pile(to_pile, card, pos_type)
+
+
+func shuffle_discard_to_draw() -> void:
+	if discard_pile.is_empty():
+		return
+	draw_pile.append_array(discard_pile)
+	discard_pile.clear()
+	draw_pile.shuffle()
+
+
+func draw_one():
+	if draw_pile.is_empty():
+		shuffle_discard_to_draw()
+	if draw_pile.is_empty():
+		return null
+	var card = draw_pile.pop_back()
+	hand.append(card)
+	return card
+
+
+func draw_many(amount: int) -> Array:
+	var drawn: Array = []
+	var count := max(0, amount)
+	for _i in count:
+		var card = draw_one()
+		if card == null:
+			break
+		drawn.append(card)
+	return drawn
+
+
+func discard(card) -> bool:
+	if not hand.has(card):
+		return false
+	hand.erase(card)
+	discard_pile.append(card)
+	return true
+
+
+func discard_card(card) -> bool:
+	return discard(card)
+
+
+func discard_hand() -> void:
+	var cards = hand.duplicate()
+	for card in cards:
+		discard(card)
+
+
+func exhaust_card(card) -> bool:
+	var location = get_card_location(card)
+	if location == "":
+		return false
+	remove_from_pile(location, card)
+	exhaust_pile.append(card)
+	return true
