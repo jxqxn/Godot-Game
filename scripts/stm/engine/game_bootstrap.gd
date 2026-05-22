@@ -19,4 +19,3 @@ func create_combat(game_state, enemies: Array = [], combat_type: String = "norma
 	var combat = combat_script.new(enemies, combat_type)
 	game_state.current_combat = combat
 	return combat
-
