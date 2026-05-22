@@ -42,14 +42,14 @@ func get_pile(pile_name: String) -> Array:
 
 
 func add_to_pile(pile_name: String, card, pos_type = StmTypes.PilePosType.TOP) -> bool:
-	var pile = get_pile(pile_name)
+	var pile: Array = get_pile(pile_name)
 	if pile.is_empty() and pile_name not in ["deck", "draw_pile", "discard_pile", "hand", "exhaust_pile"]:
 		return false
 	match int(pos_type):
 		StmTypes.PilePosType.BOTTOM:
 			pile.append(card)
 		StmTypes.PilePosType.RANDOM:
-			var index := randi_range(0, pile.size())
+			var index: int = randi_range(0, pile.size())
 			pile.insert(index, card)
 		_:
 			pile.push_front(card)
@@ -71,8 +71,8 @@ func get_card_location(card) -> String:
 
 
 func remove_from_pile(pile_name: String, card) -> bool:
-	var pile = get_pile(pile_name)
-	var index := pile.find(card)
+	var pile: Array = get_pile(pile_name)
+	var index: int = pile.find(card)
 	if index < 0:
 		return false
 	pile.remove_at(index)
@@ -80,7 +80,7 @@ func remove_from_pile(pile_name: String, card) -> bool:
 
 
 func move_to(card, to_pile: String, pos_type = StmTypes.PilePosType.TOP) -> bool:
-	var from_pile := get_card_location(card)
+	var from_pile: String = get_card_location(card)
 	if from_pile != "":
 		remove_from_pile(from_pile, card)
 	return add_to_pile(to_pile, card, pos_type)
@@ -106,7 +106,7 @@ func draw_one():
 
 func draw_many(amount: int) -> Array:
 	var drawn: Array = []
-	var count := max(0, amount)
+	var count: int = max(0, amount)
 	for _i in count:
 		var card = draw_one()
 		if card == null:
@@ -134,7 +134,7 @@ func discard_hand() -> void:
 
 
 func exhaust_card(card) -> bool:
-	var location = get_card_location(card)
+	var location: String = get_card_location(card)
 	if location == "":
 		return false
 	remove_from_pile(location, card)

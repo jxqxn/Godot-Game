@@ -51,8 +51,6 @@ func end_turn(game_state):
 	execute_player_end(game_state)
 	execute_enemy_turn(game_state)
 	var result = check_combat_end(game_state)
-	if result == _result_none():
-		start_player_turn(game_state)
 	return result
 
 
@@ -61,7 +59,6 @@ func execute_player_end(game_state) -> void:
 		return
 	if game_state.player.card_manager.has_method("discard_hand"):
 		game_state.player.card_manager.discard_hand()
-	game_state.player.block = 0
 	combat_state.current_phase = "enemy_turn"
 
 
