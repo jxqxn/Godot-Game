@@ -51,7 +51,7 @@ func test_defend_button_plays_defend_and_refreshes_display() -> void:
 	assert_true(_label_text(scene, "Layout/HandLabel").contains("手牌（3）："))
 
 
-func test_end_turn_button_resolves_enemy_turn_and_refreshes_display() -> void:
+func test_end_turn_button_starts_next_player_turn_and_reenables_card_buttons() -> void:
 	# Given：调试场景中玩家已打出 Defend 并获得 5 点格挡。
 	var scene = _instantiate_debug_scene()
 	assert_not_null(scene)
@@ -60,11 +60,13 @@ func test_end_turn_button_resolves_enemy_turn_and_refreshes_display() -> void:
 	_press_button(scene, "Layout/Buttons/DefendButton")
 	# When：点击结束回合按钮。
 	_press_button(scene, "Layout/Buttons/EndTurnButton")
-	# Then：DummyEnemy 的攻击被格挡抵消 5 点，玩家只损失 1 点血量，界面刷新到最新状态。
+	# Then：DummyEnemy 的攻击被格挡抵消 5 点，玩家只损失 1 点血量，并进入可继续出牌的新玩家回合。
 	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：69/70")
 	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：0")
-	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：2/3")
-	assert_true(_label_text(scene, "Layout/HandLabel").contains("手牌（0）：无"))
+	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：3/3")
+	assert_true(_label_text(scene, "Layout/HandLabel").contains("手牌（"))
+	assert_false(_button_disabled(scene, "Layout/Buttons/StrikeButton"))
+	assert_false(_button_disabled(scene, "Layout/Buttons/DefendButton"))
 
 
 func _instantiate_debug_scene():
@@ -91,3 +93,10 @@ func _press_button(scene: Node, node_path: String) -> void:
 	if button == null:
 		return
 	button.emit_signal("pressed")
+
+
+func _button_disabled(scene: Node, node_path: String) -> bool:
+	var button = scene.get_node_or_null(node_path)
+	if button == null:
+		return true
+	return button.disabled

@@ -152,7 +152,7 @@ func test_defend_spends_energy_grants_block_and_discards() -> void:
 	assert_eq(game_state.player.block, 5)
 	assert_true(game_state.player.card_manager.get_pile("discard_pile").has(defend))
 
-func test_end_turn_discards_hand_and_enemy_damage_uses_block() -> void:
+func test_end_turn_discards_hand_enemy_damage_uses_block_and_starts_next_player_turn() -> void:
 	# Given：玩家已打出 Defend 并保留 5 点格挡，手牌中还有其他牌。
 	var bootstrap = GameBootstrapScript.new()
 	var game_state = bootstrap.create_test_game()
@@ -163,11 +163,12 @@ func test_end_turn_discards_hand_and_enemy_damage_uses_block() -> void:
 	var starting_hp = game_state.player.hp
 	# When：玩家结束回合，DummyEnemy 执行 6 点攻击。
 	var result = combat.end_turn(game_state)
-	# Then：剩余手牌进入弃牌堆，格挡抵消 5 点伤害，玩家只损失 1 点 HP。
+	# Then：剩余手牌先进入弃牌堆，格挡抵消 5 点伤害，玩家只损失 1 点 HP，并开始下一玩家回合。
 	assert_eq(result, TypesScript.TerminalResult.NONE)
-	assert_eq(game_state.player.card_manager.get_pile("hand").size(), 0)
 	assert_eq(game_state.player.hp, starting_hp - 1)
 	assert_eq(game_state.player.block, 0)
+	assert_eq(game_state.player.energy, game_state.player.max_energy)
+	assert_true(game_state.player.card_manager.get_pile("hand").size() > 0)
 	assert_eq(combat.combat_state.current_phase, "player_start")
 
 func test_combat_reports_win_when_all_enemies_reach_zero_hp() -> void:
@@ -244,6 +245,7 @@ func test_combat_public_api_drives_state_changes_via_action_queue() -> void:
 	assert_eq(enemy.hp, enemy.max_hp - 6)
 	assert_eq(game_state.player.hp, start_hp - 1)
 	assert_true(game_state.action_queue.is_empty())
+	assert_true(game_state.player.card_manager.get_pile("hand").size() > 0)
 	assert_eq(combat.combat_state.current_phase, "player_start")
 
 

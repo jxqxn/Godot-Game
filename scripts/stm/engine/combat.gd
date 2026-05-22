@@ -71,7 +71,11 @@ func _execute_end_turn(game_state):
 	var enemy_result = execute_enemy_turn(game_state)
 	if enemy_result != _result_none():
 		return enemy_result
-	return check_combat_end(game_state)
+	var combat_end_result = check_combat_end(game_state)
+	if combat_end_result != _result_none():
+		return combat_end_result
+	start_player_turn(game_state)
+	return _result_none()
 
 
 func execute_player_end(game_state) -> void:
