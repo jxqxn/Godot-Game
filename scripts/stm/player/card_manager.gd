@@ -82,10 +82,17 @@ func remove_from_pile(pile_name: String, card) -> bool:
 
 
 func move_to(card, to_pile: String, pos_type = StmTypes.PilePosType.TOP) -> bool:
+	if not _is_valid_pile_name(to_pile):
+		return false
 	var from_pile: String = get_card_location(card)
-	if from_pile != "":
-		remove_from_pile(from_pile, card)
-	return add_to_pile(to_pile, card, pos_type)
+	if from_pile == "":
+		return add_to_pile(to_pile, card, pos_type)
+	if not remove_from_pile(from_pile, card):
+		return false
+	if add_to_pile(to_pile, card, pos_type):
+		return true
+	add_to_pile(from_pile, card, StmTypes.PilePosType.TOP)
+	return false
 
 
 func shuffle_discard_to_draw() -> void:
@@ -152,3 +159,7 @@ func _shuffled_copy(source: Array) -> Array:
 		result[i] = result[j]
 		result[j] = tmp
 	return result
+
+
+func _is_valid_pile_name(pile_name: String) -> bool:
+	return pile_name in ["deck", "draw_pile", "discard_pile", "hand", "exhaust_pile"]

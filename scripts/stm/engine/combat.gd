@@ -34,7 +34,10 @@ func play_card(game_state, card, targets: Array = []):
 	if game_state == null:
 		return _result_none()
 	game_state.add_action(StmCombatActions.PlayCardAction.new(self, card, targets))
-	return game_state.drive_actions()
+	var result = game_state.drive_actions()
+	if result != _result_none():
+		return result
+	return check_combat_end(game_state)
 
 
 func end_turn(game_state):
@@ -56,17 +59,18 @@ func _execute_play_card(game_state, card, targets: Array = []):
 	if card.has_method("play"):
 		var actions = card.play(game_state, self, targets)
 		if actions is Array and actions.size() > 0:
-			game_state.add_actions(actions)
-			game_state.drive_actions()
+			game_state.add_actions(actions, true)
 	var card_manager = game_state.player.card_manager
 	if card_manager != null and card_manager.has_method("discard_card"):
 		card_manager.discard_card(card)
-	return check_combat_end(game_state)
+	return _result_none()
 
 
 func _execute_end_turn(game_state):
 	execute_player_end(game_state)
-	execute_enemy_turn(game_state)
+	var enemy_result = execute_enemy_turn(game_state)
+	if enemy_result != _result_none():
+		return enemy_result
 	return check_combat_end(game_state)
 
 
@@ -78,27 +82,38 @@ func execute_player_end(game_state) -> void:
 	combat_state.current_phase = "enemy_turn"
 
 
-func execute_enemy_turn(game_state) -> void:
+func execute_enemy_turn(game_state):
 	if game_state.player == null:
-		return
+		return _result_none()
 	for enemy in enemies:
 		if enemy == null:
 			continue
 		if enemy.has_method("is_dead") and enemy.is_dead():
 			continue
-		var damage: int = 0
-		if enemy.has_method("get_intended_damage"):
-			damage = int(enemy.get_intended_damage())
-		elif "intent_damage" in enemy:
-			damage = int(enemy.intent_damage)
-		elif "damage" in enemy:
-			damage = int(enemy.damage)
-		if damage > 0:
-			game_state.add_action(StmCombatActions.EnemyAttackAction.new(enemy, game_state.player, damage))
+		if enemy.has_method("determine_next_intention"):
+			enemy.determine_next_intention()
+		var intention_actions: Array = []
+		if enemy.has_method("execute_intention"):
+			var produced_actions = enemy.execute_intention(game_state, self)
+			if produced_actions is Array:
+				intention_actions = produced_actions
+		if intention_actions.size() > 0:
+			game_state.add_actions(intention_actions)
+		else:
+			var damage: int = 0
+			if enemy.has_method("get_intended_damage"):
+				damage = int(enemy.get_intended_damage())
+			elif "intent_damage" in enemy:
+				damage = int(enemy.intent_damage)
+			elif "damage" in enemy:
+				damage = int(enemy.damage)
+			if damage > 0:
+				game_state.add_action(StmCombatActions.EnemyAttackAction.new(enemy, game_state.player, damage))
 		if enemy.has_method("end_turn"):
 			enemy.end_turn(game_state, self)
-	game_state.drive_actions()
+	var result = game_state.drive_actions()
 	combat_state.current_phase = "player_start"
+	return result if typeof(result) == TYPE_INT else _result_none()
 
 
 func check_combat_end(game_state):

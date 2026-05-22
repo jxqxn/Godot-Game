@@ -1,6 +1,6 @@
 extends GutTest
 
-const GameBootstrapScript := preload("res://scripts/stm/engine/game_bootstrap.gd")
+const GameBootstrapScript := preload("res://scripts/stm/tests/test_bootstrap.gd")
 const TypesScript := preload("res://scripts/stm/utils/types.gd")
 const ActionQueueScript := preload("res://scripts/stm/actions/action_queue.gd")
 const GameStateScript := preload("res://scripts/stm/engine/game_state.gd")
@@ -42,6 +42,48 @@ class RecordingActionQueue:
 
 	func is_empty() -> bool:
 		return added_actions.is_empty()
+
+
+class TerminalAction:
+	extends RefCounted
+
+	var terminal_result: int
+
+	func _init(p_terminal_result: int) -> void:
+		terminal_result = p_terminal_result
+
+	func execute(_game_state) -> int:
+		return terminal_result
+
+
+class TerminalCard:
+	extends RefCounted
+
+	var cost: int = 1
+	var card_name: String = "TerminalCard"
+
+	func play(_game_state, _combat, _targets: Array = []) -> Array:
+		return [TerminalAction.new(TypesScript.TerminalResult.COMBAT_WIN)]
+
+
+class IntentionEnemy:
+	extends EnemyScript
+
+	var determine_called: bool = false
+	var execute_called: bool = false
+
+	func _init() -> void:
+		super(20, "IntentionEnemy", 9)
+		intent_damage = 9
+
+	func determine_next_intention() -> String:
+		determine_called = true
+		current_intention = "attack"
+		return current_intention
+
+	func execute_intention(game_state, _combat) -> Array:
+		execute_called = true
+		return [StmCombatActions.EnemyAttackAction.new(self, game_state.player, 4)]
 
 
 func _find_card_by_name(cards: Array, card_name: String):
@@ -249,6 +291,65 @@ func test_card_play_only_returns_actions_without_driving_queue() -> void:
 	assert_eq(enemy.hp, start_enemy_hp)
 	assert_eq(game_state.player.block, start_block)
 	assert_eq(game_state.action_queue.queue.size(), start_queue_size)
+
+
+func test_play_card_action_result_is_not_swallowed_by_nested_drive() -> void:
+	# Given: 一场已开始的战斗，手牌中放入会返回 COMBAT_WIN 终局动作的测试卡。
+	var bootstrap = GameBootstrapScript.new()
+	var game_state = bootstrap.create_test_game()
+	var combat = bootstrap.create_test_combat(game_state)
+	combat.start(game_state)
+	var card = TerminalCard.new()
+	game_state.player.card_manager.get_pile("hand").append(card)
+	# When: 通过 Combat 公共入口打出该卡。
+	var result = combat.play_card(game_state, card, [])
+	# Then: 返回值应传播为 COMBAT_WIN，不应被吞掉。
+	assert_eq(result, TypesScript.TerminalResult.COMBAT_WIN)
+
+
+func test_move_to_invalid_pile_keeps_card_in_source_pile() -> void:
+	# Given: 手牌中有一张卡，且目标牌堆名称非法。
+	var bootstrap = GameBootstrapScript.new()
+	var game_state = bootstrap.create_test_game()
+	var card_manager = game_state.player.card_manager
+	card_manager.reset_for_combat()
+	var card = card_manager.draw_one()
+	assert_true(card_manager.get_pile("hand").has(card))
+	# When: 调用 move_to(card, "bad_pile")。
+	var moved = card_manager.move_to(card, "bad_pile")
+	# Then: 返回 false 且卡牌仍留在原始手牌堆，不会丢失。
+	assert_false(moved)
+	assert_true(card_manager.get_pile("hand").has(card))
+
+
+func test_execute_enemy_turn_uses_enemy_intention_actions() -> void:
+	# Given: 一个覆盖 execute_intention 的测试敌人，其 intent_damage 与返回动作伤害不同。
+	var bootstrap = GameBootstrapScript.new()
+	var game_state = bootstrap.create_test_game()
+	var enemy = IntentionEnemy.new()
+	var combat_script = load("res://scripts/stm/engine/combat.gd")
+	var combat = combat_script.new([enemy], "normal")
+	combat.start(game_state)
+	game_state.player.block = 0
+	var start_hp = game_state.player.hp
+	# When: 执行敌人回合。
+	combat.execute_enemy_turn(game_state)
+	# Then: 应调用 determine_next_intention/execute_intention，并以返回动作结算 4 点伤害。
+	assert_true(enemy.determine_called)
+	assert_true(enemy.execute_called)
+	assert_eq(game_state.player.hp, start_hp - 4)
+
+
+func test_production_bootstrap_is_generic_without_test_fixture_paths() -> void:
+	# Given: 生产 bootstrap 脚本源码文本。
+	var bootstrap_path = "res://scripts/stm/engine/game_bootstrap.gd"
+	var content = FileAccess.get_file_as_string(bootstrap_path)
+	# When: 检查是否包含测试目录硬编码。
+	var has_test_card_path = content.find("cards/test") >= 0
+	var has_test_enemy_path = content.find("enemies/test") >= 0
+	# Then: 生产 bootstrap 不应硬编码测试夹具路径。
+	assert_false(has_test_card_path)
+	assert_false(has_test_enemy_path)
 
 
 func _labeled_action(label: String, sink: Array):
