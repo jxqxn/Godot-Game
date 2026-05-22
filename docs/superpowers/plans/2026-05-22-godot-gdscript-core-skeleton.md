@@ -37,7 +37,9 @@
 - 所有新增代码注释使用中文。
 - 不修改 `slay-the-model-main/`。
 - 不联网安装依赖。
-- 如果 `addons/gut/gut_cmdln.gd` 不存在，记录为测试环境阻塞。
+- 当前仓库尚无 `addons/gut/gut_cmdln.gd`。执行任何测试步骤时仍使用 `godot -s addons/gut/gut_cmdln.gd`；若命令因为该文件缺失而失败，记录为“测试环境阻塞：缺少 `addons/gut/gut_cmdln.gd`”，不得改用其他测试入口，不得声称测试通过。
+- 在 GUT 缺失的状态下，只允许完成文档和测试文件写入；不得进入正式 GDScript 实现任务，除非用户明确允许在测试环境阻塞下继续。
+- 所有“运行测试”步骤只有两类有效结果：命令按预期 PASS/FAIL，或因缺少 `addons/gut/gut_cmdln.gd` 阻塞。其他结果必须先停下记录实际输出。
 
 ### Task 1: 创建 BDD 测试骨架
 
@@ -106,7 +108,7 @@ Run:
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: 如果 GUT 已安装，测试文件被发现且这些空测试通过；如果 `addons/gut/gut_cmdln.gd` 不存在，命令失败并报告测试环境阻塞。
+Expected: 二选一结果。结果 A：GUT 存在，命令成功，`scripts/stm/tests/core_skeleton_test.gd` 中 6 个空测试被执行并通过。结果 B：GUT 缺失，命令失败，记录“测试环境阻塞：缺少 `addons/gut/gut_cmdln.gd`”，并在获得用户允许前不进入 Task 3。
 
 - [ ] **Step 4: 提交测试骨架**
 
@@ -119,7 +121,7 @@ git commit -m "test: add core skeleton bdd scenarios"
 
 **Files:**
 - Modify: `scripts/stm/tests/core_skeleton_test.gd`
-- Create later in implementation tasks: all `scripts/stm/**/*.gd` files referenced by the test
+- Referenced scripts: `scripts/stm/engine/game_bootstrap.gd` 由 Task 6 创建，`scripts/stm/utils/types.gd` 由 Task 3 创建。
 
 - [ ] **Step 1: 写入完整失败测试**
 
@@ -239,7 +241,7 @@ Run:
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: FAIL。若 GUT 已安装，失败信息应包含缺失脚本路径，例如 `res://scripts/stm/engine/game_bootstrap.gd`。若 GUT 不存在，报告测试环境阻塞。
+Expected: 二选一结果。结果 A：GUT 存在，命令失败，首个失败原因是缺失 `res://scripts/stm/engine/game_bootstrap.gd` 或 `res://scripts/stm/utils/types.gd`。结果 B：GUT 缺失，命令失败，记录“测试环境阻塞：缺少 `addons/gut/gut_cmdln.gd`”，并在获得用户允许前不进入 Task 3。
 
 - [ ] **Step 3: 提交失败测试**
 
@@ -406,7 +408,7 @@ Run:
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: FAIL。失败仍来自缺失 `GameBootstrap` 或核心战斗类。
+Expected: GUT 存在时命令失败，首个失败原因仍是缺少 `StmGameBootstrap`、`StmCombat`、`StmPlayer`、`StmStrike`、`StmDefend` 或 `StmDummyEnemy`。若失败原因是 `types.gd`、`option.gd`、`action.gd` 或 `action_queue.gd` 的解析错误，必须在本任务内修正后重跑。
 
 - [ ] **Step 7: 提交基础类型和队列**
 
@@ -687,7 +689,7 @@ Run:
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: FAIL。失败应来自缺失玩家、敌人、战斗启动或战斗行为类。
+Expected: GUT 存在时命令失败，首个失败原因是缺少 `StmPlayer`、`StmEnemy`、`StmStrike`、`StmDefend`、`StmDummyEnemy`、`StmCombatActions`、`StmGameState`、`StmCombat` 或 `StmGameBootstrap`。若失败原因是 `creature.gd`、`card.gd` 或 `card_manager.gd` 的解析错误，必须在本任务内修正后重跑。
 
 - [ ] **Step 6: 提交生物、卡牌和牌堆管理**
 
@@ -823,7 +825,7 @@ Run:
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: FAIL。失败应来自缺失战斗行为、全局状态或启动器。
+Expected: GUT 存在时命令失败，首个失败原因是缺少 `StmCombatActions`、`StmCombatState`、`StmGameState`、`StmCombat` 或 `StmGameBootstrap`。若失败原因是 `player.gd`、`enemy.gd`、`strike.gd`、`defend.gd` 或 `dummy_enemy.gd` 的解析错误，必须在本任务内修正后重跑。
 
 - [ ] **Step 8: 提交玩家、敌人和测试内容**
 
@@ -1107,7 +1109,7 @@ Run:
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: PASS。若出现脚本解析错误，先修复 GDScript 类型或嵌套类语法，再重复运行同一命令。
+Expected: GUT 存在时命令 PASS，`scripts/stm/tests/core_skeleton_test.gd` 中 6 个测试全部通过。若命令失败，执行者只能修改本任务创建的 5 个文件和导致解析失败的前置 `scripts/stm/**/*.gd` 文件；不得删除测试断言，不得改用其他测试命令。修正后重复运行同一命令，直到 PASS 或遇到 GUT 缺失阻塞。
 
 - [ ] **Step 8: 提交战斗流程**
 
@@ -1164,19 +1166,63 @@ git status --short
 
 Expected: 没有未提交实现文件。
 
-- [ ] **Step 5: 提交最终验证修复**
+- [ ] **Step 5: 提交最终验证修正**
 
-如果 Step 2 或 Step 3 需要修复，修复后提交：
+执行条件：只有 Step 2 发现英文注释，或 Step 3 发现测试失败且已经完成修正时，才运行本步骤。
 
 ```powershell
 git add scripts\stm
 git commit -m "test: verify stm core skeleton"
 ```
 
-如果没有修复，跳过提交。
+Expected: 如果执行本步骤，提交成功且 `git status --short` 无未提交实现文件。如果 Step 2 和 Step 3 都无需改动，不运行本步骤。
 
 ## 自检记录
 
 - Spec 覆盖：计划覆盖 `scripts/stm/` 文件结构、ActionQueue 执行模型、Creature/Card/Player/Enemy/Combat/GameState 核心职责、Strike/Defend/DummyEnemy 最小内容、GUT/BDD 测试、安全边界、依赖和验收标准。
 - 占位词扫描：已检查常见未完成标记，计划中没有用于推迟实现的占位描述。
 - 类型一致性：统一使用 `StmTypes.TerminalResult.NONE`、`COMBAT_WIN`、`GAME_LOSE`、`COMBAT_ESCAPE`；统一使用 `card_name`、`current_combat`、`action_queue`、`draw_pile`、`discard_pile`、`exhaust_pile`。
+
+## 逐步歧义审查
+
+- Task 1 Step 1：无歧义。动作是创建 `scripts\stm\tests`，验收是目录存在。
+- Task 1 Step 2：无歧义。只写测试方法名、中文 Given-When-Then 注释和 `pass`，不写断言和正式代码。
+- Task 1 Step 3：已消除歧义。测试结果限定为 6 个空测试通过，或因缺少 GUT 阻塞。
+- Task 1 Step 4：无歧义。只提交 `scripts\stm\tests\core_skeleton_test.gd`。
+- Task 2 Step 1：无歧义。完整替换测试文件，保留每个测试的中文 Given-When-Then 注释。
+- Task 2 Step 2：已消除歧义。预期失败限定为缺少 `game_bootstrap.gd` 或 `types.gd`，GUT 缺失则阻塞。
+- Task 2 Step 3：无歧义。只提交测试文件。
+- Task 3 Step 1：无歧义。动作是创建 `utils` 和 `actions` 两个目录。
+- Task 3 Step 2：无歧义。完整写入 `types.gd` 中列出的枚举。
+- Task 3 Step 3：无歧义。完整写入 `option.gd`。
+- Task 3 Step 4：无歧义。完整写入 `action.gd`。
+- Task 3 Step 5：无歧义。完整写入 `action_queue.gd`。
+- Task 3 Step 6：已消除歧义。预期失败只允许来自尚未实现的后续核心类；本任务文件解析错误必须本任务修正。
+- Task 3 Step 7：无歧义。只提交 Task 3 创建的 4 个文件。
+- Task 4 Step 1：无歧义。动作是创建 `entities`、`cards` 和 `player` 三个目录。
+- Task 4 Step 2：无歧义。完整写入 `creature.gd`。
+- Task 4 Step 3：无歧义。完整写入 `card.gd`。
+- Task 4 Step 4：无歧义。完整写入 `card_manager.gd`。
+- Task 4 Step 5：已消除歧义。预期失败只允许来自尚未实现的玩家、敌人、战斗启动或战斗行为类；本任务文件解析错误必须本任务修正。
+- Task 4 Step 6：无歧义。只提交 Task 4 创建的 3 个文件。
+- Task 5 Step 1：无歧义。动作是创建测试卡牌和测试敌人目录。
+- Task 5 Step 2：无歧义。完整写入 `player.gd`。
+- Task 5 Step 3：无歧义。完整写入 `enemy.gd`。
+- Task 5 Step 4：无歧义。完整写入 `strike.gd`。
+- Task 5 Step 5：无歧义。完整写入 `defend.gd`。
+- Task 5 Step 6：无歧义。完整写入 `dummy_enemy.gd`。
+- Task 5 Step 7：已消除歧义。预期失败只允许来自尚未实现的战斗行为、全局状态或启动器；本任务文件解析错误必须本任务修正。
+- Task 5 Step 8：无歧义。只提交 Task 5 创建的 5 个文件。
+- Task 6 Step 1：无歧义。动作是创建 `engine` 目录。
+- Task 6 Step 2：无歧义。完整写入 `combat_actions.gd`。
+- Task 6 Step 3：无歧义。完整写入 `combat_state.gd`。
+- Task 6 Step 4：无歧义。完整写入 `game_state.gd`。
+- Task 6 Step 5：无歧义。完整写入 `combat.gd`。
+- Task 6 Step 6：无歧义。完整写入 `game_bootstrap.gd`。
+- Task 6 Step 7：已消除歧义。预期为 6 个测试全部通过；失败时只能修正本任务和前置 `scripts/stm/**/*.gd` 解析/实现问题，不能删断言或换命令。
+- Task 6 Step 8：无歧义。只提交 Task 6 创建的 5 个文件。
+- Task 7 Step 1：无歧义。`git status --short slay-the-model-main` 必须无输出。
+- Task 7 Step 2：无歧义。`rg` 输出只能是中文注释。
+- Task 7 Step 3：无歧义。必须使用 `godot -s addons/gut/gut_cmdln.gd`，结果必须 PASS 或 GUT 缺失阻塞。
+- Task 7 Step 4：无歧义。`git status --short` 必须无未提交实现文件。
+- Task 7 Step 5：已消除歧义。只有验证步骤实际产生修正时才提交；没有修正就不运行。
