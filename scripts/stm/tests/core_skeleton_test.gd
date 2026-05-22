@@ -21,6 +21,29 @@ class LabeledAction:
 		sink.append(label)
 		return TypesScript.TerminalResult.NONE
 
+
+class RecordingActionQueue:
+	extends RefCounted
+
+	var added_actions: Array = []
+	var executed_actions: Array = []
+
+	func add_action(action, _to_front: bool = false) -> void:
+		if action == null:
+			return
+		added_actions.append(action)
+
+	func drive(game_state):
+		for action in added_actions:
+			executed_actions.append(action)
+			if action.has_method("execute"):
+				action.execute(game_state)
+		return TypesScript.TerminalResult.NONE
+
+	func is_empty() -> bool:
+		return added_actions.is_empty()
+
+
 func _find_card_by_name(cards: Array, card_name: String):
 	for card in cards:
 		if card.card_name == card_name:
@@ -180,6 +203,52 @@ func test_combat_public_api_drives_state_changes_via_action_queue() -> void:
 	assert_eq(game_state.player.hp, start_hp - 1)
 	assert_true(game_state.action_queue.is_empty())
 	assert_eq(combat.combat_state.current_phase, "player_start")
+
+
+func test_combat_start_uses_draw_cards_action_queue_path() -> void:
+	# Given: 一个测试战斗，且 game_state.action_queue 被可记录替身替换。
+	var bootstrap = GameBootstrapScript.new()
+	var game_state = bootstrap.create_test_game()
+	var combat = bootstrap.create_test_combat(game_state)
+	var recording_queue = RecordingActionQueue.new()
+	game_state.action_queue = recording_queue
+	# When: 调用公共入口 combat.start(game_state)。
+	combat.start(game_state)
+	# Then: 应通过 DrawCardsAction 入队并执行，且手牌数量仍等于抽牌数。
+	var contains_draw_action := false
+	for action in recording_queue.added_actions:
+		if action is StmCombatActions.DrawCardsAction:
+			contains_draw_action = true
+			break
+	assert_true(contains_draw_action)
+	var executed_draw_action := false
+	for action in recording_queue.executed_actions:
+		if action is StmCombatActions.DrawCardsAction:
+			executed_draw_action = true
+			break
+	assert_true(executed_draw_action)
+	var expected_hand_size = min(game_state.player.draw_count, game_state.player.card_manager.get_pile("draw_pile").size() + game_state.player.card_manager.get_pile("hand").size())
+	assert_eq(game_state.player.card_manager.get_pile("hand").size(), expected_hand_size)
+
+
+func test_card_play_only_returns_actions_without_driving_queue() -> void:
+	# Given: 已开始战斗，手牌中有 Strike，记录玩家格挡、敌人血量与队列长度。
+	var bootstrap = GameBootstrapScript.new()
+	var game_state = bootstrap.create_test_game()
+	var combat = bootstrap.create_test_combat(game_state)
+	combat.start(game_state)
+	var enemy = combat.enemies[0]
+	var strike = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "Strike")
+	var start_enemy_hp = enemy.hp
+	var start_block = game_state.player.block
+	var start_queue_size = game_state.action_queue.queue.size()
+	# When: 直接调用 card.play(game_state, combat, [enemy])。
+	var actions = strike.play(game_state, combat, [enemy])
+	# Then: 卡牌层只返回动作，不应主动驱动调度或改变战斗状态。
+	assert_true(actions.size() > 0)
+	assert_eq(enemy.hp, start_enemy_hp)
+	assert_eq(game_state.player.block, start_block)
+	assert_eq(game_state.action_queue.queue.size(), start_queue_size)
 
 
 func _labeled_action(label: String, sink: Array):

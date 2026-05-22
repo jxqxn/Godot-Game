@@ -55,9 +55,6 @@ func on_play(_game_state, targets := []) -> Array:
 
 func play(game_state, _combat = null, targets := []):
 	var actions = on_play(game_state, targets)
-	if game_state != null and game_state.has_method("add_actions"):
-		game_state.add_actions(actions)
-		game_state.drive_actions()
 	return actions
 
 

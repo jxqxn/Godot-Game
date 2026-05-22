@@ -26,8 +26,8 @@ func start_player_turn(game_state) -> void:
 	if game_state.player == null:
 		return
 	game_state.player.energy = game_state.player.max_energy
-	if game_state.player.card_manager != null:
-		game_state.player.card_manager.draw_many(game_state.player.draw_count)
+	game_state.add_action(StmCombatActions.DrawCardsAction.new(game_state.player, game_state.player.draw_count))
+	game_state.drive_actions()
 
 
 func play_card(game_state, card, targets: Array = []):
@@ -54,7 +54,10 @@ func _execute_play_card(game_state, card, targets: Array = []):
 	combat_state.player_energy_spent_this_turn += cost
 	combat_state.turn_cards_played += 1
 	if card.has_method("play"):
-		card.play(game_state, self, targets)
+		var actions = card.play(game_state, self, targets)
+		if actions is Array and actions.size() > 0:
+			game_state.add_actions(actions)
+			game_state.drive_actions()
 	var card_manager = game_state.player.card_manager
 	if card_manager != null and card_manager.has_method("discard_card"):
 		card_manager.discard_card(card)
