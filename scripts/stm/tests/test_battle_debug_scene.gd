@@ -1,6 +1,7 @@
 extends GutTest
 
 const DEBUG_SCENE_PATH := "res://scenes/stm/battle_debug_scene.tscn"
+const FixedBattleFixtureScript := preload("res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd")
 
 
 func test_debug_scene_shows_initial_combat_state() -> void:
@@ -72,6 +73,66 @@ func test_debug_scene_records_fixed_battle_fixture_name() -> void:
 	assert_not_null(scene.enemy)
 	assert_eq(scene.combat.combat_type, "debug")
 	assert_eq(scene.enemy.enemy_name, "DummyEnemy")
+
+
+func test_debug_scene_rejects_inconsistent_fixture_context_without_changing_state() -> void:
+	# Given：调试场景已经有一场正常固定测试战斗。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	var original_game_state = scene.game_state
+	var original_combat = scene.combat
+	var original_enemy = scene.enemy
+	var original_fixture_name := str(scene.current_fixture_name)
+	var fixture = FixedBattleFixtureScript.new()
+	var other_context: Dictionary = fixture.create_context()
+	var mismatched_context := {
+		"name": "错配测试战斗",
+		"game_state": other_context["game_state"],
+		"combat": other_context["combat"],
+		"player": original_game_state.player,
+		"enemy": original_enemy,
+	}
+	# When：传入一个 game_state/player 不一致、combat/enemy 不一致的 fixture context。
+	var accepted: bool = scene._apply_fixture_context(mismatched_context)
+	# Then：_apply_fixture_context() 返回 false，且原来的状态保持不变。
+	assert_false(accepted)
+	assert_true(scene.game_state == original_game_state)
+	assert_true(scene.combat == original_combat)
+	assert_true(scene.enemy == original_enemy)
+	assert_eq(scene.current_fixture_name, original_fixture_name)
+
+
+func test_debug_scene_fixture_failure_clears_old_display_and_disables_all_actions() -> void:
+	# Given：调试场景已经显示一场正常战斗。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：70/70")
+	# When：触发 _handle_fixture_failure()。
+	scene._handle_fixture_failure()
+	# Then：界面显示无战斗状态，并禁用全部操作按钮与应用数值按钮。
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：无")
+	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：无")
+	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：无")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：无")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyIntentLabel"), "敌人意图：无")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyAttackLabel"), "预计攻击：无")
+	assert_eq(_label_text(scene, "Layout/PilesPanel/HandLabel"), "手牌（0）：无")
+	assert_eq(_label_text(scene, "Layout/PilesPanel/DrawPileLabel"), "抽牌堆（0）：无")
+	assert_eq(_label_text(scene, "Layout/PilesPanel/DiscardPileLabel"), "弃牌堆（0）：无")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput"), "")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnergyInput"), "")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/BlockInput"), "")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnemyHpInput"), "")
+	assert_true(_button_disabled(scene, "Layout/Buttons/StrikeButton"))
+	assert_true(_button_disabled(scene, "Layout/Buttons/DefendButton"))
+	assert_true(_button_disabled(scene, "Layout/Buttons/EndTurnButton"))
+	assert_true(_button_disabled(scene, "Layout/ValueEditor/ApplyValuesButton"))
+	assert_eq(_label_text(scene, "Layout/StatusLabel"), "测试战斗创建失败")
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("测试战斗创建失败"))
 
 
 func test_apply_values_updates_combat_state_and_display() -> void:

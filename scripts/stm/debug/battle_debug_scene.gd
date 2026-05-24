@@ -66,6 +66,10 @@ func _apply_fixture_context(context: Dictionary) -> bool:
 		return false
 	if context["game_state"].player == null:
 		return false
+	if context["game_state"].player != context["player"]:
+		return false
+	if not context["combat"].enemies.has(context["enemy"]):
+		return false
 	game_state = context["game_state"]
 	combat = context["combat"]
 	enemy = context["enemy"]
@@ -78,6 +82,7 @@ func _handle_fixture_failure() -> void:
 	combat = null
 	enemy = null
 	current_fixture_name = ""
+	_show_no_combat_display()
 	status_message = "测试战斗创建失败"
 	_reset_log()
 	_append_log(status_message)
@@ -91,6 +96,37 @@ func _handle_fixture_failure() -> void:
 		defend_button.disabled = true
 	if end_turn_button != null:
 		end_turn_button.disabled = true
+	if apply_values_button != null:
+		apply_values_button.disabled = true
+
+
+func _show_no_combat_display() -> void:
+	if player_hp_label != null:
+		player_hp_label.text = "玩家血量：无"
+	if energy_label != null:
+		energy_label.text = "能量：无"
+	if block_label != null:
+		block_label.text = "格挡：无"
+	if enemy_hp_label != null:
+		enemy_hp_label.text = "敌人血量：无"
+	if enemy_intent_label != null:
+		enemy_intent_label.text = "敌人意图：无"
+	if enemy_attack_label != null:
+		enemy_attack_label.text = "预计攻击：无"
+	if hand_label != null:
+		hand_label.text = "手牌（0）：无"
+	if draw_pile_label != null:
+		draw_pile_label.text = "抽牌堆（0）：无"
+	if discard_pile_label != null:
+		discard_pile_label.text = "弃牌堆（0）：无"
+	if player_hp_input != null:
+		player_hp_input.text = ""
+	if energy_input != null:
+		energy_input.text = ""
+	if block_input != null:
+		block_input.text = ""
+	if enemy_hp_input != null:
+		enemy_hp_input.text = ""
 
 
 func _build_ui() -> void:
