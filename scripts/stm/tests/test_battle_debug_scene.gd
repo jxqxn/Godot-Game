@@ -106,10 +106,12 @@ func test_strike_button_plays_strike_and_refreshes_display() -> void:
 		return
 	# When：点击 Strike 按钮。
 	_press_button(scene, "Layout/Buttons/StrikeButton")
-	# Then：敌人受到 6 点伤害，玩家消耗 1 点能量，界面刷新到最新状态。
+	# Then：敌人受到 6 点伤害，玩家消耗 1 点能量，手牌与弃牌堆刷新，并写入简洁日志。
 	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：14/20")
 	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：2/3")
 	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("手牌（3）："))
+	assert_true(_label_text(scene, "Layout/PilesPanel/DiscardPileLabel").contains("Strike"))
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("打出 Strike，敌人受到 6 点伤害"))
 
 
 func test_defend_button_plays_defend_and_refreshes_display() -> void:
@@ -120,10 +122,12 @@ func test_defend_button_plays_defend_and_refreshes_display() -> void:
 		return
 	# When：点击 Defend 按钮。
 	_press_button(scene, "Layout/Buttons/DefendButton")
-	# Then：玩家获得 5 点格挡，消耗 1 点能量，界面刷新到最新状态。
+	# Then：玩家获得 5 点格挡，消耗 1 点能量，手牌与弃牌堆刷新，并写入简洁日志。
 	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：5")
 	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：2/3")
 	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("手牌（3）："))
+	assert_true(_label_text(scene, "Layout/PilesPanel/DiscardPileLabel").contains("Defend"))
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("打出 Defend，获得 5 点格挡"))
 
 
 func test_end_turn_button_starts_next_player_turn_and_reenables_card_buttons() -> void:
@@ -135,13 +139,35 @@ func test_end_turn_button_starts_next_player_turn_and_reenables_card_buttons() -
 	_press_button(scene, "Layout/Buttons/DefendButton")
 	# When：点击结束回合按钮。
 	_press_button(scene, "Layout/Buttons/EndTurnButton")
-	# Then：DummyEnemy 的攻击被格挡抵消 5 点，玩家只损失 1 点血量，并进入可继续出牌的新玩家回合。
+	# Then：DummyEnemy 的攻击被格挡抵消 5 点，玩家只损失 1 点血量，日志刷新，并进入可继续出牌的新玩家回合。
 	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：69/70")
 	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：0")
 	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：3/3")
 	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("手牌（4）："))
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("结束回合，DummyEnemy 攻击造成 1 点伤害"))
 	assert_false(_button_disabled(scene, "Layout/Buttons/StrikeButton"))
 	assert_false(_button_disabled(scene, "Layout/Buttons/DefendButton"))
+
+
+func test_detailed_log_toggle_switches_between_simple_and_detailed_entries() -> void:
+	# Given：策划已经打出 Strike，简洁日志只显示关键结果。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_press_button(scene, "Layout/Buttons/StrikeButton")
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("打出 Strike，敌人受到 6 点伤害"))
+	assert_false(_label_text(scene, "Layout/LogPanel/LogLabel").contains("能量 3 -> 2"))
+	# When：打开详细日志开关。
+	_set_check_box_pressed(scene, "Layout/LogPanel/DetailedLogCheckBox", true)
+	# Then：日志显示规则过程细节。
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("能量 3 -> 2"))
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("Strike 进入弃牌堆"))
+	# When：关闭详细日志开关。
+	_set_check_box_pressed(scene, "Layout/LogPanel/DetailedLogCheckBox", false)
+	# Then：日志回到简洁结果。
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("打出 Strike，敌人受到 6 点伤害"))
+	assert_false(_label_text(scene, "Layout/LogPanel/LogLabel").contains("能量 3 -> 2"))
 
 
 func _instantiate_debug_scene():

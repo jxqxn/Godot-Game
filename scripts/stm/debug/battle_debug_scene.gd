@@ -230,9 +230,22 @@ func _on_end_turn_pressed() -> void:
 		_append_log("结束回合失败", "结束回合失败：战斗尚未开始。")
 		_refresh_display()
 		return
+	var before_player := _player_snapshot()
 	var result = combat.end_turn(game_state)
+	var after_player := _player_snapshot()
+	var before_hp: int = int(before_player["hp"])
+	var before_block: int = int(before_player["block"])
+	var before_energy: int = int(before_player["energy"])
+	var after_hp: int = int(after_player["hp"])
+	var after_block: int = int(after_player["block"])
+	var after_energy: int = int(after_player["energy"])
+	var hp_loss: int = max(before_hp - after_hp, 0)
 	status_message = _result_message(result, "敌人回合结算完成")
-	_append_log(status_message)
+	_append_log(
+		"结束回合，DummyEnemy 攻击造成 %d 点伤害" % hp_loss,
+		"结束回合：玩家 HP %d -> %d；格挡 %d -> %d；能量 %d -> %d；敌人意图执行；进入下一玩家回合；结局检查=%d。"
+			% [before_hp, after_hp, before_block, after_block, before_energy, after_energy, result]
+	)
 	_refresh_display()
 
 
@@ -257,9 +270,11 @@ func _play_first_card_named(card_name: String) -> void:
 			_refresh_display()
 			return
 		targets.append(target)
+	var before_player := _player_snapshot()
+	var before_enemy_hp := _enemy_hp_value()
 	var result = combat.play_card(game_state, card, targets)
 	status_message = _result_message(result, "已打出%s" % card_name)
-	_append_log(status_message)
+	_append_card_log(card_name, before_player, before_enemy_hp, result)
 	_refresh_display()
 
 
@@ -364,6 +379,44 @@ func _first_alive_enemy():
 			continue
 		return candidate
 	return null
+
+
+func _player_snapshot() -> Dictionary:
+	if game_state == null or game_state.player == null:
+		return {"hp": 0, "energy": 0, "block": 0}
+	var player = game_state.player
+	return {"hp": player.hp, "energy": player.energy, "block": player.block}
+
+
+func _enemy_hp_value() -> int:
+	if enemy == null:
+		return 0
+	return enemy.hp
+
+
+func _append_card_log(card_name: String, before_player: Dictionary, before_enemy_hp: int, result: int) -> void:
+	var after_player := _player_snapshot()
+	var after_enemy_hp := _enemy_hp_value()
+	var before_energy: int = int(before_player["energy"])
+	var before_block: int = int(before_player["block"])
+	var after_energy: int = int(after_player["energy"])
+	var after_block: int = int(after_player["block"])
+	if card_name == "Strike":
+		var damage: int = max(before_enemy_hp - after_enemy_hp, 0)
+		_append_log(
+			"打出 Strike，敌人受到 %d 点伤害" % damage,
+			"打出 Strike：能量 %d -> %d；敌人 HP %d -> %d；Strike 进入弃牌堆；结局检查=%d。"
+				% [before_energy, after_energy, before_enemy_hp, after_enemy_hp, result]
+		)
+	elif card_name == "Defend":
+		var block_gain: int = max(after_block - before_block, 0)
+		_append_log(
+			"打出 Defend，获得 %d 点格挡" % block_gain,
+			"打出 Defend：能量 %d -> %d；格挡 %d -> %d；Defend 进入弃牌堆；结局检查=%d。"
+				% [before_energy, after_energy, before_block, after_block, result]
+		)
+	else:
+		_append_log("打出 %s" % card_name, "打出 %s：结局检查=%d。" % [card_name, result])
 
 
 func _result_message(result: int, fallback: String) -> String:
