@@ -145,8 +145,9 @@ func _build_ui() -> void:
 	reset_button.pressed.connect(_on_reset_pressed)
 	buttons.add_child(reset_button)
 
-	var value_editor = VBoxContainer.new()
+	var value_editor = GridContainer.new()
 	value_editor.name = "ValueEditor"
+	value_editor.columns = 2
 	value_editor.add_theme_constant_override("separation", 8)
 	layout.add_child(value_editor)
 
@@ -165,6 +166,10 @@ func _build_ui() -> void:
 	apply_values_button = _new_button("ApplyValuesButton", "应用数值")
 	apply_values_button.pressed.connect(_on_apply_values_pressed)
 	value_editor.add_child(apply_values_button)
+	var apply_values_spacer = Control.new()
+	apply_values_spacer.name = "ApplyValuesSpacer"
+	apply_values_spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	value_editor.add_child(apply_values_spacer)
 
 	var log_panel = VBoxContainer.new()
 	log_panel.name = "LogPanel"

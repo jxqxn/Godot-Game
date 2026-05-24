@@ -46,6 +46,12 @@ func test_debug_scene_shows_planner_tool_surface() -> void:
 	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnergyInput"), "3")
 	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/BlockInput"), "0")
 	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnemyHpInput"), "20")
+	var value_editor = scene.get_node_or_null("Layout/ValueEditor")
+	assert_not_null(value_editor)
+	assert_true(value_editor is GridContainer)
+	if value_editor is GridContainer:
+		assert_eq(value_editor.columns, 2)
+	assert_not_null(scene.get_node_or_null("Layout/ValueEditor/ApplyValuesSpacer"))
 	assert_not_null(scene.get_node_or_null("Layout/Buttons/ResetButton"))
 	assert_not_null(scene.get_node_or_null("Layout/LogPanel/DetailedLogCheckBox"))
 	assert_false(_check_box_pressed(scene, "Layout/LogPanel/DetailedLogCheckBox"))
