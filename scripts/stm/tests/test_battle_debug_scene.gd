@@ -58,6 +58,46 @@ func test_debug_scene_shows_planner_tool_surface() -> void:
 	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("战斗开始"))
 
 
+func test_apply_values_updates_combat_state_and_display() -> void:
+	# Given：策划在调试工具中输入一组合法的玩家和敌人数值。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_set_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput", "40")
+	_set_line_edit_text(scene, "Layout/ValueEditor/EnergyInput", "2")
+	_set_line_edit_text(scene, "Layout/ValueEditor/BlockInput", "9")
+	_set_line_edit_text(scene, "Layout/ValueEditor/EnemyHpInput", "10")
+	# When：点击应用数值按钮。
+	_press_button(scene, "Layout/ValueEditor/ApplyValuesButton")
+	# Then：战斗状态、界面显示和简洁日志同时反映这次数值修改。
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：40/70")
+	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：2/3")
+	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：9")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：10/20")
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("应用数值：玩家 HP 设为 40，敌人 HP 设为 10"))
+
+
+func test_apply_values_rejects_invalid_input_without_partial_state_change() -> void:
+	# Given：当前战斗已有明确状态，策划输入一个非法敌人血量。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_set_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput", "40")
+	_set_line_edit_text(scene, "Layout/ValueEditor/EnergyInput", "2")
+	_set_line_edit_text(scene, "Layout/ValueEditor/BlockInput", "9")
+	_set_line_edit_text(scene, "Layout/ValueEditor/EnemyHpInput", "不是数字")
+	# When：点击应用数值按钮。
+	_press_button(scene, "Layout/ValueEditor/ApplyValuesButton")
+	# Then：玩家和敌人的所有数值保持原样，并显示输入错误日志。
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：70/70")
+	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：3/3")
+	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：0")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：20/20")
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("输入错误：敌人血量必须是整数"))
+
+
 func test_strike_button_plays_strike_and_refreshes_display() -> void:
 	# Given：调试场景已启动，玩家手牌中有 Strike，敌人是 DummyEnemy。
 	var scene = _instantiate_debug_scene()

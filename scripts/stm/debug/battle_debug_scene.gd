@@ -396,6 +396,45 @@ func _refresh_log() -> void:
 	log_label.text = "\n".join(entries)
 
 
+func _parse_non_negative_int(field_name: String, raw_text: String, max_value: int = -1) -> Dictionary:
+	var stripped := raw_text.strip_edges()
+	if stripped.is_empty():
+		return {"ok": false, "error": "输入错误：%s不能为空" % field_name}
+	if not stripped.is_valid_int():
+		return {"ok": false, "error": "输入错误：%s必须是整数" % field_name}
+	var value := int(stripped)
+	if value < 0:
+		return {"ok": false, "error": "输入错误：%s不能小于 0" % field_name}
+	if max_value >= 0 and value > max_value:
+		return {"ok": false, "error": "输入错误：%s不能超过 %d" % [field_name, max_value]}
+	return {"ok": true, "value": value}
+
+
+func _collect_value_inputs() -> Dictionary:
+	if game_state == null or game_state.player == null or enemy == null:
+		return {"ok": false, "error": "输入错误：战斗尚未开始"}
+	var player = game_state.player
+	var player_hp_result := _parse_non_negative_int("玩家血量", player_hp_input.text, player.max_hp)
+	if not player_hp_result.ok:
+		return player_hp_result
+	var energy_result := _parse_non_negative_int("玩家能量", energy_input.text)
+	if not energy_result.ok:
+		return energy_result
+	var block_result := _parse_non_negative_int("玩家格挡", block_input.text)
+	if not block_result.ok:
+		return block_result
+	var enemy_hp_result := _parse_non_negative_int("敌人血量", enemy_hp_input.text, enemy.max_hp)
+	if not enemy_hp_result.ok:
+		return enemy_hp_result
+	return {
+		"ok": true,
+		"player_hp": player_hp_result.value,
+		"energy": energy_result.value,
+		"block": block_result.value,
+		"enemy_hp": enemy_hp_result.value,
+	}
+
+
 func _on_detailed_log_toggled(_pressed: bool) -> void:
 	_refresh_log()
 
@@ -405,5 +444,21 @@ func _on_reset_pressed() -> void:
 
 
 func _on_apply_values_pressed() -> void:
-	status_message = "数值编辑尚未执行"
+	var values := _collect_value_inputs()
+	if not values.ok:
+		status_message = values.error
+		_append_log(values.error, "%s；本次输入没有写入任何战斗状态。" % values.error)
+		_refresh_display()
+		return
+	var player = game_state.player
+	player.hp = values.player_hp
+	player.energy = values.energy
+	player.block = values.block
+	enemy.hp = values.enemy_hp
+	status_message = "数值已应用"
+	_append_log(
+		"应用数值：玩家 HP 设为 %d，敌人 HP 设为 %d" % [player.hp, enemy.hp],
+		"应用数值：玩家 HP=%d/%d，能量=%d/%d，格挡=%d，敌人 HP=%d/%d。"
+			% [player.hp, player.max_hp, player.energy, player.max_energy, player.block, enemy.hp, enemy.max_hp]
+	)
 	_refresh_display()
