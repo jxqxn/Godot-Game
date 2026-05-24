@@ -1,7 +1,8 @@
 {
   "tests": [
     "res://scripts/stm/tests/core_skeleton_test.gd",
-    "res://scripts/stm/tests/test_battle_debug_scene.gd"
+    "res://scripts/stm/tests/test_battle_debug_scene.gd",
+    "res://scripts/stm/tests/test_fixed_battle_fixture.gd"
   ],
   "should_exit": true,
   "should_exit_on_success": true,
