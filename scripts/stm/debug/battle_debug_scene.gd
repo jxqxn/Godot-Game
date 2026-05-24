@@ -1,16 +1,13 @@
 class_name StmBattleDebugScene
 extends Control
 
-const GameBootstrapScript := preload("res://scripts/stm/engine/game_bootstrap.gd")
-const StrikeScript := preload("res://scripts/stm/cards/test/strike.gd")
-const DefendScript := preload("res://scripts/stm/cards/test/defend.gd")
-const PlayerScript := preload("res://scripts/stm/player/player.gd")
-const DummyEnemyScript := preload("res://scripts/stm/enemies/test/dummy_enemy.gd")
+const FixedBattleFixtureScript := preload("res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd")
 const TypesScript := preload("res://scripts/stm/utils/types.gd")
 
 var game_state
 var combat
 var enemy
+var current_fixture_name: String = ""
 var status_message: String = "等待行动"
 
 var player_hp_label: Label
@@ -44,22 +41,56 @@ func _ready() -> void:
 
 
 func start_debug_combat() -> void:
-	var deck: Array = [
-		StrikeScript.new(),
-		DefendScript.new(),
-		StrikeScript.new(),
-		DefendScript.new(),
-	]
-	var player = PlayerScript.new(deck)
-	var bootstrap = GameBootstrapScript.new()
-	game_state = bootstrap.create_game(player)
-	enemy = DummyEnemyScript.new()
-	combat = bootstrap.create_combat(game_state, [enemy], "debug")
+	var fixture = FixedBattleFixtureScript.new()
+	var context: Dictionary = fixture.create_context()
+	if not _apply_fixture_context(context):
+		_handle_fixture_failure()
+		return
 	status_message = "等待行动"
 	combat.start(game_state)
 	_reset_log()
 	_append_log("战斗开始", "战斗开始：玩家抽取起始手牌，敌人 DummyEnemy 准备攻击。")
 	_refresh_display()
+
+
+func _apply_fixture_context(context: Dictionary) -> bool:
+	if context.is_empty():
+		return false
+	if context.get("game_state") == null:
+		return false
+	if context.get("combat") == null:
+		return false
+	if context.get("player") == null:
+		return false
+	if context.get("enemy") == null:
+		return false
+	if context["game_state"].player == null:
+		return false
+	game_state = context["game_state"]
+	combat = context["combat"]
+	enemy = context["enemy"]
+	current_fixture_name = str(context.get("name", ""))
+	return true
+
+
+func _handle_fixture_failure() -> void:
+	game_state = null
+	combat = null
+	enemy = null
+	current_fixture_name = ""
+	status_message = "测试战斗创建失败"
+	_reset_log()
+	_append_log(status_message)
+	if status_label != null:
+		status_label.text = status_message
+	if log_label != null:
+		_refresh_log()
+	if strike_button != null:
+		strike_button.disabled = true
+	if defend_button != null:
+		defend_button.disabled = true
+	if end_turn_button != null:
+		end_turn_button.disabled = true
 
 
 func _build_ui() -> void:

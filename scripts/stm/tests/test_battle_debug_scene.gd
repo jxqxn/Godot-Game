@@ -58,6 +58,22 @@ func test_debug_scene_shows_planner_tool_surface() -> void:
 	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("战斗开始"))
 
 
+func test_debug_scene_records_fixed_battle_fixture_name() -> void:
+	# Given：策划打开依赖固定战斗夹具的调试场景。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	# When：场景完成初始化并创建测试战斗。
+	var fixture_name := str(scene.current_fixture_name)
+	# Then：场景记录基础测试战斗，并仍然连接 debug 战斗和 DummyEnemy。
+	assert_eq(fixture_name, "基础测试战斗")
+	assert_not_null(scene.combat)
+	assert_not_null(scene.enemy)
+	assert_eq(scene.combat.combat_type, "debug")
+	assert_eq(scene.enemy.enemy_name, "DummyEnemy")
+
+
 func test_apply_values_updates_combat_state_and_display() -> void:
 	# Given：策划在调试工具中输入一组合法的玩家和敌人数值。
 	var scene = _instantiate_debug_scene()
