@@ -264,6 +264,22 @@ func test_detailed_log_toggle_switches_between_simple_and_detailed_entries() -> 
 	assert_false(_label_text(scene, "Layout/LogPanel/LogLabel").contains("能量 3 -> 2"))
 
 
+func test_log_panel_uses_read_only_multiline_debug_view() -> void:
+	# Given：策划需要阅读多条战斗日志来调试规则过程。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	# When：调试场景完成初始化。
+	var log_view = scene.get_node_or_null("Layout/LogPanel/LogLabel")
+	# Then：日志区域是只读的多行调试视图，而不是一行普通标签。
+	assert_not_null(log_view)
+	assert_true(log_view is TextEdit)
+	if log_view is TextEdit:
+		assert_false(log_view.editable)
+		assert_true(log_view.custom_minimum_size.y >= 160.0)
+
+
 func test_reset_button_restarts_fixed_debug_battle() -> void:
 	# Given：策划已经打出卡牌并修改了战斗数值。
 	var scene = _instantiate_debug_scene()

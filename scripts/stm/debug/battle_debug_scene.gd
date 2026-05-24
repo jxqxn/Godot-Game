@@ -30,7 +30,7 @@ var enemy_hp_input: LineEdit
 var apply_values_button: Button
 var reset_button: Button
 var detailed_log_check_box: CheckBox
-var log_label: Label
+var log_label: TextEdit
 var simple_log_entries: Array[String] = []
 var detail_log_entries: Array[String] = []
 
@@ -249,8 +249,12 @@ func _build_ui() -> void:
 	detailed_log_check_box.toggled.connect(_on_detailed_log_toggled)
 	log_panel.add_child(detailed_log_check_box)
 
-	log_label = _new_label("LogLabel")
-	log_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	log_label = TextEdit.new()
+	log_label.name = "LogLabel"
+	log_label.editable = false
+	log_label.custom_minimum_size = Vector2(0.0, 180.0)
+	log_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	log_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	log_panel.add_child(log_label)
 
 
