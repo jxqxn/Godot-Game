@@ -15,6 +15,7 @@
 - 每个任务使用 fresh subagent。
 - 实现代理使用 `gpt-5.3-codex`。
 - 审核代理使用 `gpt-5.5`。
+- 每个实现任务提交前必须完成双重审核：实现代理先用 `git diff` 自审，再派 fresh `gpt-5.5` 审核；阻塞问题必须修复并重跑 GUT。
 - 每个任务先写中文 BDD 测试方法名和 Given-When-Then 注释，再写测试断言，再写正式代码。
 - 所有新增注释使用中文。
 - 不修复现有 UI 文本编码问题，本计划只移动固定战斗内容创建边界。
@@ -61,8 +62,6 @@ Create `scripts/stm/tests/test_fixed_battle_fixture.gd` with only the test metho
 ```gdscript
 extends GutTest
 
-const FixedBattleFixtureScript := preload("res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd")
-
 
 func test_fixed_battle_fixture_creates_named_debug_battle() -> void:
 	# Given：策划需要一个固定测试战斗样例。
@@ -100,6 +99,7 @@ func test_fixed_battle_fixture_creates_named_debug_battle() -> void:
 	assert_not_null(context.get("player"))
 	assert_not_null(context.get("enemy"))
 	assert_true(context["game_state"].player == context["player"])
+	assert_eq(context["combat"].enemies.size(), 1)
 	assert_true(context["combat"].enemies[0] == context["enemy"])
 	assert_eq(context["combat"].combat_type, "debug")
 	assert_eq(context["player"].hp, 70)
@@ -146,7 +146,7 @@ Run:
 & "C:\Users\User\Desktop\Godot_v4.6.2-stable_win64_console.exe" --headless --path "C:\Users\User\Documents\GitHub\Godot-Game" -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: FAIL, because `res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd` does not exist yet or `create_context()` is not defined.
+Expected: FAIL before implementation. The expected failure is a missing `res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd` preload; if an empty file was created accidentally, the expected failure is missing `create_context()`.
 
 - [ ] **Step 4: 实现最小固定战斗夹具**
 
@@ -203,7 +203,7 @@ Run:
 & "C:\Users\User\Desktop\Godot_v4.6.2-stable_win64_console.exe" --headless --path "C:\Users\User\Documents\GitHub\Godot-Game" -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: PASS. Existing tests still pass, and total test count increases by 2.
+Expected: PASS. GUT summary shows `26/26` tests passing. Existing tests still pass, and total test count increased by 2.
 
 - [ ] **Step 6: 审核并提交 Task 1**
 
@@ -213,6 +213,19 @@ Review:
 git diff -- scripts/stm/debug/fixtures/fixed_battle_fixture.gd scripts/stm/tests/test_fixed_battle_fixture.gd
 git status --short
 ```
+
+Then dispatch a fresh `gpt-5.5` review agent with this scope:
+
+```text
+请审查 Task 1：固定战斗夹具实现。重点检查：
+1. 是否先写中文 BDD，再写测试断言，再写正式代码。
+2. `create_context()` 是否返回 `name`、`game_state`、`combat`、`player`、`enemy`。
+3. 每次调用是否创建新的玩家、敌人、卡牌、GameState 和 Combat 实例。
+4. 是否没有新增正式内容库、配置文件、网络、Python、Node 或第三方插件依赖。
+5. 是否存在空对象、半初始化或测试断言不足。
+```
+
+Expected: no blocking findings. If there are blocking findings, fix them BDD-first and rerun the full GUT command before committing.
 
 Commit:
 
@@ -231,7 +244,7 @@ git commit -m "feat(debug): add fixed battle fixture"
 
 - [ ] **Step 1: 先写调试场景 BDD 测试方法名和中文行为注释**
 
-Append this method near the other startup tests in `scripts/stm/tests/test_battle_debug_scene.gd`:
+Insert this method immediately after `test_debug_scene_shows_planner_tool_surface()` and before `test_apply_values_updates_combat_state_and_display()` in `scripts/stm/tests/test_battle_debug_scene.gd`:
 
 ```gdscript
 func test_debug_scene_records_fixed_battle_fixture_name() -> void:
@@ -270,7 +283,7 @@ Run:
 & "C:\Users\User\Desktop\Godot_v4.6.2-stable_win64_console.exe" --headless --path "C:\Users\User\Documents\GitHub\Godot-Game" -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: FAIL, because `StmBattleDebugScene` does not expose `current_fixture_name` yet and still constructs the test battle directly.
+Expected: FAIL before scene implementation. The expected failure is missing `current_fixture_name` on `StmBattleDebugScene`.
 
 - [ ] **Step 4: 修改调试场景常量和状态字段**
 
@@ -369,7 +382,7 @@ Run:
 & "C:\Users\User\Desktop\Godot_v4.6.2-stable_win64_console.exe" --headless --path "C:\Users\User\Documents\GitHub\Godot-Game" -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: PASS. Existing调试场景测试继续通过，新增场景测试通过。
+Expected: PASS. GUT summary shows `27/27` tests passing. Existing调试场景测试继续通过，新增场景测试通过。
 
 - [ ] **Step 8: 审核并提交 Task 2**
 
@@ -379,6 +392,19 @@ Review:
 git diff -- scripts/stm/debug/battle_debug_scene.gd scripts/stm/tests/test_battle_debug_scene.gd
 git status --short
 ```
+
+Then dispatch a fresh `gpt-5.5` review agent with this scope:
+
+```text
+请审查 Task 2：调试场景从固定战斗夹具启动。重点检查：
+1. 是否先写中文 BDD，再写测试断言，再写正式代码。
+2. `battle_debug_scene.gd` 是否不再直接拼装 Strike、Defend、Player、DummyEnemy 和 GameBootstrap。
+3. `current_fixture_name` 是否由 fixture 上下文赋值，并被测试覆盖。
+4. fixture 创建失败时是否不会继续调用 `combat.start(game_state)`。
+5. 重开战斗是否仍通过 `start_debug_combat()` 创建新上下文。
+```
+
+Expected: no blocking findings. If there are blocking findings, fix them BDD-first and rerun the full GUT command before committing.
 
 Commit:
 
@@ -403,7 +429,7 @@ Run:
 & "C:\Users\User\Desktop\Godot_v4.6.2-stable_win64_console.exe" --headless --path "C:\Users\User\Documents\GitHub\Godot-Game" -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: PASS. No failing tests, no script parse errors, no Godot crash dialog.
+Expected: PASS. GUT summary shows `27/27` tests passing. No failing tests, no script parse errors, no Godot crash dialog.
 
 - [ ] **Step 2: 检查实现是否覆盖 spec**
 
