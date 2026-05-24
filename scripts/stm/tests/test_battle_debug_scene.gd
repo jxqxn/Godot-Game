@@ -47,6 +47,7 @@ func test_debug_scene_shows_planner_tool_surface() -> void:
 	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/BlockInput"), "0")
 	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnemyHpInput"), "20")
 	assert_not_null(scene.get_node_or_null("Layout/Buttons/ResetButton"))
+	assert_not_null(scene.get_node_or_null("Layout/LogPanel/DetailedLogCheckBox"))
 	assert_false(_check_box_pressed(scene, "Layout/LogPanel/DetailedLogCheckBox"))
 	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("战斗开始"))
 
