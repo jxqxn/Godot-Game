@@ -38,6 +38,9 @@
   - 测试 fixture 能创建命名 debug 战斗。
   - 测试 fixture 每次返回新实例。
 
+- Modify: `.gutconfig.json`
+  - 把 `res://scripts/stm/tests/test_fixed_battle_fixture.gd` 加入默认 GUT 测试列表，保证项目标准测试命令会运行新增测试。
+
 - Modify: `scripts/stm/debug/battle_debug_scene.gd`
   - 用 `StmFixedBattleFixture` 替换场景内的手动牌组、玩家、敌人和 combat 创建逻辑。
   - 新增 `current_fixture_name` 记录当前样例名称。
@@ -54,6 +57,7 @@
 **Files:**
 - Create: `scripts/stm/debug/fixtures/fixed_battle_fixture.gd`
 - Create: `scripts/stm/tests/test_fixed_battle_fixture.gd`
+- Modify: `.gutconfig.json`
 
 - [ ] **Step 1: 先写 BDD 测试方法名和中文行为注释**
 
@@ -197,6 +201,21 @@ func create_deck() -> Array:
 
 - [ ] **Step 5: 运行测试确认通过**
 
+Before running, update `.gutconfig.json` so the `tests` list contains the new test script:
+
+```json
+{
+  "tests": [
+    "res://scripts/stm/tests/core_skeleton_test.gd",
+    "res://scripts/stm/tests/test_battle_debug_scene.gd",
+    "res://scripts/stm/tests/test_fixed_battle_fixture.gd"
+  ],
+  "should_exit": true,
+  "should_exit_on_success": true,
+  "log_level": 2
+}
+```
+
 Run:
 
 ```powershell
@@ -211,6 +230,7 @@ Review:
 
 ```powershell
 git diff -- scripts/stm/debug/fixtures/fixed_battle_fixture.gd scripts/stm/tests/test_fixed_battle_fixture.gd
+git diff -- .gutconfig.json
 git status --short
 ```
 
@@ -230,7 +250,7 @@ Expected: no blocking findings. If there are blocking findings, fix them BDD-fir
 Commit:
 
 ```powershell
-git add scripts/stm/debug/fixtures/fixed_battle_fixture.gd scripts/stm/tests/test_fixed_battle_fixture.gd
+git add .gutconfig.json scripts/stm/debug/fixtures/fixed_battle_fixture.gd scripts/stm/tests/test_fixed_battle_fixture.gd
 git commit -m "feat(debug): add fixed battle fixture"
 ```
 
