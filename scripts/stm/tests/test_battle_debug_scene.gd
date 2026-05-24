@@ -15,12 +15,40 @@ func test_debug_scene_shows_initial_combat_state() -> void:
 	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：3/3")
 	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：0")
 	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：20/20")
-	assert_true(_label_text(scene, "Layout/HandLabel").contains("手牌（4）："))
-	assert_true(_label_text(scene, "Layout/HandLabel").contains("Strike"))
-	assert_true(_label_text(scene, "Layout/HandLabel").contains("Defend"))
+	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("手牌（4）："))
+	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("Strike"))
+	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("Defend"))
 	assert_not_null(scene.get_node_or_null("Layout/Buttons/StrikeButton"))
 	assert_not_null(scene.get_node_or_null("Layout/Buttons/DefendButton"))
 	assert_not_null(scene.get_node_or_null("Layout/Buttons/EndTurnButton"))
+
+
+func test_debug_scene_shows_planner_tool_surface() -> void:
+	# Given：策划打开固定测试战斗的调试工具。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	# When：场景完成初始化并刷新所有调试面板。
+	var title_text := _label_text(scene, "Layout/TitleLabel")
+	# Then：界面展示玩家状态、敌人意图、手牌、抽牌堆、弃牌堆、数值输入、重开按钮和详细日志开关。
+	assert_eq(title_text, "战斗调试工具")
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：70/70")
+	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：3/3")
+	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：0")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：20/20")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyIntentLabel"), "敌人意图：攻击")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyAttackLabel"), "预计攻击：6")
+	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("手牌（4）："))
+	assert_true(_label_text(scene, "Layout/PilesPanel/DrawPileLabel").contains("抽牌堆（0）："))
+	assert_true(_label_text(scene, "Layout/PilesPanel/DiscardPileLabel").contains("弃牌堆（0）："))
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput"), "70")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnergyInput"), "3")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/BlockInput"), "0")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnemyHpInput"), "20")
+	assert_not_null(scene.get_node_or_null("Layout/Buttons/ResetButton"))
+	assert_false(_check_box_pressed(scene, "Layout/LogPanel/DetailedLogCheckBox"))
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("战斗开始"))
 
 
 func test_strike_button_plays_strike_and_refreshes_display() -> void:
@@ -34,7 +62,7 @@ func test_strike_button_plays_strike_and_refreshes_display() -> void:
 	# Then：敌人受到 6 点伤害，玩家消耗 1 点能量，界面刷新到最新状态。
 	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：14/20")
 	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：2/3")
-	assert_true(_label_text(scene, "Layout/HandLabel").contains("手牌（3）："))
+	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("手牌（3）："))
 
 
 func test_defend_button_plays_defend_and_refreshes_display() -> void:
@@ -48,7 +76,7 @@ func test_defend_button_plays_defend_and_refreshes_display() -> void:
 	# Then：玩家获得 5 点格挡，消耗 1 点能量，界面刷新到最新状态。
 	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：5")
 	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：2/3")
-	assert_true(_label_text(scene, "Layout/HandLabel").contains("手牌（3）："))
+	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("手牌（3）："))
 
 
 func test_end_turn_button_starts_next_player_turn_and_reenables_card_buttons() -> void:
@@ -64,7 +92,7 @@ func test_end_turn_button_starts_next_player_turn_and_reenables_card_buttons() -
 	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：69/70")
 	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：0")
 	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：3/3")
-	assert_true(_label_text(scene, "Layout/HandLabel").contains("手牌（"))
+	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("手牌（4）："))
 	assert_false(_button_disabled(scene, "Layout/Buttons/StrikeButton"))
 	assert_false(_button_disabled(scene, "Layout/Buttons/DefendButton"))
 
@@ -85,6 +113,37 @@ func _label_text(scene: Node, node_path: String) -> String:
 	if label == null:
 		return ""
 	return str(label.text)
+
+
+func _line_edit_text(scene: Node, node_path: String) -> String:
+	var input = scene.get_node_or_null(node_path)
+	if input == null:
+		return ""
+	return str(input.text)
+
+
+func _set_line_edit_text(scene: Node, node_path: String, value: String) -> void:
+	var input = scene.get_node_or_null(node_path)
+	assert_not_null(input)
+	if input == null:
+		return
+	input.text = value
+
+
+func _check_box_pressed(scene: Node, node_path: String) -> bool:
+	var check_box = scene.get_node_or_null(node_path)
+	if check_box == null:
+		return false
+	return check_box.button_pressed
+
+
+func _set_check_box_pressed(scene: Node, node_path: String, pressed: bool) -> void:
+	var check_box = scene.get_node_or_null(node_path)
+	assert_not_null(check_box)
+	if check_box == null:
+		return
+	check_box.button_pressed = pressed
+	check_box.emit_signal("toggled", pressed)
 
 
 func _press_button(scene: Node, node_path: String) -> void:
