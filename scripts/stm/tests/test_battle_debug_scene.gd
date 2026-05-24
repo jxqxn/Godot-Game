@@ -170,6 +170,34 @@ func test_detailed_log_toggle_switches_between_simple_and_detailed_entries() -> 
 	assert_false(_label_text(scene, "Layout/LogPanel/LogLabel").contains("能量 3 -> 2"))
 
 
+func test_reset_button_restarts_fixed_debug_battle() -> void:
+	# Given：策划已经打出卡牌并修改了战斗数值。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_press_button(scene, "Layout/Buttons/StrikeButton")
+	_set_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput", "40")
+	_set_line_edit_text(scene, "Layout/ValueEditor/EnergyInput", "2")
+	_set_line_edit_text(scene, "Layout/ValueEditor/BlockInput", "9")
+	_set_line_edit_text(scene, "Layout/ValueEditor/EnemyHpInput", "10")
+	_press_button(scene, "Layout/ValueEditor/ApplyValuesButton")
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("应用数值"))
+	# When：点击重开战斗按钮。
+	_press_button(scene, "Layout/Buttons/ResetButton")
+	# Then：固定测试战斗、输入框和日志都回到新战斗开始状态。
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：70/70")
+	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：3/3")
+	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：0")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：20/20")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput"), "70")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnergyInput"), "3")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/BlockInput"), "0")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnemyHpInput"), "20")
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("战斗开始"))
+	assert_false(_label_text(scene, "Layout/LogPanel/LogLabel").contains("应用数值"))
+
+
 func _instantiate_debug_scene():
 	if not ResourceLoader.exists(DEBUG_SCENE_PATH):
 		return null
