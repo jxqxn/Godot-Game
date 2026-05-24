@@ -175,7 +175,7 @@ var detail_log_entries: Array[String] = []
 
 - [ ] **Step 3: 扩展 `_build_ui()` 的面板结构**
 
-保留 `Layout` 根节点，替换标题、敌人区、牌堆区、按钮区、数值编辑区和日志区的构建代码：
+保留 `_build_ui()` 开头的 `Layout` 判空和根节点创建代码。根节点创建后，按下面顺序创建标题区、玩家状态区、敌人区、牌堆区、状态提示、按钮区、数值编辑区和日志区。旧的 `Layout/HandLabel` 不保留，手牌标签只放在 `Layout/PilesPanel/HandLabel`。
 
 ```gdscript
 	var title = Label.new()
@@ -222,11 +222,31 @@ var detail_log_entries: Array[String] = []
 	discard_pile_label = _new_label("DiscardPileLabel")
 	discard_pile_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	piles_panel.add_child(discard_pile_label)
+
+	status_label = _new_label("StatusLabel")
+	layout.add_child(status_label)
 ```
 
-继续在按钮区加入 `ResetButton`：
+接着创建完整按钮区，四个按钮都放在 `Layout/Buttons` 下：
 
 ```gdscript
+	var buttons = HBoxContainer.new()
+	buttons.name = "Buttons"
+	buttons.add_theme_constant_override("separation", 8)
+	layout.add_child(buttons)
+
+	strike_button = _new_button("StrikeButton", "Strike")
+	strike_button.pressed.connect(_on_strike_pressed)
+	buttons.add_child(strike_button)
+
+	defend_button = _new_button("DefendButton", "Defend")
+	defend_button.pressed.connect(_on_defend_pressed)
+	buttons.add_child(defend_button)
+
+	end_turn_button = _new_button("EndTurnButton", "结束回合")
+	end_turn_button.pressed.connect(_on_end_turn_pressed)
+	buttons.add_child(end_turn_button)
+
 	reset_button = _new_button("ResetButton", "重开战斗")
 	reset_button.pressed.connect(_on_reset_pressed)
 	buttons.add_child(reset_button)
@@ -260,6 +280,7 @@ var detail_log_entries: Array[String] = []
 
 	apply_values_button = _new_button("ApplyValuesButton", "应用数值")
 	apply_values_button.pressed.connect(_on_apply_values_pressed)
+	value_editor.add_child(_new_label_with_text("ApplyValuesSpacer", ""))
 	value_editor.add_child(apply_values_button)
 ```
 
@@ -311,8 +332,8 @@ func _new_line_edit(input_name: String) -> LineEdit:
 	enemy_intent_label.text = _enemy_intent_text()
 	enemy_attack_label.text = _enemy_attack_text()
 	hand_label.text = _pile_text("手牌", "hand")
-	draw_pile_label.text = _pile_text("抽牌堆", "draw")
-	discard_pile_label.text = _pile_text("弃牌堆", "discard")
+	draw_pile_label.text = _pile_text("抽牌堆", "draw_pile")
+	discard_pile_label.text = _pile_text("弃牌堆", "discard_pile")
 	status_label.text = status_message
 	_sync_value_inputs()
 	_refresh_log()
@@ -330,14 +351,19 @@ func _enemy_hp_text() -> String:
 func _enemy_intent_text() -> String:
 	if enemy == null:
 		return "敌人意图：无"
-	if "intent" in enemy:
-		return "敌人意图：%s" % str(enemy.intent)
+	if "current_intention" in enemy:
+		var intention := str(enemy.current_intention)
+		if intention == "attack":
+			return "敌人意图：攻击"
+		return "敌人意图：%s" % intention
 	return "敌人意图：攻击"
 
 
 func _enemy_attack_text() -> String:
 	if enemy == null:
 		return "预计攻击：0"
+	if enemy.has_method("get_intended_damage"):
+		return "预计攻击：%d" % int(enemy.get_intended_damage())
 	if "intent_damage" in enemy:
 		return "预计攻击：%d" % int(enemy.intent_damage)
 	if "damage" in enemy:
@@ -753,9 +779,9 @@ func _append_card_log(card_name: String, before_player: Dictionary, before_enemy
 	_refresh_display()
 ```
 
-- [ ] **Step 4: 修改旧路径兼容或同步测试路径**
+- [ ] **Step 4: 修改旧路径引用**
 
-确保所有旧测试从 `Layout/HandLabel` 改到 `Layout/PilesPanel/HandLabel`。保留生产代码只输出新路径，不在场景里创建两个手牌标签。
+把所有旧测试里的 `Layout/HandLabel` 改成 `Layout/PilesPanel/HandLabel`。生产代码只输出新路径，不在场景里创建第二个手牌标签。
 
 - [ ] **Step 5: 运行测试确认通过**
 
@@ -822,7 +848,7 @@ func test_reset_button_restarts_fixed_debug_battle() -> void:
 	assert_false(_label_text(scene, "Layout/LogPanel/LogLabel").contains("应用数值"))
 ```
 
-- [ ] **Step 3: 确认 `_on_reset_pressed()` 已经满足行为**
+- [ ] **Step 3: 明确 `_on_reset_pressed()` 的重开行为**
 
 实现保持：
 
@@ -831,7 +857,7 @@ func _on_reset_pressed() -> void:
 	start_debug_combat()
 ```
 
-如果测试发现详细日志勾选状态需要保留，保持勾选状态不变，只重置日志内容；如果测试发现输入框未刷新，确认 `start_debug_combat()` 最后调用 `_refresh_display()`。
+重开战斗保留 `DetailedLogCheckBox` 当前勾选状态，只清空日志内容并写入新的“战斗开始”。输入框必须依赖 `start_debug_combat()` 末尾的 `_refresh_display()` 回到新战斗初始值。
 
 - [ ] **Step 4: 运行测试确认通过**
 
@@ -917,4 +943,4 @@ git commit -m "test(debug): verify battle debug tool v2"
 - 边界覆盖：没有新增正式内容库、选择器、多敌人、存档、网络、Python 或第三方插件；只增强调试场景。
 - 依赖覆盖：只使用 Godot、GDScript、GUT 和现有 `scripts/stm`。
 - 类型一致性：新增生产函数集中在 `StmBattleDebugScene`；测试辅助函数均接收 `scene: Node` 和节点路径；输入框使用 `LineEdit`，详细日志开关使用 `CheckBox`。
-- 风险记录：敌人意图字段在当前测试敌人中可能不是公开字段，因此 `_enemy_intent_text()` 和 `_enemy_attack_text()` 需要在实现时用现有字段优先，最后回退为固定测试敌人的“攻击 / 6”；这只服务调试场景，不改变规则层。
+- 字段核对：当前 `StmEnemy` 公开 `current_intention` 和 `intent_damage`；计划中的 `_enemy_intent_text()` 读取 `current_intention` 并把 `attack` 显示为“攻击”，`_enemy_attack_text()` 优先读取 `get_intended_damage()`，再读取 `intent_damage`，最后才回退为固定测试敌人的 `6`；这只服务调试场景，不改变规则层。
