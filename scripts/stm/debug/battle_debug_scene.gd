@@ -366,6 +366,7 @@ func _refresh_display() -> void:
 	strike_button.disabled = _find_card_by_name("Strike") == null or _first_alive_enemy() == null
 	defend_button.disabled = _find_card_by_name("Defend") == null
 	end_turn_button.disabled = combat == null
+	apply_values_button.disabled = game_state == null or game_state.player == null or enemy == null
 
 
 func _enemy_hp_text() -> String:

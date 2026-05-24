@@ -135,6 +135,23 @@ func test_debug_scene_fixture_failure_clears_old_display_and_disables_all_action
 	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("测试战斗创建失败"))
 
 
+func test_debug_scene_recovers_apply_values_button_after_fixture_failure_and_restart() -> void:
+	# Given：调试场景经历了一次固定战斗夹具创建失败。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	scene._handle_fixture_failure()
+	assert_true(_button_disabled(scene, "Layout/ValueEditor/ApplyValuesButton"))
+	# When：再次启动固定测试战斗。
+	scene.start_debug_combat()
+	# Then：界面恢复到可编辑战斗状态，应用数值按钮重新可用。
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：70/70")
+	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput"), "70")
+	assert_false(_button_disabled(scene, "Layout/ValueEditor/ApplyValuesButton"))
+	assert_eq(_label_text(scene, "Layout/StatusLabel"), "等待行动")
+
+
 func test_apply_values_updates_combat_state_and_display() -> void:
 	# Given：策划在调试工具中输入一组合法的玩家和敌人数值。
 	var scene = _instantiate_debug_scene()
