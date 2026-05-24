@@ -149,10 +149,24 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 24)
 	layout.add_child(title)
 
+	var body = HBoxContainer.new()
+	body.name = "Body"
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	body.add_theme_constant_override("separation", 16)
+	layout.add_child(body)
+
+	var main_panel = VBoxContainer.new()
+	main_panel.name = "MainPanel"
+	main_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	main_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	main_panel.add_theme_constant_override("separation", 12)
+	body.add_child(main_panel)
+
 	var metrics = HBoxContainer.new()
 	metrics.name = "Metrics"
 	metrics.add_theme_constant_override("separation", 16)
-	layout.add_child(metrics)
+	main_panel.add_child(metrics)
 
 	player_hp_label = _new_label("PlayerHpLabel")
 	metrics.add_child(player_hp_label)
@@ -164,7 +178,7 @@ func _build_ui() -> void:
 	var enemy_panel = VBoxContainer.new()
 	enemy_panel.name = "EnemyPanel"
 	enemy_panel.add_theme_constant_override("separation", 8)
-	layout.add_child(enemy_panel)
+	main_panel.add_child(enemy_panel)
 
 	enemy_hp_label = _new_label("EnemyHpLabel")
 	enemy_panel.add_child(enemy_hp_label)
@@ -176,7 +190,7 @@ func _build_ui() -> void:
 	var piles_panel = VBoxContainer.new()
 	piles_panel.name = "PilesPanel"
 	piles_panel.add_theme_constant_override("separation", 6)
-	layout.add_child(piles_panel)
+	main_panel.add_child(piles_panel)
 
 	hand_label = _new_label("HandLabel")
 	hand_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -189,12 +203,12 @@ func _build_ui() -> void:
 	piles_panel.add_child(discard_pile_label)
 
 	status_label = _new_label("StatusLabel")
-	layout.add_child(status_label)
+	main_panel.add_child(status_label)
 
 	var buttons = HBoxContainer.new()
 	buttons.name = "Buttons"
 	buttons.add_theme_constant_override("separation", 8)
-	layout.add_child(buttons)
+	main_panel.add_child(buttons)
 
 	strike_button = _new_button("StrikeButton", "Strike")
 	strike_button.pressed.connect(_on_strike_pressed)
@@ -216,7 +230,7 @@ func _build_ui() -> void:
 	value_editor.name = "ValueEditor"
 	value_editor.columns = 2
 	value_editor.add_theme_constant_override("separation", 8)
-	layout.add_child(value_editor)
+	main_panel.add_child(value_editor)
 
 	value_editor.add_child(_new_label_with_text("PlayerHpInputLabel", "玩家血量"))
 	player_hp_input = _new_line_edit("PlayerHpInput")
@@ -240,8 +254,10 @@ func _build_ui() -> void:
 
 	var log_panel = VBoxContainer.new()
 	log_panel.name = "LogPanel"
+	log_panel.custom_minimum_size = Vector2(360.0, 0.0)
+	log_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	log_panel.add_theme_constant_override("separation", 6)
-	layout.add_child(log_panel)
+	body.add_child(log_panel)
 
 	detailed_log_check_box = CheckBox.new()
 	detailed_log_check_box.name = "DetailedLogCheckBox"
@@ -252,7 +268,7 @@ func _build_ui() -> void:
 	log_label = TextEdit.new()
 	log_label.name = "LogLabel"
 	log_label.editable = false
-	log_label.custom_minimum_size = Vector2(0.0, 180.0)
+	log_label.custom_minimum_size = Vector2(0.0, 360.0)
 	log_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	log_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	log_panel.add_child(log_label)

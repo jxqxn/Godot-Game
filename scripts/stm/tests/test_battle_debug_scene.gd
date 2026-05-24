@@ -19,9 +19,9 @@ func test_debug_scene_shows_initial_combat_state() -> void:
 	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("手牌（4）："))
 	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("Strike"))
 	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("Defend"))
-	assert_not_null(scene.get_node_or_null("Layout/Buttons/StrikeButton"))
-	assert_not_null(scene.get_node_or_null("Layout/Buttons/DefendButton"))
-	assert_not_null(scene.get_node_or_null("Layout/Buttons/EndTurnButton"))
+	assert_not_null(scene.get_node_or_null("Layout/Body/MainPanel/Buttons/StrikeButton"))
+	assert_not_null(scene.get_node_or_null("Layout/Body/MainPanel/Buttons/DefendButton"))
+	assert_not_null(scene.get_node_or_null("Layout/Body/MainPanel/Buttons/EndTurnButton"))
 
 
 func test_debug_scene_shows_planner_tool_surface() -> void:
@@ -34,29 +34,59 @@ func test_debug_scene_shows_planner_tool_surface() -> void:
 	var title_text := _label_text(scene, "Layout/TitleLabel")
 	# Then：界面展示玩家状态、敌人意图、手牌、抽牌堆、弃牌堆、数值输入、重开按钮和详细日志开关。
 	assert_eq(title_text, "战斗调试工具")
-	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：70/70")
-	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：3/3")
-	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：0")
-	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：20/20")
-	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyIntentLabel"), "敌人意图：攻击")
-	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyAttackLabel"), "预计攻击：6")
-	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("手牌（4）："))
-	assert_true(_label_text(scene, "Layout/PilesPanel/DrawPileLabel").contains("抽牌堆（0）："))
-	assert_true(_label_text(scene, "Layout/PilesPanel/DiscardPileLabel").contains("弃牌堆（0）："))
-	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput"), "70")
-	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnergyInput"), "3")
-	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/BlockInput"), "0")
-	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnemyHpInput"), "20")
-	var value_editor = scene.get_node_or_null("Layout/ValueEditor")
+	assert_eq(_label_text(scene, "Layout/Body/MainPanel/Metrics/PlayerHpLabel"), "玩家血量：70/70")
+	assert_eq(_label_text(scene, "Layout/Body/MainPanel/Metrics/EnergyLabel"), "能量：3/3")
+	assert_eq(_label_text(scene, "Layout/Body/MainPanel/Metrics/BlockLabel"), "格挡：0")
+	assert_eq(_label_text(scene, "Layout/Body/MainPanel/EnemyPanel/EnemyHpLabel"), "敌人血量：20/20")
+	assert_eq(_label_text(scene, "Layout/Body/MainPanel/EnemyPanel/EnemyIntentLabel"), "敌人意图：攻击")
+	assert_eq(_label_text(scene, "Layout/Body/MainPanel/EnemyPanel/EnemyAttackLabel"), "预计攻击：6")
+	assert_true(_label_text(scene, "Layout/Body/MainPanel/PilesPanel/HandLabel").contains("手牌（4）："))
+	assert_true(_label_text(scene, "Layout/Body/MainPanel/PilesPanel/DrawPileLabel").contains("抽牌堆（0）："))
+	assert_true(_label_text(scene, "Layout/Body/MainPanel/PilesPanel/DiscardPileLabel").contains("弃牌堆（0）："))
+	assert_eq(_line_edit_text(scene, "Layout/Body/MainPanel/ValueEditor/PlayerHpInput"), "70")
+	assert_eq(_line_edit_text(scene, "Layout/Body/MainPanel/ValueEditor/EnergyInput"), "3")
+	assert_eq(_line_edit_text(scene, "Layout/Body/MainPanel/ValueEditor/BlockInput"), "0")
+	assert_eq(_line_edit_text(scene, "Layout/Body/MainPanel/ValueEditor/EnemyHpInput"), "20")
+	var value_editor = scene.get_node_or_null("Layout/Body/MainPanel/ValueEditor")
 	assert_not_null(value_editor)
 	assert_true(value_editor is GridContainer)
 	if value_editor is GridContainer:
 		assert_eq(value_editor.columns, 2)
-	assert_not_null(scene.get_node_or_null("Layout/ValueEditor/ApplyValuesSpacer"))
-	assert_not_null(scene.get_node_or_null("Layout/Buttons/ResetButton"))
-	assert_not_null(scene.get_node_or_null("Layout/LogPanel/DetailedLogCheckBox"))
-	assert_false(_check_box_pressed(scene, "Layout/LogPanel/DetailedLogCheckBox"))
-	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("战斗开始"))
+	assert_not_null(scene.get_node_or_null("Layout/Body/MainPanel/ValueEditor/ApplyValuesSpacer"))
+	assert_not_null(scene.get_node_or_null("Layout/Body/MainPanel/Buttons/ResetButton"))
+	assert_not_null(scene.get_node_or_null("Layout/Body/LogPanel/DetailedLogCheckBox"))
+	assert_false(_check_box_pressed(scene, "Layout/Body/LogPanel/DetailedLogCheckBox"))
+	assert_true(_label_text(scene, "Layout/Body/LogPanel/LogLabel").contains("战斗开始"))
+
+
+func test_debug_scene_places_log_in_right_side_column() -> void:
+	# Given：策划需要在同一屏同时查看战斗状态和多行战斗日志。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	# When：调试场景完成初始化。
+	var body = scene.get_node_or_null("Layout/Body")
+	var main_panel = scene.get_node_or_null("Layout/Body/MainPanel")
+	var log_panel = scene.get_node_or_null("Layout/Body/LogPanel")
+	var log_view = scene.get_node_or_null("Layout/Body/LogPanel/LogLabel")
+	# Then：主体区域使用左右分栏，日志栏位于右侧并获得稳定宽度和高度。
+	assert_not_null(body)
+	assert_true(body is HBoxContainer)
+	assert_not_null(main_panel)
+	assert_true(main_panel is VBoxContainer)
+	assert_not_null(log_panel)
+	assert_true(log_panel is VBoxContainer)
+	if body != null and log_panel != null:
+		assert_eq(body.get_child(body.get_child_count() - 1), log_panel)
+	if log_panel is Control:
+		assert_true(log_panel.custom_minimum_size.x >= 320.0)
+		assert_eq(log_panel.size_flags_vertical, Control.SIZE_EXPAND_FILL)
+	assert_not_null(log_view)
+	assert_true(log_view is TextEdit)
+	if log_view is TextEdit:
+		assert_true(log_view.custom_minimum_size.y >= 360.0)
+		assert_eq(log_view.size_flags_vertical, Control.SIZE_EXPAND_FILL)
 
 
 func test_debug_scene_records_fixed_battle_fixture_name() -> void:
@@ -271,7 +301,7 @@ func test_log_panel_uses_read_only_multiline_debug_view() -> void:
 	if scene == null:
 		return
 	# When：调试场景完成初始化。
-	var log_view = scene.get_node_or_null("Layout/LogPanel/LogLabel")
+	var log_view = scene.get_node_or_null("Layout/Body/LogPanel/LogLabel")
 	# Then：日志区域是只读的多行调试视图，而不是一行普通标签。
 	assert_not_null(log_view)
 	assert_true(log_view is TextEdit)
@@ -320,21 +350,21 @@ func _instantiate_debug_scene():
 
 
 func _label_text(scene: Node, node_path: String) -> String:
-	var label = scene.get_node_or_null(node_path)
+	var label = _debug_node_or_null(scene, node_path)
 	if label == null:
 		return ""
 	return str(label.text)
 
 
 func _line_edit_text(scene: Node, node_path: String) -> String:
-	var input = scene.get_node_or_null(node_path)
+	var input = _debug_node_or_null(scene, node_path)
 	if input == null:
 		return ""
 	return str(input.text)
 
 
 func _set_line_edit_text(scene: Node, node_path: String, value: String) -> void:
-	var input = scene.get_node_or_null(node_path)
+	var input = _debug_node_or_null(scene, node_path)
 	assert_not_null(input)
 	if input == null:
 		return
@@ -342,14 +372,14 @@ func _set_line_edit_text(scene: Node, node_path: String, value: String) -> void:
 
 
 func _check_box_pressed(scene: Node, node_path: String) -> bool:
-	var check_box = scene.get_node_or_null(node_path)
+	var check_box = _debug_node_or_null(scene, node_path)
 	if check_box == null:
 		return false
 	return check_box.button_pressed
 
 
 func _set_check_box_pressed(scene: Node, node_path: String, pressed: bool) -> void:
-	var check_box = scene.get_node_or_null(node_path)
+	var check_box = _debug_node_or_null(scene, node_path)
 	assert_not_null(check_box)
 	if check_box == null:
 		return
@@ -358,7 +388,7 @@ func _set_check_box_pressed(scene: Node, node_path: String, pressed: bool) -> vo
 
 
 func _press_button(scene: Node, node_path: String) -> void:
-	var button = scene.get_node_or_null(node_path)
+	var button = _debug_node_or_null(scene, node_path)
 	assert_not_null(button)
 	if button == null:
 		return
@@ -366,7 +396,35 @@ func _press_button(scene: Node, node_path: String) -> void:
 
 
 func _button_disabled(scene: Node, node_path: String) -> bool:
-	var button = scene.get_node_or_null(node_path)
+	var button = _debug_node_or_null(scene, node_path)
 	if button == null:
 		return true
 	return button.disabled
+
+
+func _debug_node_or_null(scene: Node, node_path: String):
+	var node = scene.get_node_or_null(node_path)
+	if node != null:
+		return node
+	var relocated_path := _relocated_debug_path(node_path)
+	if relocated_path == node_path:
+		return null
+	return scene.get_node_or_null(relocated_path)
+
+
+func _relocated_debug_path(node_path: String) -> String:
+	if node_path.begins_with("Layout/Metrics"):
+		return node_path.replace("Layout/Metrics", "Layout/Body/MainPanel/Metrics")
+	if node_path.begins_with("Layout/EnemyPanel"):
+		return node_path.replace("Layout/EnemyPanel", "Layout/Body/MainPanel/EnemyPanel")
+	if node_path.begins_with("Layout/PilesPanel"):
+		return node_path.replace("Layout/PilesPanel", "Layout/Body/MainPanel/PilesPanel")
+	if node_path.begins_with("Layout/StatusLabel"):
+		return node_path.replace("Layout/StatusLabel", "Layout/Body/MainPanel/StatusLabel")
+	if node_path.begins_with("Layout/Buttons"):
+		return node_path.replace("Layout/Buttons", "Layout/Body/MainPanel/Buttons")
+	if node_path.begins_with("Layout/ValueEditor"):
+		return node_path.replace("Layout/ValueEditor", "Layout/Body/MainPanel/ValueEditor")
+	if node_path.begins_with("Layout/LogPanel"):
+		return node_path.replace("Layout/LogPanel", "Layout/Body/LogPanel")
+	return node_path
