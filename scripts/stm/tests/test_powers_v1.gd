@@ -211,3 +211,17 @@ func test_add_power_ignores_expired_powers() -> void:
 	# Then：应忽略该状态，容器摘要保持“无”。
 	assert_false(player.has_power("vulnerable"))
 	assert_eq(player.power_summary_text(), "无")
+
+
+func test_builtin_damage_powers_do_not_clamp_before_action_final_clamp() -> void:
+	# Given：攻击方先减伤 5，再叠加内置力量 +2；受击方再加伤 10。
+	var player = PlayerScript.new([])
+	var enemy = EnemyScript.new(20, "测试敌人", 0)
+	player.add_power(ChainMinusPower.new())
+	player.add_power(StrengthScript.new(2))
+	enemy.add_power(ChainPlusPower.new())
+	var action = CombatActionsScript.AttackAction.new(player, enemy, 1, null)
+	# When：执行一次 1 点基础伤害攻击。
+	action.execute(null)
+	# Then：内置状态节点不应提前钳制，敌人生命应从 20 变为 12。
+	assert_eq(enemy.hp, 12)

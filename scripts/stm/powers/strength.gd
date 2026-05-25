@@ -12,4 +12,4 @@ func _init(p_amount: int = 0) -> void:
 
 
 func modify_damage_dealt(value: int, _target = null, _card = null) -> int:
-	return max(0, int(value) + amount)
+	return int(value) + amount
