@@ -134,6 +134,35 @@ class EndTurnActionEnemy:
 			game_state.add_action(queued_action)
 
 
+class DamageIntentionEnemy:
+	extends "res://scripts/stm/enemies/enemy.gd"
+
+	func _init() -> void:
+		super(20, "意图伤害敌人", 0)
+
+	func execute_intention(_game_state, _combat) -> Array:
+		return [EndTurnDamageAction.new()]
+
+
+class HpObservingEnemy:
+	extends "res://scripts/stm/enemies/enemy.gd"
+
+	var observed_player = null
+	var observed_hp: int = -1
+
+	func _init(player_ref = null) -> void:
+		super(20, "观察敌人", 0)
+		observed_player = player_ref
+
+	func determine_next_intention() -> String:
+		if observed_player != null:
+			observed_hp = int(observed_player.hp)
+		return "observe"
+
+	func execute_intention(_game_state, _combat) -> Array:
+		return []
+
+
 func test_bash_deals_damage_and_applies_vulnerable() -> void:
 	# Given：玩家准备打出 Bash，敌人有 20 点生命且没有易伤。
 	var player = PlayerScript.new([])
@@ -477,6 +506,20 @@ func test_enemy_turn_continues_when_fallback_action_drive_returns_none() -> void
 	assert_eq(second_drive_result, TypesScript.TerminalResult.NONE)
 
 
+func test_enemy_turn_queues_all_enemy_actions_before_driving_queue() -> void:
+	# Given：敌人 A 会入队 3 点伤害动作，敌人 B 在决定意图时记录玩家生命。
+	var player = PlayerScript.new([])
+	var enemy_a = DamageIntentionEnemy.new()
+	var enemy_b = HpObservingEnemy.new(player)
+	var combat = CombatScript.new([enemy_a, enemy_b], "test")
+	var game_state = GameStateScript.new(player)
+	# When：执行敌人回合。
+	combat.execute_enemy_turn(game_state)
+	# Then：敌人 B 记录到的应是结算前生命 70，整轮结束后玩家生命为 67。
+	assert_eq(enemy_b.observed_hp, 70)
+	assert_eq(player.hp, 67)
+
+
 func test_fallback_action_drive_returns_terminal_result() -> void:
 	# Given：action_queue 为空实现，pending 队列中有一个返回 COMBAT_LOSE 的动作。
 	var player = PlayerScript.new([])
@@ -487,3 +530,22 @@ func test_fallback_action_drive_returns_terminal_result() -> void:
 	var result = game_state.drive_actions()
 	# Then：应返回该终局结果而不是 null。
 	assert_eq(result, TypesScript.TerminalResult.COMBAT_LOSE)
+
+
+func test_fallback_action_drive_preserves_unexecuted_actions_after_terminal() -> void:
+	# Given：fallback 队列先入队终局动作，再入队 3 点伤害动作。
+	var player = PlayerScript.new([])
+	var game_state = GameStateScript.new(player)
+	game_state.action_queue = null
+	game_state.add_action(EndTurnTerminalAction.new(TypesScript.TerminalResult.COMBAT_LOSE))
+	game_state.add_action(EndTurnDamageAction.new())
+	# When：第一次执行 drive_actions。
+	var first_result = game_state.drive_actions()
+	# Then：第一次返回 COMBAT_LOSE，且伤害动作尚未执行。
+	assert_eq(first_result, TypesScript.TerminalResult.COMBAT_LOSE)
+	assert_eq(player.hp, 70)
+	# When：第二次执行 drive_actions。
+	var second_result = game_state.drive_actions()
+	# Then：第二次返回 NONE，并执行保留的伤害动作。
+	assert_eq(second_result, TypesScript.TerminalResult.NONE)
+	assert_eq(player.hp, 67)

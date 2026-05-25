@@ -59,7 +59,6 @@ func drive_actions():
 		if typeof(result) == TYPE_INT:
 			var terminal_result := int(result)
 			if terminal_result != none_result:
-				_pending_actions.clear()
 				return terminal_result
 	return none_result
 

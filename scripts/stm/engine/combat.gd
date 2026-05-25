@@ -93,11 +93,13 @@ func execute_player_end(game_state) -> void:
 func execute_enemy_turn(game_state):
 	if game_state.player == null:
 		return _result_none()
+	var processed_enemies: Array = []
 	for enemy in enemies:
 		if enemy == null:
 			continue
 		if enemy.has_method("is_dead") and enemy.is_dead():
 			continue
+		processed_enemies.append(enemy)
 		if enemy.has_method("notify_turn_start"):
 			enemy.notify_turn_start()
 		if enemy.has_method("determine_next_intention"):
@@ -119,19 +121,15 @@ func execute_enemy_turn(game_state):
 				damage = int(enemy.damage)
 			if damage > 0:
 				game_state.add_action(StmCombatActions.EnemyAttackAction.new(enemy, game_state.player, damage))
-		var result = _terminal_result_or_none(game_state.drive_actions())
-		if result != _result_none():
-			combat_state.current_phase = "player_start"
-			return result
-		if enemy.has_method("notify_turn_end"):
-			enemy.notify_turn_end()
 		if enemy.has_method("end_turn"):
 			enemy.end_turn(game_state, self)
-		var end_turn_result = _terminal_result_or_none(game_state.drive_actions())
-		if end_turn_result != _result_none():
-			combat_state.current_phase = "player_start"
-			return end_turn_result
+	var result = _terminal_result_or_none(game_state.drive_actions())
+	for enemy in processed_enemies:
+		if enemy != null and enemy.has_method("notify_turn_end"):
+			enemy.notify_turn_end()
 	combat_state.current_phase = "player_start"
+	if result != _result_none():
+		return result
 	return _result_none()
 
 
