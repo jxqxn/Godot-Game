@@ -264,3 +264,29 @@ func test_dexterity_increases_block_from_skill() -> void:
 	action.execute(null)
 	# Then：玩家实际获得 7 点格挡。
 	assert_eq(player.block, 7)
+
+
+func test_weak_rounds_fractional_damage_down() -> void:
+	# Given：玩家拥有 1 回合虚弱，敌人初始生命为 20。
+	var player = PlayerScript.new([])
+	var enemy = EnemyScript.new(20, "测试敌人", 0)
+	player.add_power(WeakScript.new(1))
+	# When：玩家执行一次基础 7 点伤害的攻击。
+	var action = CombatActionsScript.AttackAction.new(player, enemy, 7, null)
+	action.execute(null)
+	# Then：虚弱按向下取整生效，敌人仅损失 5 点生命。
+	assert_eq(enemy.hp, 15)
+
+
+func test_builtin_weak_does_not_clamp_before_action_final_clamp() -> void:
+	# Given：攻击方先减伤 5，再由虚弱缩放，受击方最后加伤 10。
+	var player = PlayerScript.new([])
+	var enemy = EnemyScript.new(20, "测试敌人", 0)
+	player.add_power(ChainMinusPower.new())
+	player.add_power(WeakScript.new(1))
+	enemy.add_power(ChainPlusPower.new())
+	# When：执行一次基础 1 点伤害攻击。
+	var action = CombatActionsScript.AttackAction.new(player, enemy, 1, null)
+	action.execute(null)
+	# Then：应先完成链式修正再统一钳制，敌人生命应从 20 变为 13。
+	assert_eq(enemy.hp, 13)

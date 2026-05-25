@@ -1,5 +1,5 @@
 class_name StmDexterityPower
-extends "res://scripts/stm/powers/power.gd"
+extends StmPower
 
 
 func _init(p_amount: int = 0) -> void:

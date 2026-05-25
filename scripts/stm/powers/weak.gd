@@ -1,5 +1,5 @@
 class_name StmWeakPower
-extends "res://scripts/stm/powers/power.gd"
+extends StmPower
 
 
 func _init(p_duration: int = 0) -> void:
