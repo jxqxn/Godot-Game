@@ -89,19 +89,26 @@ In `test_fixed_battle_fixture_creates_fresh_instances_each_time()`, replace the 
 
 - [ ] **Step 2: Write failing card-name assertions**
 
-In `scripts/stm/tests/test_powers_v1.gd`, add this test before the behavior tests for the three test cards:
+In `scripts/stm/tests/test_powers_v1.gd`, add a `DefendScript` preload beside the existing `StrikeScript` preload:
+
+```gdscript
+const DefendScript := preload("res://scripts/stm/cards/test/defend.gd")
+```
+
+Then add this test before the behavior tests for the three status test cards:
 
 ```gdscript
 func test_test_cards_use_chinese_display_names() -> void:
 	# Given：策划调试牌组使用五张测试卡。
 	var strike = StrikeScript.new()
+	var defend = DefendScript.new()
 	var bash = BashScript.new()
 	var inflame = InflameScript.new()
 	var shrug = ShrugItOffScript.new()
 	# When：读取这些卡牌的显示名称。
-	var names := [strike.card_name, bash.card_name, inflame.card_name, shrug.card_name]
+	var names := [strike.card_name, defend.card_name, bash.card_name, inflame.card_name, shrug.card_name]
 	# Then：测试卡使用中文名称，便于策划在调试界面识别。
-	assert_eq(names, ["打击", "痛击", "燃烧", "耸肩无视"])
+	assert_eq(names, ["打击", "防御", "痛击", "燃烧", "耸肩无视"])
 ```
 
 In `test_shrug_it_off_gains_block_and_draws_card()`, update the final draw assertion:
@@ -112,7 +119,7 @@ In `test_shrug_it_off_gains_block_and_draws_card()`, update the final draw asser
 
 - [ ] **Step 3: Update existing skeleton tests to use Chinese names**
 
-In `scripts/stm/tests/core_skeleton_test.gd`, replace English card lookups and display assertions:
+In `scripts/stm/tests/core_skeleton_test.gd`, replace English card lookup strings only. Do not rename helper functions or class names:
 
 ```gdscript
 var strike = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "打击")
@@ -244,7 +251,7 @@ Run:
 & "C:\Users\User\Desktop\Godot_v4.6.2-stable_win64_console.exe" --headless --path "C:\Users\User\Documents\GitHub\Godot-Game" -s addons/gut/gut_cmdln.gd
 ```
 
-Expected: fixture, core, and powers card-name expectations align with Chinese card names. Existing battle debug tests may still fail because the UI still expects fixed `StrikeButton` / `DefendButton`; do not commit this transition state.
+Expected: `test_fixed_battle_fixture.gd`, `core_skeleton_test.gd`, and `test_powers_v1.gd` pass their Chinese card-name assertions. Running the full suite can still fail only in `test_battle_debug_scene.gd`, because that file still expects fixed `StrikeButton` / `DefendButton` or English UI card names. If another suite fails, fix Task 1 before continuing. Do not commit this transition state.
 
 - [ ] **Step 8: Keep Task 1 changes unstaged for Task 2**
 
@@ -261,6 +268,17 @@ Do not commit after Task 1. Continue directly to Task 2 so the first implementat
 - [ ] **Step 1: Write failing tests for hand-card buttons**
 
 In `scripts/stm/tests/test_battle_debug_scene.gd`, update initial display tests so they no longer expect fixed `StrikeButton` / `DefendButton`, and add assertions for `HandButtons`:
+
+Add these card preloads near the existing constants:
+
+```gdscript
+const StrikeScript := preload("res://scripts/stm/cards/test/strike.gd")
+const BashScript := preload("res://scripts/stm/cards/test/bash.gd")
+const InflameScript := preload("res://scripts/stm/cards/test/inflame.gd")
+const ShrugItOffScript := preload("res://scripts/stm/cards/test/shrug_it_off.gd")
+```
+
+Replace `test_debug_scene_shows_initial_combat_state()` with:
 
 ```gdscript
 func test_debug_scene_shows_initial_combat_state() -> void:
@@ -615,23 +633,30 @@ func _append_card_log(card, before_player: Dictionary, before_enemy_hp: int, res
 		)
 ```
 
-- [ ] **Step 9: Update remaining battle debug tests**
+- [ ] **Step 9: Update named battle debug tests**
 
 In `scripts/stm/tests/test_battle_debug_scene.gd`:
 
-- Replace fixed button disable assertions in fixture-failure tests with:
+Update these existing tests by name:
+
+- `test_debug_scene_fixture_failure_clears_old_display_and_disables_all_actions`
+- `test_end_turn_button_starts_next_player_turn_and_reenables_card_buttons`
+- `test_detailed_log_toggle_switches_between_simple_and_detailed_entries`
+- `test_reset_button_restarts_fixed_debug_battle`
+
+Replace fixed button disable assertions in `test_debug_scene_fixture_failure_clears_old_display_and_disables_all_actions()` with:
 
 ```gdscript
 	assert_eq(_hand_card_button_count(scene), 0)
 ```
 
-- Replace end-turn re-enable assertions with:
+Replace end-turn re-enable assertions in `test_end_turn_button_starts_next_player_turn_and_reenables_card_buttons()` with:
 
 ```gdscript
 	assert_true(_hand_card_button_count(scene) > 0)
 ```
 
-- Replace detailed log tests to click hand card:
+Replace detailed log card clicks in `test_detailed_log_toggle_switches_between_simple_and_detailed_entries()` with:
 
 ```gdscript
 _ensure_card_in_hand(scene, "打击")
@@ -639,7 +664,7 @@ _press_hand_card_button(scene, "打击")
 assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("打出 打击，敌人受到 6 点伤害"))
 ```
 
-- Replace reset test fixed button click with:
+Replace reset test fixed button click in `test_reset_button_restarts_fixed_debug_battle()` with:
 
 ```gdscript
 _ensure_card_in_hand(scene, "打击")
