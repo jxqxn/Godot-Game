@@ -7,6 +7,8 @@ const CardScript := preload("res://scripts/stm/cards/card.gd")
 const CombatActionsScript := preload("res://scripts/stm/actions/combat_actions.gd")
 const StrengthScript := preload("res://scripts/stm/powers/strength.gd")
 const VulnerableScript := preload("res://scripts/stm/powers/vulnerable.gd")
+const WeakScript := preload("res://scripts/stm/powers/weak.gd")
+const DexterityScript := preload("res://scripts/stm/powers/dexterity.gd")
 
 
 class DamageTestSource:
@@ -239,3 +241,26 @@ func test_builtin_vulnerable_does_not_clamp_before_action_final_clamp() -> void:
 	action.execute(null)
 	# Then：易伤节点不应提前钳制，最终应只造成 4 点伤害，敌人生命变为 16。
 	assert_eq(enemy.hp, 16)
+
+
+func test_weak_reduces_attack_damage() -> void:
+	# Given：玩家拥有 2 回合虚弱。
+	var player = PlayerScript.new([])
+	var enemy = EnemyScript.new(20, "测试敌人", 0)
+	player.add_power(WeakScript.new(2))
+	# When：玩家执行一次基础 8 点伤害的攻击。
+	var action = CombatActionsScript.AttackAction.new(player, enemy, 8, null)
+	action.execute(null)
+	# Then：虚弱使敌人只损失 6 点生命。
+	assert_eq(enemy.hp, 14)
+
+
+func test_dexterity_increases_block_from_skill() -> void:
+	# Given：玩家拥有 2 点敏捷。
+	var player = PlayerScript.new([])
+	player.add_power(DexterityScript.new(2))
+	# When：玩家执行一次基础 5 点格挡动作。
+	var action = CombatActionsScript.GainBlockAction.new(player, 5, player, null)
+	action.execute(null)
+	# Then：玩家实际获得 7 点格挡。
+	assert_eq(player.block, 7)
