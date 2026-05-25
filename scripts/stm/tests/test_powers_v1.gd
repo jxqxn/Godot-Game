@@ -4,6 +4,10 @@ const PlayerScript := preload("res://scripts/stm/player/player.gd")
 const EnemyScript := preload("res://scripts/stm/enemies/enemy.gd")
 const GameStateScript := preload("res://scripts/stm/engine/game_state.gd")
 const CardScript := preload("res://scripts/stm/cards/card.gd")
+const StrikeScript := preload("res://scripts/stm/cards/test/strike.gd")
+const BashScript := preload("res://scripts/stm/cards/test/bash.gd")
+const InflameScript := preload("res://scripts/stm/cards/test/inflame.gd")
+const ShrugItOffScript := preload("res://scripts/stm/cards/test/shrug_it_off.gd")
 const CombatActionsScript := preload("res://scripts/stm/actions/combat_actions.gd")
 const StrengthScript := preload("res://scripts/stm/powers/strength.gd")
 const VulnerableScript := preload("res://scripts/stm/powers/vulnerable.gd")
@@ -88,6 +92,47 @@ class FakePower:
 	extends RefCounted
 
 	var power_id := "fake"
+
+
+func test_bash_deals_damage_and_applies_vulnerable() -> void:
+	# Given：玩家准备打出 Bash，敌人有 20 点生命且没有易伤。
+	var player = PlayerScript.new([])
+	var enemy = EnemyScript.new(20, "测试敌人", 0)
+	var game_state = GameStateScript.new(player)
+	var card = BashScript.new()
+	# When：Bash 的动作被依次执行。
+	for action in card.play(game_state, null, [enemy]):
+		action.execute(game_state)
+	# Then：敌人受到 8 点伤害，并获得 2 回合易伤。
+	assert_eq(enemy.hp, 12)
+	assert_eq(enemy.get_power("vulnerable").duration, 2)
+
+
+func test_inflame_applies_strength_to_player() -> void:
+	# Given：玩家准备打出 Inflame。
+	var player = PlayerScript.new([])
+	var game_state = GameStateScript.new(player)
+	var card = InflameScript.new()
+	# When：Inflame 的动作被执行。
+	for action in card.play(game_state, null, []):
+		action.execute(game_state)
+	# Then：玩家获得 2 点力量。
+	assert_eq(player.get_power("strength").amount, 2)
+
+
+func test_shrug_it_off_gains_block_and_draws_card() -> void:
+	# Given：玩家抽牌堆里有一张 Strike，并准备打出 Shrug It Off。
+	var player = PlayerScript.new([])
+	player.card_manager.draw_pile = [StrikeScript.new()]
+	var game_state = GameStateScript.new(player)
+	var card = ShrugItOffScript.new()
+	# When：Shrug It Off 的动作被依次执行。
+	for action in card.play(game_state, null, []):
+		action.execute(game_state)
+	# Then：玩家获得 8 点格挡，并抽到一张手牌。
+	assert_eq(player.block, 8)
+	assert_eq(player.card_manager.hand.size(), 1)
+	assert_eq(player.card_manager.hand[0].card_name, "Strike")
 
 
 func test_apply_power_stacks_intensity_or_duration() -> void:
