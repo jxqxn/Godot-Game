@@ -225,3 +225,17 @@ func test_builtin_damage_powers_do_not_clamp_before_action_final_clamp() -> void
 	action.execute(null)
 	# Then：内置状态节点不应提前钳制，敌人生命应从 20 变为 12。
 	assert_eq(enemy.hp, 12)
+
+
+func test_builtin_vulnerable_does_not_clamp_before_action_final_clamp() -> void:
+	# Given：攻击方先把基础伤害压到负数，受击方先应用易伤再通过后续状态加回正数。
+	var player = PlayerScript.new([])
+	var enemy = EnemyScript.new(20, "测试敌人", 0)
+	player.add_power(ChainMinusPower.new())
+	enemy.add_power(VulnerableScript.new(1))
+	enemy.add_power(ChainPlusPower.new())
+	var action = CombatActionsScript.AttackAction.new(player, enemy, 1, null)
+	# When：执行一次 1 点基础伤害攻击。
+	action.execute(null)
+	# Then：易伤节点不应提前钳制，最终应只造成 4 点伤害，敌人生命变为 16。
+	assert_eq(enemy.hp, 16)
