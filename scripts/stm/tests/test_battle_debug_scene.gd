@@ -2,6 +2,8 @@ extends GutTest
 
 const DEBUG_SCENE_PATH := "res://scenes/stm/battle_debug_scene.tscn"
 const FixedBattleFixtureScript := preload("res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd")
+const StrengthScript := preload("res://scripts/stm/powers/strength.gd")
+const VulnerableScript := preload("res://scripts/stm/powers/vulnerable.gd")
 
 
 func test_debug_scene_shows_initial_combat_state() -> void:
@@ -147,9 +149,11 @@ func test_debug_scene_fixture_failure_clears_old_display_and_disables_all_action
 	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：无")
 	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：无")
 	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：无")
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerPowersLabel"), "玩家状态效果：无")
 	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：无")
 	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyIntentLabel"), "敌人意图：无")
 	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyAttackLabel"), "预计攻击：无")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyPowersLabel"), "敌人状态效果：无")
 	assert_eq(_label_text(scene, "Layout/PilesPanel/HandLabel"), "手牌（0）：无")
 	assert_eq(_label_text(scene, "Layout/PilesPanel/DrawPileLabel"), "抽牌堆（0）：无")
 	assert_eq(_label_text(scene, "Layout/PilesPanel/DiscardPileLabel"), "弃牌堆（0）：无")
@@ -336,6 +340,21 @@ func test_reset_button_restarts_fixed_debug_battle() -> void:
 	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/EnemyHpInput"), "20")
 	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("战斗开始"))
 	assert_false(_label_text(scene, "Layout/LogPanel/LogLabel").contains("应用数值"))
+
+
+func test_调试场景显示玩家和敌人状态效果摘要() -> void:
+	# Given：调试场景已初始化，玩家和敌人分别拥有力量与易伤效果。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	scene.game_state.player.add_power(StrengthScript.new(2))
+	scene.enemy.add_power(VulnerableScript.new(3))
+	# When：刷新调试场景显示。
+	scene._refresh_display()
+	# Then：玩家与敌人的状态效果摘要应正确显示。
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerPowersLabel"), "玩家状态效果：力量 2")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyPowersLabel"), "敌人状态效果：易伤 3")
 
 
 func _instantiate_debug_scene():

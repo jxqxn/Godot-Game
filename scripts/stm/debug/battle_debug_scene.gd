@@ -13,9 +13,11 @@ var status_message: String = "等待行动"
 var player_hp_label: Label
 var energy_label: Label
 var block_label: Label
+var player_powers_label: Label
 var enemy_hp_label: Label
 var enemy_intent_label: Label
 var enemy_attack_label: Label
+var enemy_powers_label: Label
 var hand_label: Label
 var draw_pile_label: Label
 var discard_pile_label: Label
@@ -107,12 +109,16 @@ func _show_no_combat_display() -> void:
 		energy_label.text = "能量：无"
 	if block_label != null:
 		block_label.text = "格挡：无"
+	if player_powers_label != null:
+		player_powers_label.text = "玩家状态效果：无"
 	if enemy_hp_label != null:
 		enemy_hp_label.text = "敌人血量：无"
 	if enemy_intent_label != null:
 		enemy_intent_label.text = "敌人意图：无"
 	if enemy_attack_label != null:
 		enemy_attack_label.text = "预计攻击：无"
+	if enemy_powers_label != null:
+		enemy_powers_label.text = "敌人状态效果：无"
 	if hand_label != null:
 		hand_label.text = "手牌（0）：无"
 	if draw_pile_label != null:
@@ -174,6 +180,8 @@ func _build_ui() -> void:
 	metrics.add_child(energy_label)
 	block_label = _new_label("BlockLabel")
 	metrics.add_child(block_label)
+	player_powers_label = _new_label("PlayerPowersLabel")
+	metrics.add_child(player_powers_label)
 
 	var enemy_panel = VBoxContainer.new()
 	enemy_panel.name = "EnemyPanel"
@@ -186,6 +194,8 @@ func _build_ui() -> void:
 	enemy_panel.add_child(enemy_intent_label)
 	enemy_attack_label = _new_label("EnemyAttackLabel")
 	enemy_panel.add_child(enemy_attack_label)
+	enemy_powers_label = _new_label("EnemyPowersLabel")
+	enemy_panel.add_child(enemy_powers_label)
 
 	var piles_panel = VBoxContainer.new()
 	piles_panel.name = "PilesPanel"
@@ -373,9 +383,11 @@ func _refresh_display() -> void:
 	player_hp_label.text = "玩家血量：%d/%d" % [player.hp, player.max_hp]
 	energy_label.text = "能量：%d/%d" % [player.energy, player.max_energy]
 	block_label.text = "格挡：%d" % player.block
+	player_powers_label.text = _power_text("玩家状态效果", player)
 	enemy_hp_label.text = _enemy_hp_text()
 	enemy_intent_label.text = _enemy_intent_text()
 	enemy_attack_label.text = _enemy_attack_text()
+	enemy_powers_label.text = _power_text("敌人状态效果", enemy)
 	hand_label.text = _pile_text("手牌", "hand")
 	draw_pile_label.text = _pile_text("抽牌堆", "draw_pile")
 	discard_pile_label.text = _pile_text("弃牌堆", "discard_pile")
@@ -416,6 +428,15 @@ func _enemy_attack_text() -> String:
 	if "damage" in enemy:
 		return "预计攻击：%d" % int(enemy.damage)
 	return "预计攻击：6"
+
+
+func _power_text(title: String, creature) -> String:
+	if creature == null or not creature.has_method("power_summary_text"):
+		return "%s：无" % title
+	var summary := str(creature.power_summary_text())
+	if summary.is_empty():
+		summary = "无"
+	return "%s：%s" % [title, summary]
 
 
 func _pile_text(title: String, pile_name: String) -> String:
