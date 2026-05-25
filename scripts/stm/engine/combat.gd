@@ -119,18 +119,18 @@ func execute_enemy_turn(game_state):
 				damage = int(enemy.damage)
 			if damage > 0:
 				game_state.add_action(StmCombatActions.EnemyAttackAction.new(enemy, game_state.player, damage))
-		var result = game_state.drive_actions()
+		var result = _terminal_result_or_none(game_state.drive_actions())
 		if result != _result_none():
 			combat_state.current_phase = "player_start"
-			return result if typeof(result) == TYPE_INT else _result_none()
+			return result
 		if enemy.has_method("notify_turn_end"):
 			enemy.notify_turn_end()
 		if enemy.has_method("end_turn"):
 			enemy.end_turn(game_state, self)
-		var end_turn_result = game_state.drive_actions()
+		var end_turn_result = _terminal_result_or_none(game_state.drive_actions())
 		if end_turn_result != _result_none():
 			combat_state.current_phase = "player_start"
-			return end_turn_result if typeof(end_turn_result) == TYPE_INT else _result_none()
+			return end_turn_result
 	combat_state.current_phase = "player_start"
 	return _result_none()
 
@@ -179,6 +179,12 @@ func _result_win():
 
 func _result_lose():
 	return _read_terminal_result("COMBAT_LOSE", 2)
+
+
+func _terminal_result_or_none(result) -> int:
+	if typeof(result) == TYPE_INT:
+		return int(result)
+	return _result_none()
 
 
 func _read_terminal_result(key: String, fallback: int):

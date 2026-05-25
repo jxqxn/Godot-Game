@@ -50,11 +50,18 @@ func drive_actions():
 			return action_queue.drive(self)
 		if action_queue.has_method("execute_all"):
 			return action_queue.execute_all(self)
-	for action in _pending_actions:
-		if action != null and action.has_method("execute"):
-			action.execute(self)
-	_pending_actions.clear()
-	return null
+	var none_result := int(StmTypes.TerminalResult.NONE)
+	while not _pending_actions.is_empty():
+		var action = _pending_actions.pop_front()
+		if action == null or not action.has_method("execute"):
+			continue
+		var result = action.execute(self)
+		if typeof(result) == TYPE_INT:
+			var terminal_result := int(result)
+			if terminal_result != none_result:
+				_pending_actions.clear()
+				return terminal_result
+	return none_result
 
 
 func _try_new_global(class_name_text: String):

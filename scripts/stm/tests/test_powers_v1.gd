@@ -456,3 +456,34 @@ func test_player_turn_end_ticks_powers_even_without_card_manager() -> void:
 	# Then：易伤会被结算移除，且阶段切换到 enemy_turn。
 	assert_false(player.has_power("vulnerable"))
 	assert_eq(combat.combat_state.current_phase, "enemy_turn")
+
+
+func test_enemy_turn_continues_when_fallback_action_drive_returns_none() -> void:
+	# Given：action_queue 为空实现，两个敌人都会在 end_turn 入队 3 点伤害动作。
+	var player = PlayerScript.new([])
+	var enemy_a = EndTurnActionEnemy.new(EndTurnDamageAction.new())
+	var enemy_b = EndTurnActionEnemy.new(EndTurnDamageAction.new())
+	var combat = CombatScript.new([enemy_a, enemy_b], "test")
+	var game_state = GameStateScript.new(player)
+	game_state.action_queue = null
+	# When：执行整轮敌人回合。
+	combat.execute_enemy_turn(game_state)
+	# Then：两个 end_turn 动作都在该敌人回合内结算，阶段回到 player_start，且后续 drive 不再改变生命。
+	assert_eq(player.hp, 64)
+	assert_eq(combat.combat_state.current_phase, "player_start")
+	var hp_after_enemy_turn = player.hp
+	var second_drive_result = game_state.drive_actions()
+	assert_eq(player.hp, hp_after_enemy_turn)
+	assert_eq(second_drive_result, TypesScript.TerminalResult.NONE)
+
+
+func test_fallback_action_drive_returns_terminal_result() -> void:
+	# Given：action_queue 为空实现，pending 队列中有一个返回 COMBAT_LOSE 的动作。
+	var player = PlayerScript.new([])
+	var game_state = GameStateScript.new(player)
+	game_state.action_queue = null
+	game_state.add_action(EndTurnTerminalAction.new(TypesScript.TerminalResult.COMBAT_LOSE))
+	# When：执行 fallback 路径的 drive_actions。
+	var result = game_state.drive_actions()
+	# Then：应返回该终局结果而不是 null。
+	assert_eq(result, TypesScript.TerminalResult.COMBAT_LOSE)
