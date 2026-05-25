@@ -81,9 +81,9 @@ func _execute_end_turn(game_state):
 
 
 func execute_player_end(game_state) -> void:
-	if game_state.player == null or game_state.player.card_manager == null:
+	if game_state.player == null:
 		return
-	if game_state.player.card_manager.has_method("discard_hand"):
+	if game_state.player.card_manager != null and game_state.player.card_manager.has_method("discard_hand"):
 		game_state.player.card_manager.discard_hand()
 	if game_state.player.has_method("notify_turn_end"):
 		game_state.player.notify_turn_end()
@@ -120,13 +120,17 @@ func execute_enemy_turn(game_state):
 			if damage > 0:
 				game_state.add_action(StmCombatActions.EnemyAttackAction.new(enemy, game_state.player, damage))
 		var result = game_state.drive_actions()
+		if result != _result_none():
+			combat_state.current_phase = "player_start"
+			return result if typeof(result) == TYPE_INT else _result_none()
 		if enemy.has_method("notify_turn_end"):
 			enemy.notify_turn_end()
 		if enemy.has_method("end_turn"):
 			enemy.end_turn(game_state, self)
-		if result != _result_none():
+		var end_turn_result = game_state.drive_actions()
+		if end_turn_result != _result_none():
 			combat_state.current_phase = "player_start"
-			return result if typeof(result) == TYPE_INT else _result_none()
+			return end_turn_result if typeof(end_turn_result) == TYPE_INT else _result_none()
 	combat_state.current_phase = "player_start"
 	return _result_none()
 

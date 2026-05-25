@@ -10,6 +10,7 @@ const BashScript := preload("res://scripts/stm/cards/test/bash.gd")
 const InflameScript := preload("res://scripts/stm/cards/test/inflame.gd")
 const ShrugItOffScript := preload("res://scripts/stm/cards/test/shrug_it_off.gd")
 const CombatActionsScript := preload("res://scripts/stm/actions/combat_actions.gd")
+const TypesScript := preload("res://scripts/stm/utils/types.gd")
 const StrengthScript := preload("res://scripts/stm/powers/strength.gd")
 const VulnerableScript := preload("res://scripts/stm/powers/vulnerable.gd")
 const WeakScript := preload("res://scripts/stm/powers/weak.gd")
@@ -93,6 +94,44 @@ class FakePower:
 	extends RefCounted
 
 	var power_id := "fake"
+
+
+class EndTurnDamageAction:
+	extends RefCounted
+
+	func execute(game_state) -> int:
+		if game_state != null and game_state.player != null:
+			game_state.player.take_damage(3)
+		return TypesScript.TerminalResult.NONE
+
+
+class EndTurnTerminalAction:
+	extends RefCounted
+
+	var terminal_result: int = TypesScript.TerminalResult.NONE
+
+	func _init(p_terminal_result: int) -> void:
+		terminal_result = p_terminal_result
+
+	func execute(_game_state) -> int:
+		return terminal_result
+
+
+class EndTurnActionEnemy:
+	extends "res://scripts/stm/enemies/enemy.gd"
+
+	var queued_action = null
+
+	func _init(action_to_queue = null) -> void:
+		super(20, "回合结束敌人", 0)
+		queued_action = action_to_queue
+
+	func execute_intention(_game_state, _combat) -> Array:
+		return []
+
+	func end_turn(game_state, _combat) -> void:
+		if queued_action != null:
+			game_state.add_action(queued_action)
 
 
 func test_bash_deals_damage_and_applies_vulnerable() -> void:
@@ -374,3 +413,46 @@ func test_enemy_duration_power_affects_current_action_before_ticking_down() -> v
 	# Then：虚弱先影响本次攻击，随后持续时间归零并被移除。
 	assert_eq(player.hp, 64)
 	assert_false(enemy.has_power("weak"))
+
+
+func test_enemy_end_turn_actions_are_driven_before_enemy_turn_finishes() -> void:
+	# Given：敌人的 end_turn 会入队一个让玩家失去 3 点生命的动作。
+	var player = PlayerScript.new([])
+	var enemy = EndTurnActionEnemy.new(EndTurnDamageAction.new())
+	var combat = CombatScript.new([enemy], "test")
+	var game_state = GameStateScript.new(player)
+	# When：执行敌人回合。
+	combat.execute_enemy_turn(game_state)
+	# Then：该动作在敌人回合内被结算，且行动队列为空。
+	assert_eq(player.hp, 67)
+	assert_true(game_state.action_queue.is_empty())
+
+
+func test_enemy_end_turn_terminal_result_is_returned() -> void:
+	# Given：敌人的 end_turn 会入队一个返回 COMBAT_LOSE 的终局动作。
+	var player = PlayerScript.new([])
+	var enemy = EndTurnActionEnemy.new(
+		EndTurnTerminalAction.new(TypesScript.TerminalResult.COMBAT_LOSE)
+	)
+	var combat = CombatScript.new([enemy], "test")
+	var game_state = GameStateScript.new(player)
+	# When：执行敌人回合并接收返回值。
+	var result = combat.execute_enemy_turn(game_state)
+	# Then：敌人回合应返回该终局结果，且不吞掉该结果。
+	assert_eq(result, TypesScript.TerminalResult.COMBAT_LOSE)
+	assert_true(game_state.action_queue.is_empty())
+
+
+func test_player_turn_end_ticks_powers_even_without_card_manager() -> void:
+	# Given：玩家有 1 回合易伤，但 card_manager 为空且当前阶段是 player_turn。
+	var player = PlayerScript.new([])
+	player.add_power(VulnerableScript.new(1))
+	player.card_manager = null
+	var combat = CombatScript.new([], "test")
+	var game_state = GameStateScript.new(player)
+	combat.combat_state.current_phase = "player_turn"
+	# When：执行玩家回合结束。
+	combat.execute_player_end(game_state)
+	# Then：易伤会被结算移除，且阶段切换到 enemy_turn。
+	assert_false(player.has_power("vulnerable"))
+	assert_eq(combat.combat_state.current_phase, "enemy_turn")
