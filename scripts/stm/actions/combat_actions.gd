@@ -19,11 +19,12 @@ class AttackAction:
 	func execute(_game_state = null):
 		if target == null:
 			return StmTypes.TerminalResult.NONE
-		var final_damage: int = max(0, int(damage))
+		var final_damage: int = int(damage)
 		if source != null and source.has_method("modify_damage_dealt"):
-			final_damage = max(0, int(source.modify_damage_dealt(final_damage, target, card)))
+			final_damage = int(source.modify_damage_dealt(final_damage, target, card))
 		if target != null and target.has_method("modify_damage_taken"):
-			final_damage = max(0, int(target.modify_damage_taken(final_damage, source, card)))
+			final_damage = int(target.modify_damage_taken(final_damage, source, card))
+		final_damage = max(0, int(final_damage))
 		if target.has_method("take_damage"):
 			target.take_damage(final_damage, source, card)
 		elif "hp" in target:

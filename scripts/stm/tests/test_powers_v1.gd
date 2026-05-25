@@ -6,6 +6,25 @@ const CombatActionsScript := preload("res://scripts/stm/actions/combat_actions.g
 const StrengthScript := preload("res://scripts/stm/powers/strength.gd")
 const VulnerableScript := preload("res://scripts/stm/powers/vulnerable.gd")
 
+class DamageTestSource:
+	extends RefCounted
+
+	func modify_damage_dealt(value: int, _target = null, _card = null) -> int:
+		return value - 5
+
+class DamageTestTarget:
+	extends RefCounted
+
+	var hp: int = 20
+
+	func modify_damage_taken(value: int, _source = null, _card = null) -> int:
+		return value + 10
+
+	func take_damage(amount, _source = null, _card = null) -> int:
+		var damage := int(amount)
+		hp -= damage
+		return damage
+
 
 func test_apply_power_stacks_intensity_or_duration() -> void:
 	# Given：玩家和敌人分别准备接收强度型状态与持续型状态。
@@ -49,3 +68,14 @@ func test_vulnerable_increases_damage_taken() -> void:
 	action.execute(null)
 	# Then：易伤使敌人实际损失 9 点生命。
 	assert_eq(enemy.hp, 11)
+
+
+func test_attack_damage_modifiers_apply_before_single_final_clamp() -> void:
+	# Given：基础伤害为 1，攻击方先减伤 5，再由受击方加伤 10。
+	var source = DamageTestSource.new()
+	var target = DamageTestTarget.new()
+	var action = CombatActionsScript.AttackAction.new(source, target, 1, null)
+	# When：执行一次攻击结算。
+	action.execute(null)
+	# Then：应先完成两侧修正再统一下限钳制，最终仅造成 6 点伤害。
+	assert_eq(target.hp, 14)
