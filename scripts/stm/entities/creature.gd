@@ -1,5 +1,6 @@
 class_name StmCreature
 extends RefCounted
+const StmPowerScript := preload("res://scripts/stm/powers/power.gd")
 
 var _max_hp: int = 1
 var _hp: int = 1
@@ -63,6 +64,10 @@ func gain_block(amount) -> int:
 func add_power(power) -> void:
 	if power == null:
 		return
+	if not is_instance_of(power, StmPowerScript):
+		return
+	if power.is_expired():
+		return
 	var power_id_text := _get_power_id_text(power)
 	if power_id_text.is_empty():
 		return
@@ -114,26 +119,26 @@ func power_summary_text() -> String:
 
 
 func modify_damage_dealt(value: int, target = null, card = null) -> int:
-	var modified: int = max(0, int(value))
+	var modified: int = int(value)
 	for power in powers:
 		if power != null and power.has_method("modify_damage_dealt"):
-			modified = max(0, int(power.modify_damage_dealt(modified, target, card)))
+			modified = int(power.modify_damage_dealt(modified, target, card))
 	return modified
 
 
 func modify_damage_taken(value: int, source = null, card = null) -> int:
-	var modified: int = max(0, int(value))
+	var modified: int = int(value)
 	for power in powers:
 		if power != null and power.has_method("modify_damage_taken"):
-			modified = max(0, int(power.modify_damage_taken(modified, source, card)))
+			modified = int(power.modify_damage_taken(modified, source, card))
 	return modified
 
 
 func modify_block_gained(value: int, source = null, card = null) -> int:
-	var modified: int = max(0, int(value))
+	var modified: int = int(value)
 	for power in powers:
 		if power != null and power.has_method("modify_block_gained"):
-			modified = max(0, int(power.modify_block_gained(modified, source, card)))
+			modified = int(power.modify_block_gained(modified, source, card))
 	return modified
 
 

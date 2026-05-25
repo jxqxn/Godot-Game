@@ -54,18 +54,26 @@ class GainBlockAction:
 
 	var target
 	var amount: int
+	var source
+	var card
 
-	func _init(p_target, p_amount: int) -> void:
+	func _init(p_target, p_amount: int, p_source = null, p_card = null) -> void:
 		target = p_target
 		amount = p_amount
+		source = p_source
+		card = p_card
 
 	func execute(_game_state = null):
 		if target == null:
 			return StmTypes.TerminalResult.NONE
+		var final_block: int = int(amount)
+		if target.has_method("modify_block_gained"):
+			final_block = int(target.modify_block_gained(final_block, source, card))
+		final_block = max(0, int(final_block))
 		if target.has_method("gain_block"):
-			target.gain_block(amount)
+			target.gain_block(final_block)
 		elif "block" in target:
-			target.block += amount
+			target.block += final_block
 		return StmTypes.TerminalResult.NONE
 
 

@@ -44,12 +44,12 @@ func can_play(game_state) -> bool:
 func on_play(_game_state, targets := []) -> Array:
 	var actions: Array = []
 	if block > 0 and _game_state != null and _game_state.player != null:
-		actions.append(StmCombatActions.GainBlockAction.new(_game_state.player, block))
+		actions.append(StmCombatActions.GainBlockAction.new(_game_state.player, block, _game_state.player, self))
 	if damage > 0 and targets.size() > 0:
 		var source = null
 		if _game_state != null:
 			source = _game_state.player
-		actions.append(StmCombatActions.AttackAction.new(source, targets[0], damage))
+		actions.append(StmCombatActions.AttackAction.new(source, targets[0], damage, self))
 	return actions
 
 
