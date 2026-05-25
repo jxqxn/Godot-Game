@@ -120,45 +120,45 @@ func test_draw_many_moves_cards_from_draw_pile_to_hand() -> void:
 	assert_eq(card_manager.get_pile("draw_pile").size(), 2)
 
 func test_strike_spends_energy_damages_enemy_and_discards() -> void:
-	# Given：一场已开始的测试战斗，玩家手牌中有 Strike。
+	# Given：一场已开始的测试战斗，玩家手牌中有打击。
 	var bootstrap = GameBootstrapScript.new()
 	var game_state = bootstrap.create_test_game()
 	var combat = bootstrap.create_test_combat(game_state)
 	combat.start(game_state)
 	var enemy = combat.enemies[0]
-	var strike = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "Strike")
+	var strike = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "打击")
 	var starting_energy = game_state.player.energy
-	# When：玩家对 DummyEnemy 打出 Strike。
+	# When：玩家对 DummyEnemy 打出打击。
 	var result = combat.play_card(game_state, strike, [enemy])
-	# Then：玩家消耗 1 点能量，敌人受到 6 点伤害，Strike 进入弃牌堆。
+	# Then：玩家消耗 1 点能量，敌人受到 6 点伤害，打击进入弃牌堆。
 	assert_eq(result, TypesScript.TerminalResult.NONE)
 	assert_eq(game_state.player.energy, starting_energy - 1)
 	assert_eq(enemy.hp, enemy.max_hp - 6)
 	assert_true(game_state.player.card_manager.get_pile("discard_pile").has(strike))
 
 func test_defend_spends_energy_grants_block_and_discards() -> void:
-	# Given：一场已开始的测试战斗，玩家手牌中有 Defend。
+	# Given：一场已开始的测试战斗，玩家手牌中有防御。
 	var bootstrap = GameBootstrapScript.new()
 	var game_state = bootstrap.create_test_game()
 	var combat = bootstrap.create_test_combat(game_state)
 	combat.start(game_state)
-	var defend = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "Defend")
+	var defend = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "防御")
 	var starting_energy = game_state.player.energy
-	# When：玩家打出 Defend。
+	# When：玩家打出防御。
 	var result = combat.play_card(game_state, defend, [])
-	# Then：玩家消耗 1 点能量，获得 5 点格挡，Defend 进入弃牌堆。
+	# Then：玩家消耗 1 点能量，获得 5 点格挡，防御进入弃牌堆。
 	assert_eq(result, TypesScript.TerminalResult.NONE)
 	assert_eq(game_state.player.energy, starting_energy - 1)
 	assert_eq(game_state.player.block, 5)
 	assert_true(game_state.player.card_manager.get_pile("discard_pile").has(defend))
 
 func test_end_turn_discards_hand_enemy_damage_uses_block_and_starts_next_player_turn() -> void:
-	# Given：玩家已打出 Defend 并保留 5 点格挡，手牌中还有其他牌。
+	# Given：玩家已打出防御并保留 5 点格挡，手牌中还有其他牌。
 	var bootstrap = GameBootstrapScript.new()
 	var game_state = bootstrap.create_test_game()
 	var combat = bootstrap.create_test_combat(game_state)
 	combat.start(game_state)
-	var defend = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "Defend")
+	var defend = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "防御")
 	combat.play_card(game_state, defend, [])
 	var starting_hp = game_state.player.hp
 	# When：玩家结束回合，DummyEnemy 执行 6 点攻击。
@@ -172,15 +172,15 @@ func test_end_turn_discards_hand_enemy_damage_uses_block_and_starts_next_player_
 	assert_eq(combat.combat_state.current_phase, "player_start")
 
 func test_combat_reports_win_when_all_enemies_reach_zero_hp() -> void:
-	# Given：DummyEnemy 只剩 6 点 HP，玩家手牌中有 Strike。
+	# Given：DummyEnemy 只剩 6 点 HP，玩家手牌中有打击。
 	var bootstrap = GameBootstrapScript.new()
 	var game_state = bootstrap.create_test_game()
 	var combat = bootstrap.create_test_combat(game_state)
 	combat.start(game_state)
 	var enemy = combat.enemies[0]
 	enemy.hp = 6
-	var strike = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "Strike")
-	# When：玩家对 DummyEnemy 打出 Strike。
+	var strike = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "打击")
+	# When：玩家对 DummyEnemy 打出打击。
 	var result = combat.play_card(game_state, strike, [enemy])
 	# Then：战斗返回胜利结果。
 	assert_eq(result, TypesScript.TerminalResult.COMBAT_WIN)
@@ -225,16 +225,16 @@ func test_player_and_dummy_enemy_use_shared_inheritance() -> void:
 
 
 func test_combat_public_api_drives_state_changes_via_action_queue() -> void:
-	# Given：开始一场战斗并定位手牌中的 Strike/Defend。
+	# Given：开始一场战斗并定位手牌中的打击/防御。
 	var bootstrap = GameBootstrapScript.new()
 	var game_state = bootstrap.create_test_game()
 	var combat = bootstrap.create_test_combat(game_state)
 	combat.start(game_state)
 	var enemy = combat.enemies[0]
-	var strike = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "Strike")
-	var defend = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "Defend")
+	var strike = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "打击")
+	var defend = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "防御")
 	var start_hp = game_state.player.hp
-	# When：连续打出 Strike、Defend，然后结束回合。
+	# When：连续打出打击、防御，然后结束回合。
 	var strike_result = combat.play_card(game_state, strike, [enemy])
 	var defend_result = combat.play_card(game_state, defend, [])
 	var end_result = combat.end_turn(game_state)
@@ -276,13 +276,13 @@ func test_combat_start_uses_draw_cards_action_queue_path() -> void:
 
 
 func test_card_play_only_returns_actions_without_driving_queue() -> void:
-	# Given: 已开始战斗，手牌中有 Strike，记录玩家格挡、敌人血量与队列长度。
+	# Given：已开始战斗，手牌中有打击，记录玩家格挡、敌人血量与队列长度。
 	var bootstrap = GameBootstrapScript.new()
 	var game_state = bootstrap.create_test_game()
 	var combat = bootstrap.create_test_combat(game_state)
 	combat.start(game_state)
 	var enemy = combat.enemies[0]
-	var strike = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "Strike")
+	var strike = _find_card_by_name(game_state.player.card_manager.get_pile("hand"), "打击")
 	var start_enemy_hp = enemy.hp
 	var start_block = game_state.player.block
 	var start_queue_size = game_state.action_queue.queue.size()

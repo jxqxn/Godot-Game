@@ -4,6 +4,9 @@ extends RefCounted
 const GameBootstrapScript := preload("res://scripts/stm/engine/game_bootstrap.gd")
 const StrikeScript := preload("res://scripts/stm/cards/test/strike.gd")
 const DefendScript := preload("res://scripts/stm/cards/test/defend.gd")
+const BashScript := preload("res://scripts/stm/cards/test/bash.gd")
+const InflameScript := preload("res://scripts/stm/cards/test/inflame.gd")
+const ShrugItOffScript := preload("res://scripts/stm/cards/test/shrug_it_off.gd")
 const PlayerScript := preload("res://scripts/stm/player/player.gd")
 const DummyEnemyScript := preload("res://scripts/stm/enemies/test/dummy_enemy.gd")
 
@@ -37,4 +40,7 @@ func create_deck() -> Array:
 		DefendScript.new(),
 		StrikeScript.new(),
 		DefendScript.new(),
+		BashScript.new(),
+		InflameScript.new(),
+		ShrugItOffScript.new(),
 	]

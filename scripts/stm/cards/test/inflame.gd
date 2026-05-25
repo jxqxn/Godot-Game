@@ -5,7 +5,7 @@ const StrengthScript := preload("res://scripts/stm/powers/strength.gd")
 
 
 func _init() -> void:
-	card_name = "Inflame"
+	card_name = "燃烧"
 	card_type = "power"
 	card_rarity = "uncommon"
 	target_type = "self"

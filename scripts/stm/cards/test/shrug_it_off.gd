@@ -3,7 +3,7 @@ extends StmCard
 
 
 func _init() -> void:
-	card_name = "Shrug It Off"
+	card_name = "耸肩无视"
 	card_type = "skill"
 	card_rarity = "common"
 	target_type = "self"

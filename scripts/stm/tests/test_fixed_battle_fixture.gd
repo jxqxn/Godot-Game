@@ -26,11 +26,14 @@ func test_fixed_battle_fixture_creates_named_debug_battle() -> void:
 	assert_eq(context["enemy"].hp, 20)
 	assert_eq(context["enemy"].max_hp, 20)
 	var deck: Array = context["player"].card_manager.get_pile("deck")
-	assert_eq(deck.size(), 4)
-	assert_eq(deck[0].card_name, "Strike")
-	assert_eq(deck[1].card_name, "Defend")
-	assert_eq(deck[2].card_name, "Strike")
-	assert_eq(deck[3].card_name, "Defend")
+	assert_eq(deck.size(), 7)
+	assert_eq(deck[0].card_name, "打击")
+	assert_eq(deck[1].card_name, "防御")
+	assert_eq(deck[2].card_name, "打击")
+	assert_eq(deck[3].card_name, "防御")
+	assert_eq(deck[4].card_name, "痛击")
+	assert_eq(deck[5].card_name, "燃烧")
+	assert_eq(deck[6].card_name, "耸肩无视")
 
 
 func test_fixed_battle_fixture_creates_fresh_instances_each_time() -> void:
@@ -46,9 +49,7 @@ func test_fixed_battle_fixture_creates_fresh_instances_each_time() -> void:
 	assert_false(first["game_state"] == second["game_state"])
 	var first_deck: Array = first["player"].card_manager.get_pile("deck")
 	var second_deck: Array = second["player"].card_manager.get_pile("deck")
-	assert_eq(first_deck.size(), 4)
-	assert_eq(second_deck.size(), 4)
-	assert_false(first_deck[0] == second_deck[0])
-	assert_false(first_deck[1] == second_deck[1])
-	assert_false(first_deck[2] == second_deck[2])
-	assert_false(first_deck[3] == second_deck[3])
+	assert_eq(first_deck.size(), 7)
+	assert_eq(second_deck.size(), 7)
+	for index in first_deck.size():
+		assert_false(first_deck[index] == second_deck[index])

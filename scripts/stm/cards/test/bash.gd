@@ -5,7 +5,7 @@ const VulnerableScript := preload("res://scripts/stm/powers/vulnerable.gd")
 
 
 func _init() -> void:
-	card_name = "Bash"
+	card_name = "痛击"
 	card_type = "attack"
 	card_rarity = "starter"
 	target_type = "enemy_select"

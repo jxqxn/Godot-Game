@@ -6,6 +6,7 @@ const GameStateScript := preload("res://scripts/stm/engine/game_state.gd")
 const CombatScript := preload("res://scripts/stm/engine/combat.gd")
 const CardScript := preload("res://scripts/stm/cards/card.gd")
 const StrikeScript := preload("res://scripts/stm/cards/test/strike.gd")
+const DefendScript := preload("res://scripts/stm/cards/test/defend.gd")
 const BashScript := preload("res://scripts/stm/cards/test/bash.gd")
 const InflameScript := preload("res://scripts/stm/cards/test/inflame.gd")
 const ShrugItOffScript := preload("res://scripts/stm/cards/test/shrug_it_off.gd")
@@ -177,6 +178,19 @@ func test_bash_deals_damage_and_applies_vulnerable() -> void:
 	assert_eq(enemy.get_power("vulnerable").duration, 2)
 
 
+func test_test_cards_use_chinese_display_names() -> void:
+	# Given：策划调试牌组使用五张测试卡。
+	var strike = StrikeScript.new()
+	var defend = DefendScript.new()
+	var bash = BashScript.new()
+	var inflame = InflameScript.new()
+	var shrug = ShrugItOffScript.new()
+	# When：读取这些卡牌的显示名称。
+	var names := [strike.card_name, defend.card_name, bash.card_name, inflame.card_name, shrug.card_name]
+	# Then：测试卡使用中文名称，便于策划在调试界面识别。
+	assert_eq(names, ["打击", "防御", "痛击", "燃烧", "耸肩无视"])
+
+
 func test_inflame_applies_strength_to_player() -> void:
 	# Given：玩家准备打出 Inflame。
 	var player = PlayerScript.new([])
@@ -201,7 +215,7 @@ func test_shrug_it_off_gains_block_and_draws_card() -> void:
 	# Then：玩家获得 8 点格挡，并抽到一张手牌。
 	assert_eq(player.block, 8)
 	assert_eq(player.card_manager.hand.size(), 1)
-	assert_eq(player.card_manager.hand[0].card_name, "Strike")
+	assert_eq(player.card_manager.hand[0].card_name, "打击")
 
 
 func test_apply_power_stacks_intensity_or_duration() -> void:

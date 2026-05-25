@@ -21,9 +21,8 @@ var enemy_powers_label: Label
 var hand_label: Label
 var draw_pile_label: Label
 var discard_pile_label: Label
+var hand_buttons_container: GridContainer
 var status_label: Label
-var strike_button: Button
-var defend_button: Button
 var end_turn_button: Button
 var player_hp_input: LineEdit
 var energy_input: LineEdit
@@ -92,10 +91,6 @@ func _handle_fixture_failure() -> void:
 		status_label.text = status_message
 	if log_label != null:
 		_refresh_log()
-	if strike_button != null:
-		strike_button.disabled = true
-	if defend_button != null:
-		defend_button.disabled = true
 	if end_turn_button != null:
 		end_turn_button.disabled = true
 	if apply_values_button != null:
@@ -125,6 +120,10 @@ func _show_no_combat_display() -> void:
 		draw_pile_label.text = "抽牌堆（0）：无"
 	if discard_pile_label != null:
 		discard_pile_label.text = "弃牌堆（0）：无"
+	if hand_buttons_container != null:
+		for child in hand_buttons_container.get_children():
+			hand_buttons_container.remove_child(child)
+			child.queue_free()
 	if player_hp_input != null:
 		player_hp_input.text = ""
 	if energy_input != null:
@@ -205,6 +204,14 @@ func _build_ui() -> void:
 	hand_label = _new_label("HandLabel")
 	hand_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	piles_panel.add_child(hand_label)
+
+	hand_buttons_container = GridContainer.new()
+	hand_buttons_container.name = "HandButtons"
+	hand_buttons_container.columns = 4
+	hand_buttons_container.add_theme_constant_override("h_separation", 8)
+	hand_buttons_container.add_theme_constant_override("v_separation", 8)
+	piles_panel.add_child(hand_buttons_container)
+
 	draw_pile_label = _new_label("DrawPileLabel")
 	draw_pile_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	piles_panel.add_child(draw_pile_label)
@@ -219,14 +226,6 @@ func _build_ui() -> void:
 	buttons.name = "Buttons"
 	buttons.add_theme_constant_override("separation", 8)
 	main_panel.add_child(buttons)
-
-	strike_button = _new_button("StrikeButton", "Strike")
-	strike_button.pressed.connect(_on_strike_pressed)
-	buttons.add_child(strike_button)
-
-	defend_button = _new_button("DefendButton", "Defend")
-	defend_button.pressed.connect(_on_defend_pressed)
-	buttons.add_child(defend_button)
 
 	end_turn_button = _new_button("EndTurnButton", "结束回合")
 	end_turn_button.pressed.connect(_on_end_turn_pressed)
@@ -313,14 +312,6 @@ func _new_button(button_name: String, button_text: String) -> Button:
 	return button
 
 
-func _on_strike_pressed() -> void:
-	_play_first_card_named("Strike")
-
-
-func _on_defend_pressed() -> void:
-	_play_first_card_named("Defend")
-
-
 func _on_end_turn_pressed() -> void:
 	if game_state == null or combat == null:
 		status_message = "战斗尚未开始"
@@ -339,27 +330,33 @@ func _on_end_turn_pressed() -> void:
 	var hp_loss: int = max(before_hp - after_hp, 0)
 	status_message = _result_message(result, "敌人回合结算完成")
 	_append_log(
-		"结束回合，DummyEnemy 攻击造成 %d 点伤害" % hp_loss,
-		"结束回合：玩家 HP %d -> %d；格挡 %d -> %d；能量 %d -> %d；敌人意图执行；进入下一玩家回合；结局检查=%d。"
+		"结束回合：DummyEnemy 攻击造成 %d 点伤害" % hp_loss,
+		"结束回合：玩家 HP %d -> %d；格挡 %d -> %d；能量 %d -> %d；敌人意图执行；进入下一玩家回合；结局检查 %d。"
 			% [before_hp, after_hp, before_block, after_block, before_energy, after_energy, result]
 	)
 	_refresh_display()
 
 
-func _play_first_card_named(card_name: String) -> void:
-	if game_state == null or combat == null:
+func _play_card_from_hand(card) -> void:
+	if game_state == null or combat == null or game_state.player == null:
 		status_message = "战斗尚未开始"
 		_append_log("出牌失败", "出牌失败：战斗尚未开始。")
 		_refresh_display()
 		return
-	var card = _find_card_by_name(card_name)
-	if card == null:
-		status_message = "手牌中没有%s" % card_name
+	if game_state.player.card_manager == null or not game_state.player.card_manager.get_pile("hand").has(card):
+		var missing_name := _card_display_name(card)
+		status_message = "手牌中没有%s" % missing_name
+		_append_log(status_message)
+		_refresh_display()
+		return
+	if card != null and card.has_method("can_play") and not card.can_play(game_state):
+		var blocked_name := _card_display_name(card)
+		status_message = "无法打出%s" % blocked_name
 		_append_log(status_message)
 		_refresh_display()
 		return
 	var targets: Array = []
-	if str(card.get("target_type")) == "enemy_select":
+	if card != null and str(card.get("target_type")) == "enemy_select":
 		var target = _first_alive_enemy()
 		if target == null:
 			status_message = "没有可选敌人"
@@ -370,8 +367,9 @@ func _play_first_card_named(card_name: String) -> void:
 	var before_player := _player_snapshot()
 	var before_enemy_hp := _enemy_hp_value()
 	var result = combat.play_card(game_state, card, targets)
+	var card_name := _card_display_name(card)
 	status_message = _result_message(result, "已打出%s" % card_name)
-	_append_card_log(card_name, before_player, before_enemy_hp, result)
+	_append_card_log(card, before_player, before_enemy_hp, result)
 	_refresh_display()
 
 
@@ -391,14 +389,51 @@ func _refresh_display() -> void:
 	hand_label.text = _pile_text("手牌", "hand")
 	draw_pile_label.text = _pile_text("抽牌堆", "draw_pile")
 	discard_pile_label.text = _pile_text("弃牌堆", "discard_pile")
+	_refresh_hand_buttons(player)
 	status_label.text = status_message
 	_sync_value_inputs()
 	_refresh_log()
 
-	strike_button.disabled = _find_card_by_name("Strike") == null or _first_alive_enemy() == null
-	defend_button.disabled = _find_card_by_name("Defend") == null
 	end_turn_button.disabled = combat == null
 	apply_values_button.disabled = game_state == null or game_state.player == null or enemy == null
+
+
+func _refresh_hand_buttons(player) -> void:
+	if hand_buttons_container == null:
+		return
+	for child in hand_buttons_container.get_children():
+		hand_buttons_container.remove_child(child)
+		child.queue_free()
+	if player == null or player.card_manager == null:
+		return
+	var hand: Array = player.card_manager.get_pile("hand")
+	for index in hand.size():
+		var card = hand[index]
+		var button = _new_button("HandCardButton%d" % index, _card_button_text(card))
+		button.disabled = not _can_play_card_from_hand(card)
+		button.pressed.connect(_play_card_from_hand.bind(card))
+		hand_buttons_container.add_child(button)
+
+
+func _card_button_text(card) -> String:
+	var cost := 0
+	if card != null and "cost" in card:
+		cost = int(card.cost)
+	return "%s（%d）" % [_card_display_name(card), cost]
+
+
+func _can_play_card_from_hand(card) -> bool:
+	if game_state == null or combat == null or game_state.player == null:
+		return false
+	if game_state.player.card_manager == null:
+		return false
+	if not game_state.player.card_manager.get_pile("hand").has(card):
+		return false
+	if card != null and card.has_method("can_play") and not card.can_play(game_state):
+		return false
+	if card != null and str(card.get("target_type")) == "enemy_select" and _first_alive_enemy() == null:
+		return false
+	return true
 
 
 func _enemy_hp_text() -> String:
@@ -420,14 +455,14 @@ func _enemy_intent_text() -> String:
 
 func _enemy_attack_text() -> String:
 	if enemy == null:
-		return "预计攻击：0"
+		return "预计攻击：无"
 	if enemy.has_method("get_intended_damage"):
 		return "预计攻击：%d" % int(enemy.get_intended_damage())
 	if "intent_damage" in enemy:
 		return "预计攻击：%d" % int(enemy.intent_damage)
 	if "damage" in enemy:
 		return "预计攻击：%d" % int(enemy.damage)
-	return "预计攻击：6"
+	return "预计攻击：无"
 
 
 func _power_text(title: String, creature) -> String:
@@ -468,16 +503,6 @@ func _card_display_name(card) -> String:
 	return "未知"
 
 
-func _find_card_by_name(card_name: String):
-	if game_state == null or game_state.player == null:
-		return null
-	var hand = game_state.player.card_manager.get_pile("hand")
-	for card in hand:
-		if _card_display_name(card) == card_name:
-			return card
-	return null
-
-
 func _first_alive_enemy():
 	if combat == null:
 		return null
@@ -503,29 +528,32 @@ func _enemy_hp_value() -> int:
 	return enemy.hp
 
 
-func _append_card_log(card_name: String, before_player: Dictionary, before_enemy_hp: int, result: int) -> void:
+func _append_card_log(card, before_player: Dictionary, before_enemy_hp: int, result: int) -> void:
+	var card_name := _card_display_name(card)
 	var after_player := _player_snapshot()
 	var after_enemy_hp := _enemy_hp_value()
-	var before_energy: int = int(before_player["energy"])
-	var before_block: int = int(before_player["block"])
-	var after_energy: int = int(after_player["energy"])
-	var after_block: int = int(after_player["block"])
-	if card_name == "Strike":
-		var damage: int = max(before_enemy_hp - after_enemy_hp, 0)
+	var damage: int = max(before_enemy_hp - after_enemy_hp, 0)
+	var block_gain: int = max(int(after_player["block"]) - int(before_player["block"]), 0)
+	var energy_before: int = int(before_player["energy"])
+	var energy_after: int = int(after_player["energy"])
+	if damage > 0:
 		_append_log(
-			"打出 Strike，敌人受到 %d 点伤害" % damage,
-			"打出 Strike：能量 %d -> %d；敌人 HP %d -> %d；Strike 进入弃牌堆；结局检查=%d。"
-				% [before_energy, after_energy, before_enemy_hp, after_enemy_hp, result]
+			"打出 %s，敌人受到 %d 点伤害" % [card_name, damage],
+			"打出 %s：能量 %d -> %d；敌人 HP %d -> %d；%s 进入弃牌堆；结局检查 %d。"
+				% [card_name, energy_before, energy_after, before_enemy_hp, after_enemy_hp, card_name, result]
 		)
-	elif card_name == "Defend":
-		var block_gain: int = max(after_block - before_block, 0)
+	elif block_gain > 0:
 		_append_log(
-			"打出 Defend，获得 %d 点格挡" % block_gain,
-			"打出 Defend：能量 %d -> %d；格挡 %d -> %d；Defend 进入弃牌堆；结局检查=%d。"
-				% [before_energy, after_energy, before_block, after_block, result]
+			"打出 %s，获得 %d 点格挡" % [card_name, block_gain],
+			"打出 %s：能量 %d -> %d；格挡 %d -> %d；%s 进入弃牌堆；结局检查 %d。"
+				% [card_name, energy_before, energy_after, int(before_player["block"]), int(after_player["block"]), card_name, result]
 		)
 	else:
-		_append_log("打出 %s" % card_name, "打出 %s：结局检查=%d。" % [card_name, result])
+		_append_log(
+			"打出 %s" % card_name,
+			"打出 %s：能量 %d -> %d；结局检查 %d。"
+				% [card_name, energy_before, energy_after, result]
+		)
 
 
 func _result_message(result: int, fallback: String) -> String:
@@ -620,7 +648,7 @@ func _on_apply_values_pressed() -> void:
 	status_message = "数值已应用"
 	_append_log(
 		"应用数值：玩家 HP 设为 %d，敌人 HP 设为 %d" % [player.hp, enemy.hp],
-		"应用数值：玩家 HP=%d/%d，能量=%d/%d，格挡=%d，敌人 HP=%d/%d。"
+		"应用数值：玩家 HP=%d/%d，能量 %d/%d，格挡 %d，敌人 HP=%d/%d。"
 			% [player.hp, player.max_hp, player.energy, player.max_energy, player.block, enemy.hp, enemy.max_hp]
 	)
 	_refresh_display()
