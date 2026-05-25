@@ -25,6 +25,8 @@ func start_player_turn(game_state) -> void:
 	combat_state.current_phase = "player_start"
 	if game_state.player == null:
 		return
+	if game_state.player.has_method("notify_turn_start"):
+		game_state.player.notify_turn_start()
 	game_state.player.energy = game_state.player.max_energy
 	game_state.add_action(StmCombatActions.DrawCardsAction.new(game_state.player, game_state.player.draw_count))
 	game_state.drive_actions()
@@ -83,6 +85,8 @@ func execute_player_end(game_state) -> void:
 		return
 	if game_state.player.card_manager.has_method("discard_hand"):
 		game_state.player.card_manager.discard_hand()
+	if game_state.player.has_method("notify_turn_end"):
+		game_state.player.notify_turn_end()
 	combat_state.current_phase = "enemy_turn"
 
 
@@ -94,6 +98,8 @@ func execute_enemy_turn(game_state):
 			continue
 		if enemy.has_method("is_dead") and enemy.is_dead():
 			continue
+		if enemy.has_method("notify_turn_start"):
+			enemy.notify_turn_start()
 		if enemy.has_method("determine_next_intention"):
 			enemy.determine_next_intention()
 		var intention_actions: Array = []
@@ -113,11 +119,16 @@ func execute_enemy_turn(game_state):
 				damage = int(enemy.damage)
 			if damage > 0:
 				game_state.add_action(StmCombatActions.EnemyAttackAction.new(enemy, game_state.player, damage))
+		var result = game_state.drive_actions()
+		if enemy.has_method("notify_turn_end"):
+			enemy.notify_turn_end()
 		if enemy.has_method("end_turn"):
 			enemy.end_turn(game_state, self)
-	var result = game_state.drive_actions()
+		if result != _result_none():
+			combat_state.current_phase = "player_start"
+			return result if typeof(result) == TYPE_INT else _result_none()
 	combat_state.current_phase = "player_start"
-	return result if typeof(result) == TYPE_INT else _result_none()
+	return _result_none()
 
 
 func check_combat_end(game_state):

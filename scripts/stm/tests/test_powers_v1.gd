@@ -3,6 +3,7 @@ extends GutTest
 const PlayerScript := preload("res://scripts/stm/player/player.gd")
 const EnemyScript := preload("res://scripts/stm/enemies/enemy.gd")
 const GameStateScript := preload("res://scripts/stm/engine/game_state.gd")
+const CombatScript := preload("res://scripts/stm/engine/combat.gd")
 const CardScript := preload("res://scripts/stm/cards/card.gd")
 const StrikeScript := preload("res://scripts/stm/cards/test/strike.gd")
 const BashScript := preload("res://scripts/stm/cards/test/bash.gd")
@@ -346,3 +347,30 @@ func test_builtin_weak_does_not_clamp_before_action_final_clamp() -> void:
 	action.execute(null)
 	# Then：应先完成链式修正再统一钳制，敌人生命应从 20 变为 13。
 	assert_eq(enemy.hp, 13)
+
+
+func test_power_duration_ticks_at_turn_boundaries() -> void:
+	# Given：敌人拥有 2 回合易伤，战斗即将执行敌人回合。
+	var player = PlayerScript.new([])
+	var enemy = EnemyScript.new(20, "测试敌人", 0)
+	var combat = CombatScript.new([enemy], "test")
+	var game_state = GameStateScript.new(player)
+	enemy.add_power(VulnerableScript.new(2))
+	# When：敌人回合被执行一次。
+	combat.execute_enemy_turn(game_state)
+	# Then：敌人身上的易伤在敌人回合结束时减少 1 回合。
+	assert_eq(enemy.get_power("vulnerable").duration, 1)
+
+
+func test_enemy_duration_power_affects_current_action_before_ticking_down() -> void:
+	# Given：敌人拥有 1 回合虚弱，并准备造成 8 点基础攻击。
+	var player = PlayerScript.new([])
+	var enemy = EnemyScript.new(20, "测试敌人", 8)
+	var combat = CombatScript.new([enemy], "test")
+	var game_state = GameStateScript.new(player)
+	enemy.add_power(WeakScript.new(1))
+	# When：敌人回合执行攻击并结算回合结束。
+	combat.execute_enemy_turn(game_state)
+	# Then：虚弱先影响本次攻击，随后持续时间归零并被移除。
+	assert_eq(player.hp, 64)
+	assert_false(enemy.has_power("weak"))
