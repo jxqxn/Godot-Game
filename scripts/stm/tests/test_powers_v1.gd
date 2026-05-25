@@ -276,6 +276,17 @@ func test_weak_rounds_fractional_damage_down() -> void:
 	action.execute(null)
 	# Then：虚弱按向下取整生效，敌人仅损失 5 点生命。
 	assert_eq(enemy.hp, 15)
+	# Given：攻击方先减伤 5，再施加 1 回合虚弱；受击方最后加伤 10。
+	var player2 = PlayerScript.new([])
+	var enemy2 = EnemyScript.new(20, "测试敌人", 0)
+	player2.add_power(ChainMinusPower.new())
+	player2.add_power(WeakScript.new(1))
+	enemy2.add_power(ChainPlusPower.new())
+	# When：执行一次基础 2 点伤害攻击。
+	var action2 = CombatActionsScript.AttackAction.new(player2, enemy2, 2, null)
+	action2.execute(null)
+	# Then：虚弱必须按 floor 处理负数小数，敌人生命应从 20 变为 13。
+	assert_eq(enemy2.hp, 13)
 
 
 func test_builtin_weak_does_not_clamp_before_action_final_clamp() -> void:
