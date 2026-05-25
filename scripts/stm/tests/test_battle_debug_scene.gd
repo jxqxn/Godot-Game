@@ -342,7 +342,7 @@ func test_reset_button_restarts_fixed_debug_battle() -> void:
 	assert_false(_label_text(scene, "Layout/LogPanel/LogLabel").contains("应用数值"))
 
 
-func test_调试场景显示玩家和敌人状态效果摘要() -> void:
+func test_debug_scene_displays_player_and_enemy_power_summaries() -> void:
 	# Given：调试场景已初始化，玩家和敌人分别拥有力量与易伤效果。
 	var scene = _instantiate_debug_scene()
 	assert_not_null(scene)
