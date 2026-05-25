@@ -8,19 +8,26 @@ class AttackAction:
 	var source
 	var target
 	var damage: int
+	var card
 
-	func _init(p_source, p_target, p_damage: int) -> void:
+	func _init(p_source, p_target, p_damage: int, p_card = null) -> void:
 		source = p_source
 		target = p_target
 		damage = p_damage
+		card = p_card
 
 	func execute(_game_state = null):
 		if target == null:
 			return StmTypes.TerminalResult.NONE
+		var final_damage: int = max(0, int(damage))
+		if source != null and source.has_method("modify_damage_dealt"):
+			final_damage = max(0, int(source.modify_damage_dealt(final_damage, target, card)))
+		if target != null and target.has_method("modify_damage_taken"):
+			final_damage = max(0, int(target.modify_damage_taken(final_damage, source, card)))
 		if target.has_method("take_damage"):
-			target.take_damage(damage, source)
+			target.take_damage(final_damage, source, card)
 		elif "hp" in target:
-			target.hp -= damage
+			target.hp -= final_damage
 		return StmTypes.TerminalResult.NONE
 
 
@@ -37,7 +44,7 @@ class EnemyAttackAction:
 		damage = p_damage
 
 	func execute(_game_state = null):
-		var attack = AttackAction.new(enemy, player, damage)
+		var attack = AttackAction.new(enemy, player, damage, null)
 		return attack.execute()
 
 
@@ -58,6 +65,24 @@ class GainBlockAction:
 			target.gain_block(amount)
 		elif "block" in target:
 			target.block += amount
+		return StmTypes.TerminalResult.NONE
+
+
+class ApplyPowerAction:
+	extends RefCounted
+
+	var target
+	var power
+
+	func _init(p_target, p_power) -> void:
+		target = p_target
+		power = p_power
+
+	func execute(_game_state = null):
+		if target == null:
+			return StmTypes.TerminalResult.NONE
+		if target.has_method("add_power"):
+			target.add_power(power)
 		return StmTypes.TerminalResult.NONE
 
 
