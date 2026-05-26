@@ -458,7 +458,6 @@ func _refresh_display() -> void:
 		if victory_label != null:
 			victory_label.visible = true
 		_show_map_panel_state()
-		_show_no_combat_display()
 		status_label.text = "游戏通关"
 		return
 
@@ -466,7 +465,6 @@ func _refresh_display() -> void:
 		if map_panel != null:
 			map_panel.visible = true
 		_show_map_panel_state()
-		_show_no_combat_display()
 		status_label.text = status_message
 		return
 
