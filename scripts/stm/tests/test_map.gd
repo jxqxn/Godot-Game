@@ -22,18 +22,26 @@ func test_layer_one_is_single_combat_room() -> void:
 	assert_eq(rooms[0]["type"], "combat")
 
 
-func test_layer_five_has_two_branch_options() -> void:
+func test_layer_four_can_branch_to_combat_or_rest_path() -> void:
+	# Given：固定测试地图。
+	# When：查询第 3 层（层 4）的休息房后续路径。
+	var layer = MapDataScript.FLOORS[3]
+	var rooms = layer["rooms"]
+	# Then：层 4 是休息房，并允许前往层 5 战斗或跳到层 6 休息。
+	assert_eq(rooms.size(), 1)
+	assert_eq(rooms[0]["type"], "rest")
+	assert_eq(rooms[0]["next_floors"], [4, 5])
+
+
+func test_layer_five_is_optional_combat_room() -> void:
 	# Given：固定测试地图。
 	# When：查询第 4 层（层 5）的房间列表。
 	var layer = MapDataScript.FLOORS[4]
 	var rooms = layer["rooms"]
-	# Then：该层有 2 间可选房间（CombatRoom 和 RestRoom），形成分支。
-	assert_eq(rooms.size(), 2)
-	var types := []
-	for room in rooms:
-		types.append(room["type"])
-	assert_true(types.has("combat"))
-	assert_true(types.has("rest"))
+	# Then：层 5 是可选战斗房，通向层 6。
+	assert_eq(rooms.size(), 1)
+	assert_eq(rooms[0]["type"], "combat")
+	assert_eq(rooms[0]["next_floors"], [5])
 
 
 func test_layer_seven_is_boss_room() -> void:
@@ -55,24 +63,49 @@ func test_map_manager_starts_at_floor_zero() -> void:
 	assert_eq(current, 0)
 
 
-func test_map_manager_navigate_to_next_floor() -> void:
+func test_map_manager_navigate_to_floor() -> void:
 	# Given：地图管理器处于第 0 层。
 	var manager = MapManagerScript.new()
 	# When：导航到第 1 层（层 2）。
-	manager.navigate_to_floor(1)
-	# Then：当前楼层索引变为 1。
+	var changed = manager.navigate_to_floor(1)
+	# Then：当前楼层索引变为 1，并返回 true。
+	assert_true(changed)
 	assert_eq(manager.get_current_floor_index(), 1)
 
 
-func test_map_manager_available_next_floors_from_branch() -> void:
-	# Given：地图管理器处于第 4 层（层 5，有分支）。
+func test_map_manager_rejects_invalid_floor() -> void:
+	# Given：地图管理器处于第 0 层。
 	var manager = MapManagerScript.new()
-	manager.navigate_to_floor(4)
+	# When：尝试导航到不存在的楼层。
+	var changed = manager.navigate_to_floor(99)
+	# Then：导航失败且当前楼层不变。
+	assert_false(changed)
+	assert_eq(manager.get_current_floor_index(), 0)
+
+
+func test_map_manager_available_next_floors_from_rest_branch() -> void:
+	# Given：地图管理器处于第 3 层（层 4，休息后分支）。
+	var manager = MapManagerScript.new()
+	manager.navigate_to_floor(3)
 	# When：查询可用的下一层选项。
 	var options = manager.get_available_next_floors()
-	# Then：当前层的 2 个房间各自指向同一汇合层（层 6），但房间类型不同。
-	assert_eq(options.size(), 1)
-	assert_eq(options[0]["floor_index"], 5)
+	# Then：可以选择前往层 5 战斗或直接前往层 6 休息。
+	assert_eq(options.size(), 2)
+	assert_eq(options[0]["floor_index"], 4)
+	assert_eq(options[1]["floor_index"], 5)
+
+
+func test_map_manager_navigate_to_next_floor_only_allows_reachable_options() -> void:
+	# Given：地图管理器处于第 3 层（层 4）。
+	var manager = MapManagerScript.new()
+	manager.navigate_to_floor(3)
+	# When：尝试前往不可达的 Boss 层，再前往可达的层 6。
+	var bad_result = manager.navigate_to_next_floor(6)
+	var good_result = manager.navigate_to_next_floor(5)
+	# Then：不可达导航失败，可达导航成功。
+	assert_false(bad_result)
+	assert_true(good_result)
+	assert_eq(manager.get_current_floor_index(), 5)
 
 
 func test_map_manager_is_final_floor_for_boss_layer() -> void:
