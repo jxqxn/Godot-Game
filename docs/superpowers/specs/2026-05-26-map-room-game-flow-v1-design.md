@@ -34,8 +34,9 @@ scripts/stm/
 
 **`scripts/stm/rooms/`**
 - `base.gd`：房间基类 `StmRoom`。定义 `enter(game_state) → void`、`leave(game_state) → void` 生命周期方法，以及 `is_completed: bool` 状态。
-- `combat.gd`：`StmCombatRoom extends StmRoom`。进入时通过 `StmFixedBattleFixture` 创建战斗上下文并调用 `combat.start()`。Boss 战斗使用加强属性敌人（HP 40，攻击 12）。
+- `combat.gd`：`StmCombatRoom extends StmRoom`。进入时通过 `StmFixedBattleFixture` 创建战斗上下文并调用 `combat.start()`。普通战斗使用 DummyEnemy。
 - `rest.gd`：`StmRestRoom extends StmRoom`。进入后恢复玩家 30% 最大 HP，并立即标记完成。
+- `boss_room.gd`：`StmBossRoom extends StmCombatRoom`。覆盖 `enter()`，使用 BossEnemy（HP 40，攻击 12）替代 DummyEnemy。
 
 **`scripts/stm/engine/game_flow.gd`**
 - `StmGameFlow`：编排地图→房间→战斗→循环。持有 `MapManager`、当前 `Room` 实例、`GameState` 引用。提供 `start_flow()`、`enter_room(floor_index)`、`complete_current_room()`、`get_available_next_floors()` 等公开方法。Boss 胜利后设置 `flow_completed: bool = true`。
@@ -74,7 +75,7 @@ scripts/stm/
 
 - `enter()`：通过 `StmFixedBattleFixture.create_context()` 创建 Player/DummyEnemy/Combat/GameState
 - 普通战斗敌人：DummyEnemy（HP 20，攻击 6）
-- Boss 战斗敌人：BossEnemy（HP 40，攻击 12）
+- Boss 战斗敌人：直接用 `StmEnemy.new(40, "BossEnemy", 12)` 构造，不创建新脚本文件
 - 战斗通过现有 `combat.start()` 和 `combat.play_card()` / `combat.end_turn()` 流程
 - 战斗胜利（`TerminalResult.COMBAT_WIN`）后自动标记 `is_completed = true`
 
@@ -86,26 +87,46 @@ scripts/stm/
 
 ### BossRoom
 
-- 继承 CombatRoom，但使用加强版敌人
+- 继承 CombatRoom（`StmBossRoom extends StmCombatRoom`）
+- `enter()` 覆盖父类：使用 `StmEnemy.new(40, "BossEnemy", 12)` 替代 DummyEnemy
 - 战斗胜利后，`GameFlow` 设置 `flow_completed = true`
 
-## 安全、边界、依赖
+## 安全模型
 
-- 不修改 `slay-the-model-main/`。
-- 不改动现有 `scripts/stm/engine/combat.gd` 核心战斗逻辑，房间层只包装调用。
-- 地图数据是纯数据对象，不包含 UI 逻辑。
-- 不引入网络调用、Python 运行时或新 Godot 插件。
-- 所有房间操作通过 `GameFlow` 入口，调试场景不直接操作 `MapManager`。
-- 测试必须可在 headless 环境运行。
-- Boss 敌人使用现有 DummyEnemy 脚本构造（调整构造参数），不新建敌人脚本。
+延续核心骨架设计的所有安全约束：
+
+- `slay-the-model-main/` 始终只读。不编辑、删除、重命名其中任何文件。
+- 不引入网络调用、API key、模型调用、遥测、存档上传或远程内容加载。
+- 不新增 Godot 插件（GUT 已就位，不再下载其他依赖）。
+- 不写入 Godot 项目目录之外的位置。
+- 不创建破坏性编辑器工具、代码生成器或批量文件重写脚本。
+- 测试必须确定性执行：不使用未设种子的随机断言，不依赖墙上时间，不依赖用户输入。
+- 规则测试必须可在 headless 环境运行。
+
+## 依赖
+
+- Godot 版本：4.6.2。
+- 语言：仅使用 GDScript。不依赖 Python 运行时。
+- 测试入口：`godot -s addons/gut/gut_cmdln.gd`（与 AGENT.md 一致）。
+- 允许在测试中直接构造对象实例，不要求 autoload 单例。
+- 除 GUT 外不新增第三方依赖。
+
+## 对象类型约定
+
+- `map/`、`rooms/`、`game_flow.gd` 中所有逻辑对象使用 `extends RefCounted`。
+- 只有调试场景（`battle_debug_scene.gd`）可以使用 `extends Control`（Node）。
+- 地图和房间数据使用简单数组与字典，不引入外部配置文件。
 
 ## 边界合同
 
-- `map/` 只负责地图数据与导航查询，不应知道战斗流程或玩家状态。
-- `rooms/` 负责房间内逻辑（进入/离开/完成），可以调用战斗系统，但不应知道地图结构。
-- `game_flow.gd` 持有 `MapManager` + 当前 `Room` + `GameState`，负责编排三者，但不应知道具体房间内部实现。
-- 调试场景只通过 `GameFlow` 的公开方法驱动流程，不直接操作 MapManager 或 Room。
-- 未来完整系统（多 Act、商店、事件、宝箱、选牌奖励）是扩展点，不在此阶段实现。
+延续核心骨架设计的所有边界合同，并新增以下模块边界：
+
+- `map/` 只负责地图数据与导航查询。不应知道战斗流程、玩家状态、HP 或牌堆。
+- `rooms/` 负责房间内逻辑（进入/离开/完成）。可以调用战斗系统（`StmCombat`、`StmFixedBattleFixture`），但不应知道地图结构或 UI。
+- `game_flow.gd` 持有 `MapManager` + 当前 `Room` + `GameState`，负责编排三者。不应知道具体房间内部实现，也不应直接操作 UI。
+- 调试场景只通过 `GameFlow` 的公开方法驱动流程，不直接操作 `MapManager` 或 `Room` 实例。
+- 不改动现有核心战斗逻辑（`combat.gd`、`combat_actions.gd`、`creature.gd`、`card.gd` 等），房间层只包装调用这些公开接口。
+- 未来完整系统（多 Act、商店、事件、宝箱、选牌奖励、遗物、药水）是扩展点，不在此阶段实现。
 
 ## 调试 UI 改造要点
 
@@ -123,6 +144,7 @@ scripts/stm/
 - 新增 `scripts/stm/tests/test_game_flow.gd`：验证完整流程（创建→选层→进房间→完成→推进→Boss→通关）
 - 修改 `scripts/stm/tests/test_battle_debug_scene.gd`：验证地图导航 UI 节点和交互
 - 测试函数名使用英文，Given-When-Then 行为注释使用中文
+- 遵循 AGENT.md 的 BDD 流程：先写测试方法名和中文 Given-When-Then 注释，再写断言代码，再写实现代码
 - 运行命令：`godot -s addons/gut/gut_cmdln.gd`
 - 所有测试必须 headless 可运行
 
