@@ -645,14 +645,16 @@ func _show_map_panel_state() -> void:
 	for child in next_floor_container.get_children():
 		next_floor_container.remove_child(child)
 		child.free()
-	next_floor_container.visible = false
 
 	var next_floors: Array = game_flow.get_available_next_floors()
 	if not next_floors.is_empty():
+		next_floor_container.visible = true
 		for option in next_floors:
 			var btn = _new_button("NextFloorButton%d" % option["floor_index"], "→ %s" % option["floor_name"])
 			btn.pressed.connect(_on_next_floor_selected.bind(option["floor_index"]))
 			next_floor_container.add_child(btn)
+	else:
+		next_floor_container.visible = false
 
 
 func _get_floor_display_name(floor_index: int) -> String:
@@ -845,6 +847,9 @@ func _on_room_completed() -> void:
 	_append_log("房间完成", "可选下一层：%s。" % ", ".join(floor_names))
 	_show_map_panel_state()
 	_rebuild_hand_buttons()
+	enemy = null
+	combat = null
+	game_state.current_combat = null
 	_refresh_display()
 
 
