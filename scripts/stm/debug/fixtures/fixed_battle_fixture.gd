@@ -15,14 +15,13 @@ const COMBAT_TYPE := "debug"
 
 
 func create_context() -> Dictionary:
-	var deck: Array = create_deck()
-	var player = PlayerScript.new(deck)
-	var enemy = DummyEnemyScript.new()
+	var player = create_player()
 	var bootstrap = GameBootstrapScript.new()
 	var game_state = bootstrap.create_game(player)
 	if game_state == null:
 		return {}
-	var combat = bootstrap.create_combat(game_state, [enemy], COMBAT_TYPE)
+	var enemy = create_enemy()
+	var combat = create_combat(game_state, enemy)
 	if combat == null:
 		return {}
 	return {
@@ -32,6 +31,22 @@ func create_context() -> Dictionary:
 		"player": player,
 		"enemy": enemy,
 	}
+
+
+func create_player():
+	return PlayerScript.new(create_deck())
+
+
+func create_enemy():
+	return DummyEnemyScript.new()
+
+
+func create_combat(game_state, enemy = null):
+	if game_state == null:
+		return null
+	var combat_enemy = enemy if enemy != null else create_enemy()
+	var bootstrap = GameBootstrapScript.new()
+	return bootstrap.create_combat(game_state, [combat_enemy], COMBAT_TYPE)
 
 
 func create_deck() -> Array:
