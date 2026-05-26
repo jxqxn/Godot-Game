@@ -300,9 +300,9 @@ func _on_enter_room_pressed() -> void:
 	var room_type = room.get_room_type()
 	if room_type == "rest":
 		game_flow.complete_current_room()
-		var before_hp: int = int(room.last_hp_before) if "last_hp_before" in room else 0
-		var after_hp: int = int(room.last_hp_after) if "last_hp_after" in room else before_hp
-		var healed: int = int(room.last_heal_amount) if "last_heal_amount" in room else max(after_hp - before_hp, 0)
+		var before_hp: int = int(room.get("last_hp_before"))
+		var after_hp: int = int(room.get("last_hp_after"))
+		var healed: int = int(room.get("last_heal_amount"))
 		status_message = "休息房间已完成"
 		_append_log(
 			"休息房间：恢复 %d 点 HP（%d → %d）" % [healed, before_hp, after_hp],
@@ -402,6 +402,7 @@ func _on_room_completed() -> void:
 func _on_next_floor_selected(floor_index: int) -> void:
 	if game_flow == null:
 		return
+	_disable_next_floor_buttons()
 	var advanced: bool = game_flow.advance_to_next_floor(floor_index)
 	if not advanced:
 		status_message = "无法前往 %s" % _get_floor_display_name(floor_index)
@@ -464,19 +465,32 @@ func _show_map_panel_state() -> void:
 	var floor_index = game_flow.get_current_floor_index()
 	current_floor_label.text = "当前楼层：%s" % _get_floor_display_name(floor_index)
 	var room_names: Array = []
-	for rt in game_flow.get_current_floor_room_types():
-		room_names.append(_get_room_type_cn(str(rt)))
+	for room_type in game_flow.get_current_floor_room_types():
+		room_names.append(_get_room_type_cn(str(room_type)))
 	room_choices_label.text = "可选房间：%s" % ", ".join(room_names)
-	enter_room_button.disabled = game_flow.get_current_floor_room_types().is_empty() or (game_flow.get_current_room() != null and not game_flow.get_current_room().is_completed)
-	for child in next_floor_container.get_children():
-		next_floor_container.remove_child(child)
-		child.free()
+	var current_room = game_flow.get_current_room()
+	enter_room_button.disabled = game_flow.is_flow_completed() or room_names.is_empty() or current_room != null
+	_clear_next_floor_buttons()
 	var next_floors: Array = game_flow.get_available_next_floors()
 	next_floor_container.visible = not next_floors.is_empty()
 	for option in next_floors:
 		var btn = _new_button("NextFloorButton%d" % option["floor_index"], "→ %s" % option["floor_name"])
 		btn.pressed.connect(_on_next_floor_selected.bind(option["floor_index"]))
 		next_floor_container.add_child(btn)
+
+
+func _clear_next_floor_buttons() -> void:
+	for button_node in next_floor_container.get_children():
+		if button_node is Button:
+			button_node.disabled = true
+		button_node.visible = false
+		button_node.queue_free()
+
+
+func _disable_next_floor_buttons() -> void:
+	for button_node in next_floor_container.get_children():
+		if button_node is Button:
+			button_node.disabled = true
 
 
 func _show_no_combat_display() -> void:
@@ -512,13 +526,12 @@ func _show_no_combat_display() -> void:
 func _refresh_hand_buttons(player = null) -> void:
 	if hand_buttons_container == null:
 		return
-	for child in hand_buttons_container.get_children():
-		hand_buttons_container.remove_child(child)
-		child.queue_free()
+	for button_node in hand_buttons_container.get_children():
+		button_node.queue_free()
 	if player == null or player.card_manager == null:
 		return
 	var hand: Array = player.card_manager.get_pile("hand")
-	for index in hand.size():
+	for index in range(hand.size()):
 		var card = hand[index]
 		var button = _new_button("HandCardButton%d" % index, _card_button_text(card))
 		button.disabled = not _can_play_card_from_hand(card)
@@ -601,13 +614,17 @@ func _on_detailed_log_toggled(_pressed: bool) -> void:
 
 
 func _card_button_text(card) -> String:
-	return "%s（%d）" % [_card_display_name(card), int(card.cost if card != null and "cost" in card else 0)]
+	var cost := 0
+	if card != null and card.get("cost") != null:
+		cost = int(card.get("cost"))
+	return "%s（%d）" % [_card_display_name(card), cost]
 
 
 func _card_display_name(card) -> String:
 	if card == null:
 		return "未知"
-	return str(card.card_name) if "card_name" in card else "未知"
+	var card_name = card.get("card_name")
+	return str(card_name) if card_name != null else "未知"
 
 
 func _first_alive_enemy():
@@ -637,7 +654,8 @@ func _enemy_hp_text() -> String:
 func _enemy_intent_text() -> String:
 	if enemy == null:
 		return "敌人意图：无"
-	return "敌人意图：攻击" if str(enemy.current_intention) == "attack" else "敌人意图：%s" % str(enemy.current_intention)
+	var current_intention = enemy.get("current_intention")
+	return "敌人意图：攻击" if str(current_intention) == "attack" else "敌人意图：%s" % str(current_intention)
 
 
 func _enemy_attack_text() -> String:
@@ -645,7 +663,8 @@ func _enemy_attack_text() -> String:
 		return "预计攻击：无"
 	if enemy.has_method("get_intended_damage"):
 		return "预计攻击：%d" % int(enemy.get_intended_damage())
-	return "预计攻击：%d" % int(enemy.intent_damage) if "intent_damage" in enemy else "预计攻击：无"
+	var intent_damage = enemy.get("intent_damage")
+	return "预计攻击：%d" % int(intent_damage) if intent_damage != null else "预计攻击：无"
 
 
 func _power_text(title: String, creature) -> String:
