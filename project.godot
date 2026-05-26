@@ -15,6 +15,10 @@ run/main_scene="res://scenes/stm/battle_debug_scene.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+McpInteractionServer="*res://scripts/autoload/mcp_interaction_server.gd"
+
 [dotnet]
 
 project/assembly_name="Cards"
