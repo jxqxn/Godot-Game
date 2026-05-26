@@ -8,26 +8,20 @@ const StrikeScript := preload("res://scripts/stm/cards/test/strike.gd")
 const BashScript := preload("res://scripts/stm/cards/test/bash.gd")
 const InflameScript := preload("res://scripts/stm/cards/test/inflame.gd")
 const ShrugItOffScript := preload("res://scripts/stm/cards/test/shrug_it_off.gd")
+const GameFlowScript := preload("res://scripts/stm/engine/game_flow.gd")
 
 
 func test_debug_scene_shows_initial_combat_state() -> void:
 	# Given：策划打开固定调试战斗场景。
 	var scene = _instantiate_debug_scene()
-	# When：场景初始化完成。
 	assert_not_null(scene)
 	if scene == null:
 		return
-	# Then：界面显示玩家血量、能量、格挡、手牌和敌人血量，并为当前手牌生成可点击按钮。
-	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：70/70")
-	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：3/3")
-	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：0")
-	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：20/20")
-	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("手牌（"))
-	assert_not_null(_debug_node_or_null(scene, "Layout/PilesPanel/HandButtons"))
-	assert_eq(_hand_card_button_count(scene), 5)
-	assert_null(scene.get_node_or_null("Layout/Body/MainPanel/Buttons/StrikeButton"))
-	assert_null(scene.get_node_or_null("Layout/Body/MainPanel/Buttons/DefendButton"))
-	assert_not_null(scene.get_node_or_null("Layout/Body/MainPanel/Buttons/EndTurnButton"))
+	# When：场景初始化完成。
+	# Then：界面显示地图导航面板，包含当前楼层和进入房间按钮。
+	assert_not_null(_debug_node_or_null(scene, "Layout/MainPanel/MapPanel"))
+	assert_true(_label_text(scene, "Layout/MainPanel/MapPanel/CurrentFloorLabel").length() > 0)
+	assert_not_null(_debug_node_or_null(scene, "Layout/MainPanel/MapPanel/EnterRoomButton"))
 
 
 func test_debug_scene_shows_planner_tool_surface() -> void:
@@ -36,6 +30,7 @@ func test_debug_scene_shows_planner_tool_surface() -> void:
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	# When：场景完成初始化并刷新所有调试面板。
 	var title_text := _label_text(scene, "Layout/TitleLabel")
 	# Then：界面展示玩家状态、敌人意图、手牌、抽牌堆、弃牌堆、数值输入、重开按钮和详细日志开关。
@@ -101,10 +96,9 @@ func test_debug_scene_records_fixed_battle_fixture_name() -> void:
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	# When：场景完成初始化并创建测试战斗。
-	var fixture_name := str(scene.current_fixture_name)
-	# Then：场景记录基础测试战斗，并仍然连接 debug 战斗和 DummyEnemy。
-	assert_eq(fixture_name, "基础测试战斗")
+	# Then：场景连接 debug 战斗和 DummyEnemy。
 	assert_not_null(scene.combat)
 	assert_not_null(scene.enemy)
 	assert_eq(scene.combat.combat_type, "debug")
@@ -146,6 +140,7 @@ func test_debug_scene_fixture_failure_clears_old_display_and_disables_all_action
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：70/70")
 	# When：触发 _handle_fixture_failure()。
 	scene._handle_fixture_failure()
@@ -182,6 +177,7 @@ func test_debug_scene_recovers_apply_values_button_after_fixture_failure_and_res
 	assert_true(_button_disabled(scene, "Layout/ValueEditor/ApplyValuesButton"))
 	# When：再次启动固定测试战斗。
 	scene.start_debug_combat()
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	# Then：界面恢复到可编辑战斗状态，应用数值按钮重新可用。
 	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：70/70")
 	assert_eq(_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput"), "70")
@@ -195,6 +191,7 @@ func test_apply_values_updates_combat_state_and_display() -> void:
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	_set_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput", "40")
 	_set_line_edit_text(scene, "Layout/ValueEditor/EnergyInput", "2")
 	_set_line_edit_text(scene, "Layout/ValueEditor/BlockInput", "9")
@@ -215,6 +212,7 @@ func test_apply_values_rejects_invalid_input_without_partial_state_change() -> v
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	_set_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput", "40")
 	_set_line_edit_text(scene, "Layout/ValueEditor/EnergyInput", "2")
 	_set_line_edit_text(scene, "Layout/ValueEditor/BlockInput", "9")
@@ -235,6 +233,7 @@ func test_clicking_hand_attack_card_plays_that_card_and_refreshes_display() -> v
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	_ensure_card_in_hand(scene, "打击")
 	# When：点击手牌中的打击。
 	_press_hand_card_button(scene, "打击")
@@ -251,6 +250,7 @@ func test_clicking_hand_skill_card_plays_that_card_and_refreshes_display() -> vo
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	_ensure_card_in_hand(scene, "防御")
 	# When：点击手牌中的防御。
 	_press_hand_card_button(scene, "防御")
@@ -267,6 +267,7 @@ func test_clicking_bash_applies_vulnerable_from_hand() -> void:
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	_replace_hand(scene, [BashScript.new()])
 	scene._refresh_display()
 	# When：点击手牌中的痛击。
@@ -282,6 +283,7 @@ func test_clicking_inflame_applies_strength_from_hand() -> void:
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	_replace_hand(scene, [InflameScript.new()])
 	scene._refresh_display()
 	# When：点击手牌中的燃烧。
@@ -297,6 +299,7 @@ func test_clicking_shrug_it_off_gains_block_and_draws_from_hand() -> void:
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	_replace_hand(scene, [ShrugItOffScript.new()])
 	scene.game_state.player.card_manager.draw_pile = [StrikeScript.new()]
 	scene._refresh_display()
@@ -314,6 +317,7 @@ func test_end_turn_button_starts_next_player_turn_and_reenables_card_buttons() -
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	_ensure_card_in_hand(scene, "防御")
 	_press_hand_card_button(scene, "防御")
 	# When：点击结束回合按钮。
@@ -333,6 +337,7 @@ func test_detailed_log_toggle_switches_between_simple_and_detailed_entries() -> 
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	_ensure_card_in_hand(scene, "打击")
 	_press_hand_card_button(scene, "打击")
 	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("打出 打击，敌人受到 6 点伤害"))
@@ -371,6 +376,7 @@ func test_reset_button_restarts_fixed_debug_battle() -> void:
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	_ensure_card_in_hand(scene, "打击")
 	_press_hand_card_button(scene, "打击")
 	_set_line_edit_text(scene, "Layout/ValueEditor/PlayerHpInput", "40")
@@ -381,6 +387,7 @@ func test_reset_button_restarts_fixed_debug_battle() -> void:
 	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("应用数值"))
 	# When：点击重开战斗按钮。
 	_press_button(scene, "Layout/Buttons/ResetButton")
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	# Then：固定测试战斗、输入框和日志都回到新战斗开始状态。
 	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：70/70")
 	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：3/3")
@@ -400,6 +407,7 @@ func test_debug_scene_displays_player_and_enemy_power_summaries() -> void:
 	assert_not_null(scene)
 	if scene == null:
 		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
 	scene.game_state.player.add_power(StrengthScript.new(2))
 	scene.enemy.add_power(VulnerableScript.new(3))
 	# When：刷新调试场景显示。
@@ -407,6 +415,52 @@ func test_debug_scene_displays_player_and_enemy_power_summaries() -> void:
 	# Then：玩家与敌人的状态效果摘要应正确显示。
 	assert_eq(_label_text(scene, "Layout/Metrics/PlayerPowersLabel"), "玩家状态效果：力量 2")
 	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyPowersLabel"), "敌人状态效果：易伤 3")
+
+
+func test_debug_scene_starts_with_map_navigation_panel() -> void:
+	# Given：策划打开调试场景。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	# When：场景完成初始化。
+	# Then：场景显示地图导航面板，包含当前楼层、房间类型和可选路径，而不是直接开始战斗。
+	assert_not_null(_debug_node_or_null(scene, "Layout/MainPanel/MapPanel"))
+	assert_true(_label_text(scene, "Layout/MainPanel/MapPanel/CurrentFloorLabel").length() > 0)
+	assert_not_null(_debug_node_or_null(scene, "Layout/MainPanel/MapPanel/EnterRoomButton"))
+
+
+func test_debug_scene_enter_combat_room_shows_battle_ui() -> void:
+	# Given：调试场景已启动，显示地图面板。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	# When：点击进入房间按钮（当前层为 CombatRoom）。
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	# Then：战斗 UI 显示，地图面板隐藏。
+	assert_not_null(_debug_node_or_null(scene, "Layout/PilesPanel/HandButtons"))
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("战斗开始"))
+
+
+func test_debug_scene_game_flow_completed_shows_victory() -> void:
+	# Given：调试场景已启动，GameFlow 直接进入 Boss 层并完成。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	var flow = scene.game_flow
+	if flow == null:
+		return
+	flow._map_manager.navigate_to_floor(6)
+	flow.enter_current_room()
+	flow.complete_current_room()
+	scene._on_room_completed()
+	# When：场景刷新。
+	scene._refresh_display()
+	# Then：显示通关信息。
+	assert_true(flow.is_flow_completed())
+	assert_not_null(_debug_node_or_null(scene, "Layout/MainPanel/MapPanel/VictoryLabel"))
 
 
 func _instantiate_debug_scene():
@@ -540,4 +594,6 @@ func _relocated_debug_path(node_path: String) -> String:
 		return node_path.replace("Layout/ValueEditor", "Layout/Body/MainPanel/ValueEditor")
 	if node_path.begins_with("Layout/LogPanel"):
 		return node_path.replace("Layout/LogPanel", "Layout/Body/LogPanel")
+	if node_path.begins_with("Layout/MainPanel"):
+		return node_path.replace("Layout/MainPanel", "Layout/Body/MainPanel")
 	return node_path

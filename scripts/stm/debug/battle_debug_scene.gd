@@ -3,10 +3,19 @@ extends Control
 
 const FixedBattleFixtureScript := preload("res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd")
 const TypesScript := preload("res://scripts/stm/utils/types.gd")
+const GameFlowScript := preload("res://scripts/stm/engine/game_flow.gd")
+const StmMapDataScript := preload("res://scripts/stm/map/map_data.gd")
 
 var game_state
 var combat
 var enemy
+var game_flow = null
+var map_panel: VBoxContainer
+var current_floor_label: Label
+var room_choices_label: Label
+var enter_room_button: Button
+var next_floor_container: VBoxContainer
+var victory_label: Label
 var current_fixture_name: String = ""
 var status_message: String = "等待行动"
 
@@ -42,15 +51,29 @@ func _ready() -> void:
 
 
 func start_debug_combat() -> void:
-	var fixture = FixedBattleFixtureScript.new()
-	var context: Dictionary = fixture.create_context()
-	if not _apply_fixture_context(context):
+	game_state = null
+	combat = null
+	enemy = null
+	current_fixture_name = ""
+	var bootstrap_script = load("res://scripts/stm/engine/game_bootstrap.gd")
+	if bootstrap_script == null:
 		_handle_fixture_failure()
 		return
-	status_message = "等待行动"
-	combat.start(game_state)
+	var player_script = load("res://scripts/stm/player/player.gd")
+	if player_script == null:
+		_handle_fixture_failure()
+		return
+	var deck: Array = FixedBattleFixtureScript.new().create_deck()
+	var player = player_script.new(deck)
+	var bootstrap = bootstrap_script.new()
+	game_state = bootstrap.create_game(player)
+	if game_state == null:
+		_handle_fixture_failure()
+		return
+	game_flow = GameFlowScript.new(game_state)
+	status_message = "等待选择楼层"
 	_reset_log()
-	_append_log("战斗开始", "战斗开始：玩家抽取起始手牌，敌人 DummyEnemy 准备攻击。")
+	_append_log("地图加载完成", "地图加载完成：7 层固定测试地图已就绪，第 1 层为战斗房间。")
 	_refresh_display()
 
 
@@ -132,6 +155,19 @@ func _show_no_combat_display() -> void:
 		block_input.text = ""
 	if enemy_hp_input != null:
 		enemy_hp_input.text = ""
+	if current_floor_label != null:
+		current_floor_label.text = "当前楼层：无"
+	if room_choices_label != null:
+		room_choices_label.text = "可选房间：无"
+	if enter_room_button != null:
+		enter_room_button.disabled = true
+	if next_floor_container != null:
+		for child in next_floor_container.get_children():
+			next_floor_container.remove_child(child)
+			child.free()
+		next_floor_container.visible = false
+	if victory_label != null:
+		victory_label.visible = false
 
 
 func _build_ui() -> void:
@@ -167,6 +203,34 @@ func _build_ui() -> void:
 	main_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	main_panel.add_theme_constant_override("separation", 12)
 	body.add_child(main_panel)
+
+	map_panel = VBoxContainer.new()
+	map_panel.name = "MapPanel"
+	map_panel.add_theme_constant_override("separation", 8)
+	main_panel.add_child(map_panel)
+
+	current_floor_label = _new_label("CurrentFloorLabel")
+	map_panel.add_child(current_floor_label)
+
+	room_choices_label = _new_label("RoomChoicesLabel")
+	room_choices_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	map_panel.add_child(room_choices_label)
+
+	enter_room_button = _new_button("EnterRoomButton", "进入房间")
+	enter_room_button.pressed.connect(_on_enter_room_pressed)
+	map_panel.add_child(enter_room_button)
+
+	next_floor_container = VBoxContainer.new()
+	next_floor_container.name = "NextFloorContainer"
+	next_floor_container.visible = false
+	next_floor_container.add_theme_constant_override("separation", 6)
+	map_panel.add_child(next_floor_container)
+
+	victory_label = _new_label("VictoryLabel")
+	victory_label.visible = false
+	victory_label.text = "游戏通关！"
+	victory_label.add_theme_font_size_override("font_size", 20)
+	map_panel.add_child(victory_label)
 
 	var metrics = HBoxContainer.new()
 	metrics.name = "Metrics"
@@ -331,9 +395,14 @@ func _on_end_turn_pressed() -> void:
 	status_message = _result_message(result, "敌人回合结算完成")
 	_append_log(
 		"结束回合：DummyEnemy 攻击造成 %d 点伤害" % hp_loss,
-		"结束回合：玩家 HP %d -> %d；格挡 %d -> %d；能量 %d -> %d；敌人意图执行；进入下一玩家回合；结局检查 %d。"
+		"结束回合：玩家 HP %d -> %d；格挡 %d -> %d；能量 %d -> %d；敌人意图执行；进入下一玩家回合；结局检查=%d。"
 			% [before_hp, after_hp, before_block, after_block, before_energy, after_energy, result]
 	)
+	if result == TypesScript.TerminalResult.COMBAT_WIN:
+		if game_flow != null and game_flow.get_current_room() != null:
+			game_flow.complete_current_room()
+			_on_room_completed()
+			return
 	_refresh_display()
 
 
@@ -370,11 +439,35 @@ func _play_card_from_hand(card) -> void:
 	var card_name := _card_display_name(card)
 	status_message = _result_message(result, "已打出%s" % card_name)
 	_append_card_log(card, before_player, before_enemy_hp, result)
+	if result == TypesScript.TerminalResult.COMBAT_WIN:
+		if game_flow != null and game_flow.get_current_room() != null:
+			game_flow.complete_current_room()
+			_on_room_completed()
+			return
 	_refresh_display()
 
 
 func _refresh_display() -> void:
 	if game_state == null or game_state.player == null:
+		return
+
+	# GameFlow 驱动的地图/通关状态检查
+	if game_flow != null and game_flow.is_flow_completed():
+		if map_panel != null:
+			map_panel.visible = true
+		if victory_label != null:
+			victory_label.visible = true
+		_show_map_panel_state()
+		_show_no_combat_display()
+		status_label.text = "游戏通关"
+		return
+
+	if game_flow != null and game_state.current_combat == null:
+		if map_panel != null:
+			map_panel.visible = true
+		_show_map_panel_state()
+		_show_no_combat_display()
+		status_label.text = status_message
 		return
 
 	var player = game_state.player
@@ -528,6 +621,49 @@ func _enemy_hp_value() -> int:
 	return enemy.hp
 
 
+func _show_map_panel_state() -> void:
+	if game_flow == null:
+		return
+	var floor_index = game_flow.get_current_floor_index()
+	var floor_name = _get_floor_display_name(floor_index)
+	current_floor_label.text = "当前楼层：%s" % floor_name
+
+	var room_types: Array = game_flow.get_current_floor_room_types()
+	var room_names: Array = []
+	for rt in room_types:
+		match str(rt):
+			"combat":
+				room_names.append("战斗房间")
+			"rest":
+				room_names.append("休息房间")
+			"boss":
+				room_names.append("BOSS 房间")
+			_:
+				room_names.append(str(rt))
+	room_choices_label.text = "可选房间：%s" % ", ".join(room_names)
+
+	enter_room_button.disabled = room_types.is_empty()
+
+	for child in next_floor_container.get_children():
+		next_floor_container.remove_child(child)
+		child.free()
+	next_floor_container.visible = false
+
+	var next_floors: Array = game_flow.get_available_next_floors()
+	if not next_floors.is_empty():
+		for option in next_floors:
+			var btn = _new_button("NextFloorButton%d" % option["floor_index"], "→ %s" % option["floor_name"])
+			btn.pressed.connect(_on_next_floor_selected.bind(option["floor_index"]))
+			next_floor_container.add_child(btn)
+
+
+func _get_floor_display_name(floor_index: int) -> String:
+	var floors = StmMapDataScript.FLOORS
+	if floor_index >= 0 and floor_index < floors.size():
+		return str(floors[floor_index].get("name", "第 %d 层" % (floor_index + 1)))
+	return "第 %d 层" % (floor_index + 1)
+
+
 func _append_card_log(card, before_player: Dictionary, before_enemy_hp: int, result: int) -> void:
 	var card_name := _card_display_name(card)
 	var after_player := _player_snapshot()
@@ -652,3 +788,97 @@ func _on_apply_values_pressed() -> void:
 			% [player.hp, player.max_hp, player.energy, player.max_energy, player.block, enemy.hp, enemy.max_hp]
 	)
 	_refresh_display()
+
+
+func _on_enter_room_pressed() -> void:
+	if game_flow == null:
+		status_message = "流程尚未初始化"
+		_append_log(status_message)
+		_refresh_display()
+		return
+	game_flow.enter_current_room()
+	var room = game_flow.get_current_room()
+	if room == null:
+		status_message = "进入房间失败"
+		_append_log(status_message)
+		_refresh_display()
+		return
+	var room_type = room.get_room_type()
+	if room_type == "rest":
+		var player = game_state.player
+		var before_hp: int = player.hp if player != null else 0
+		game_flow.complete_current_room()
+		var after_hp: int = player.hp if player != null else 0
+		var healed: int = after_hp - before_hp
+		status_message = "休息房间已完成"
+		_append_log(
+			"休息房间：恢复 %d 点 HP（%d → %d）" % [healed, before_hp, after_hp],
+			"休息房间：HP %d → %d。" % [before_hp, after_hp]
+		)
+		_on_room_completed()
+		return
+	map_panel.visible = false
+	enemy = room.get_enemy() if room.has_method("get_enemy") else null
+	combat = room.get_combat() if room.has_method("get_combat") else null
+	status_message = "等待行动"
+	_append_log("战斗开始", "战斗开始：玩家进入%s。" % _get_room_type_cn(room_type))
+	_refresh_display()
+
+
+func _on_room_completed() -> void:
+	if game_flow == null:
+		return
+	if game_flow.is_flow_completed():
+		map_panel.visible = true
+		victory_label.visible = true
+		_show_map_panel_state()
+		status_message = "游戏通关"
+		_append_log("游戏通关！", "游戏通关：BOSS 已被击败。")
+		_rebuild_hand_buttons()
+		_refresh_display()
+		return
+	map_panel.visible = true
+	next_floor_container.visible = true
+	var next_floors: Array = game_flow.get_available_next_floors()
+	var floor_names: Array = []
+	for option in next_floors:
+		floor_names.append(str(option.get("floor_name", "")))
+	status_message = "房间完成，选择下一层"
+	_append_log("房间完成", "可选下一层：%s。" % ", ".join(floor_names))
+	_show_map_panel_state()
+	_rebuild_hand_buttons()
+	_refresh_display()
+
+
+func _on_next_floor_selected(floor_index: int) -> void:
+	if game_flow == null:
+		return
+	game_flow.advance_to_next_floor(floor_index)
+	enemy = null
+	combat = null
+	game_state.current_combat = null
+	status_message = "已到达 %s" % _get_floor_display_name(floor_index)
+	_append_log(status_message, "推进到 %s。" % _get_floor_display_name(floor_index))
+	_refresh_display()
+
+
+func _get_room_type_cn(room_type: String) -> String:
+	match room_type:
+		"combat":
+			return "战斗房间"
+		"rest":
+			return "休息房间"
+		"boss":
+			return "BOSS 房间"
+		_:
+			return room_type
+
+
+func _rebuild_hand_buttons() -> void:
+	if hand_buttons_container == null:
+		return
+	for child in hand_buttons_container.get_children():
+		hand_buttons_container.remove_child(child)
+		child.free()
+	if game_state != null and game_state.player != null:
+		_refresh_hand_buttons(game_state.player)
