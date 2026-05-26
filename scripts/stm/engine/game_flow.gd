@@ -91,6 +91,13 @@ func advance_to_next_floor(floor_index: int) -> bool:
 	return _map_manager.navigate_to_next_floor(floor_index)
 
 
+func debug_navigate_to_floor_for_test(floor_index: int) -> bool:
+	# 仅供测试/调试场景定位楼层使用；正常游戏流程必须走 advance_to_next_floor()。
+	if _current_room != null:
+		return false
+	return _map_manager.navigate_to_floor(floor_index)
+
+
 func leave_current_room() -> void:
 	if _current_room == null:
 		return
