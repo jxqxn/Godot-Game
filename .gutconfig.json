@@ -5,7 +5,8 @@
     "res://scripts/stm/tests/test_fixed_battle_fixture.gd",
     "res://scripts/stm/tests/test_powers_v1.gd",
     "res://scripts/stm/tests/test_map.gd",
-    "res://scripts/stm/tests/test_rooms.gd"
+    "res://scripts/stm/tests/test_rooms.gd",
+    "res://scripts/stm/tests/test_game_flow.gd"
   ],
   "should_exit": true,
   "should_exit_on_success": true,
