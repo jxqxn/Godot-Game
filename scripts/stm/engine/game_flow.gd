@@ -62,7 +62,10 @@ func complete_current_room() -> bool:
 	if _current_room == null:
 		return false
 	if _is_combat_room_type(_current_room.get_room_type()):
-		return false
+		var result := _current_combat_result()
+		if result != TypesScript.TerminalResult.COMBAT_WIN:
+			return false
+		return handle_combat_result(result)
 	_current_room.complete(_game_state)
 	return true
 
@@ -109,3 +112,14 @@ func _create_room(room_type: String):
 
 func _is_combat_room_type(room_type: String) -> bool:
 	return room_type == "combat" or room_type == "boss"
+
+
+func _current_combat_result() -> int:
+	if _game_state == null or _game_state.current_combat == null:
+		return TypesScript.TerminalResult.NONE
+	var combat = _game_state.current_combat
+	if combat.has_method("check_combat_end"):
+		var result = combat.check_combat_end(_game_state)
+		if typeof(result) == TYPE_INT:
+			return int(result)
+	return TypesScript.TerminalResult.NONE
