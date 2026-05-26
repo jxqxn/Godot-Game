@@ -785,7 +785,6 @@ class_name StmBossRoom
 extends StmCombatRoom
 
 const EnemyScript := preload("res://scripts/stm/enemies/enemy.gd")
-const GameBootstrapScript := preload("res://scripts/stm/engine/game_bootstrap.gd")
 
 
 func enter(game_state) -> void:
