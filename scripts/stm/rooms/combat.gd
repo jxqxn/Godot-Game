@@ -16,6 +16,8 @@ func enter(game_state) -> void:
 	var fixture = FixedBattleFixtureScript.new()
 	if game_state.player == null:
 		game_state.player = fixture.create_player()
+	else:
+		_ensure_player_has_fixture_deck(game_state.player, fixture)
 	_player = game_state.player
 	_enemy = fixture.create_enemy()
 	_combat = fixture.create_combat(game_state, _enemy)
@@ -51,3 +53,11 @@ func get_enemy():
 
 func get_room_type() -> String:
 	return "combat"
+
+
+func _ensure_player_has_fixture_deck(player, fixture) -> void:
+	if player == null or player.card_manager == null:
+		return
+	if not player.card_manager.get_pile("deck").is_empty():
+		return
+	player.card_manager.deck = fixture.create_deck()
