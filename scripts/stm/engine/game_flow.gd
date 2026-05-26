@@ -44,7 +44,7 @@ func get_current_floor_room_types() -> Array:
 
 
 func enter_current_room(room_index: int = 0) -> bool:
-	if _current_room != null and not _current_room.is_completed:
+	if _current_room != null:
 		return false
 	var room_types := _map_manager.get_available_room_types()
 	if room_index < 0 or room_index >= room_types.size():
