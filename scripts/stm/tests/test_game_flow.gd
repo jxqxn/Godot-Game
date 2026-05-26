@@ -181,3 +181,42 @@ func test_game_flow_not_completed_at_non_boss_floor() -> void:
 	var is_completed = flow.is_flow_completed()
 	# Then：普通战斗完成不应触发通关。
 	assert_false(is_completed)
+
+
+func test_game_flow_short_path_reaches_boss_and_completes_flow() -> void:
+	# Given：GameFlow 从第 1 层开始，选择最短路径跳过第 5 层战斗。
+	var game_state = _create_minimal_game_state()
+	var flow = GameFlowScript.new(game_state)
+	# When：依次完成 1-3 层战斗，进入第 4 层休息，跳到第 6 层休息，再进入第 7 层 Boss 并胜利。
+	assert_true(_win_current_combat_room_and_advance(flow, 1))
+	assert_true(_win_current_combat_room_and_advance(flow, 2))
+	assert_true(_win_current_combat_room_and_advance(flow, 3))
+	assert_true(_enter_rest_room_and_advance(flow, 5))
+	assert_true(_enter_rest_room_and_advance(flow, 6))
+	assert_true(flow.enter_current_room())
+	assert_eq(flow.get_current_room().get_room_type(), "boss")
+	var boss_completed = flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
+	# Then：流程停留在 Boss 层，并被标记为通关。
+	assert_true(boss_completed)
+	assert_eq(flow.get_current_floor_index(), 6)
+	assert_true(flow.is_flow_completed())
+
+
+func _win_current_combat_room_and_advance(flow, next_floor_index: int) -> bool:
+	if not flow.enter_current_room():
+		return false
+	if flow.get_current_room().get_room_type() != "combat":
+		return false
+	if not flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN):
+		return false
+	return flow.advance_to_next_floor(next_floor_index)
+
+
+func _enter_rest_room_and_advance(flow, next_floor_index: int) -> bool:
+	if not flow.enter_current_room():
+		return false
+	if flow.get_current_room().get_room_type() != "rest":
+		return false
+	if not flow.get_current_room().is_completed:
+		return false
+	return flow.advance_to_next_floor(next_floor_index)
