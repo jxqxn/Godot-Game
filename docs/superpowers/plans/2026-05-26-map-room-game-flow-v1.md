@@ -604,12 +604,19 @@ func enter(game_state) -> void:
 	var context: Dictionary = fixture.create_context()
 	if context.is_empty():
 		return
-	_player = context["player"]
+	# 如果 game_state 已有 Player 则复用，否则用 fixture 创建的新 Player
+	if game_state != null and game_state.player != null:
+		_player = game_state.player
+	else:
+		_player = context["player"]
 	_combat = context["combat"]
 	_enemy = context["enemy"]
 	if game_state != null:
 		game_state.player = _player
 		game_state.current_combat = _combat
+	# 每次进入战斗房间重置牌堆
+	if _player != null and _player.card_manager != null:
+		_player.card_manager.reset_for_combat()
 	_combat.start(game_state)
 
 
@@ -666,7 +673,6 @@ Append these test methods to `scripts/stm/tests/test_rooms.gd`（在最后一个
 ```gdscript
 const RestRoomScript := preload("res://scripts/stm/rooms/rest.gd")
 const BossRoomScript := preload("res://scripts/stm/rooms/boss_room.gd")
-const CombatScript := preload("res://scripts/stm/engine/combat.gd")
 
 
 func test_rest_room_restores_thirty_percent_max_hp() -> void:
@@ -784,20 +790,19 @@ const GameBootstrapScript := preload("res://scripts/stm/engine/game_bootstrap.gd
 
 func enter(game_state) -> void:
 	is_completed = false
-	var bootstrap = GameBootstrapScript.new()
-	var fixture = load("res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd").new()
-	var context: Dictionary = fixture.create_context()
-	if context.is_empty():
+	if game_state == null or game_state.player == null:
 		return
-	_player = context["player"]
+	_player = game_state.player
 	var boss_enemy = EnemyScript.new(40, "BossEnemy", 12)
 	var combat_script = load("res://scripts/stm/engine/combat.gd")
 	if combat_script != null:
 		_combat = combat_script.new([boss_enemy], "boss")
 	_enemy = boss_enemy
-	if game_state != null:
-		game_state.player = _player
-		game_state.current_combat = _combat
+	game_state.player = _player
+	game_state.current_combat = _combat
+	# 每次进入 Boss 房间重置牌堆
+	if _player != null and _player.card_manager != null:
+		_player.card_manager.reset_for_combat()
 	if _combat != null:
 		_combat.start(game_state)
 
@@ -1212,10 +1217,13 @@ Expected: FAIL — `Layout/MainPanel/MapPanel` 等节点不存在。
 
 **a) 在 preload 区增加 GameFlow 依赖**
 
-将现有的 `const FixedBattleFixtureScript` 保留，新增：
+将 preload 区更新为（在 `FixedBattleFixtureScript` 和 `TypesScript` 之后新增）：
 
 ```gdscript
+const FixedBattleFixtureScript := preload("res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd")
+const TypesScript := preload("res://scripts/stm/utils/types.gd")
 const GameFlowScript := preload("res://scripts/stm/engine/game_flow.gd")
+const StmMapDataScript := preload("res://scripts/stm/map/map_data.gd")
 ```
 
 **b) 新增状态变量**
@@ -1223,7 +1231,7 @@ const GameFlowScript := preload("res://scripts/stm/engine/game_flow.gd")
 在现有变量区（`var enemy` 之后）增加：
 
 ```gdscript
-var game_flow
+var game_flow = null
 var map_panel: VBoxContainer
 var current_floor_label: Label
 var room_choices_label: Label
@@ -1318,9 +1326,14 @@ func start_debug_combat() -> void:
 
 **f) 扩展 `_refresh_display()`**
 
-在 `_refresh_display()` 函数开头增加 GameFlow 驱动的面板刷新：
+在现有 `_refresh_display()` 开头（`if game_state == null or game_state.player == null: return` 之后、原有 UI 更新代码之前）插入 GameFlow 状态检查。新增代码会提前 return，不影响原有战斗 UI 刷新逻辑。完整结构如下：
 
 ```gdscript
+func _refresh_display() -> void:
+	if game_state == null or game_state.player == null:
+		return
+
+	# --- 新增：GameFlow 驱动的地图/通关状态检查（以下为新增行）---
 	if game_flow != null and game_flow.is_flow_completed():
 		if map_panel != null:
 			map_panel.visible = true
@@ -1330,12 +1343,18 @@ func start_debug_combat() -> void:
 		status_label.text = "游戏通关"
 		return
 
-	if game_flow != null and game_state != null and game_state.current_combat == null:
+	if game_flow != null and game_state.current_combat == null:
 		if map_panel != null:
 			map_panel.visible = true
 		_show_map_panel_state()
 		status_label.text = status_message
 		return
+	# --- 新增结束 ---
+
+	# 以下为原有 UI 刷新代码，保持不变
+	var player = game_state.player
+	player_hp_label.text = "玩家血量：%d/%d" % [player.hp, player.max_hp]
+	# ...（后续代码不变）...
 ```
 
 **g) 新增地图面板刷新辅助函数**
@@ -1378,7 +1397,7 @@ func _show_map_panel_state() -> void:
 
 
 func _get_floor_display_name(floor_index: int) -> String:
-	var floors = StmMapData.FLOORS
+	var floors = StmMapDataScript.FLOORS
 	if floor_index >= 0 and floor_index < floors.size():
 		return str(floors[floor_index].get("name", "第 %d 层" % (floor_index + 1)))
 	return "第 %d 层" % (floor_index + 1)
@@ -1477,15 +1496,37 @@ func _rebuild_hand_buttons() -> void:
 	for child in hand_buttons_container.get_children():
 		hand_buttons_container.remove_child(child)
 		child.free()
+	if game_state != null and game_state.player != null:
+		_refresh_hand_buttons(game_state.player)
 ```
 
 **i) 修改 `_on_end_turn_pressed()` —— 战斗胜利后触发房间完成**
 
-在现有 `_on_end_turn_pressed()` 末尾，检查 section 添加：
+在 `_refresh_display()` 调用之前插入 COMBAT_WIN 检查。完整的修改后函数：
 
 ```gdscript
+func _on_end_turn_pressed() -> void:
+	if game_state == null or combat == null:
+		status_message = "战斗尚未开始"
+		_append_log("结束回合失败", "结束回合失败：战斗尚未开始。")
+		_refresh_display()
+		return
+	var before_player := _player_snapshot()
 	var result = combat.end_turn(game_state)
-	# ... 现有日志和刷新代码 ...
+	var after_player := _player_snapshot()
+	var before_hp: int = int(before_player["hp"])
+	var before_block: int = int(before_player["block"])
+	var before_energy: int = int(before_player["energy"])
+	var after_hp: int = int(after_player["hp"])
+	var after_block: int = int(after_player["block"])
+	var after_energy: int = int(after_player["energy"])
+	var hp_loss: int = max(before_hp - after_hp, 0)
+	status_message = _result_message(result, "敌人回合结算完成")
+	_append_log(
+		"结束回合：DummyEnemy 攻击造成 %d 点伤害" % hp_loss,
+		"结束回合：玩家 HP %d -> %d；格挡 %d -> %d；能量 %d -> %d；敌人意图执行；进入下一玩家回合；结局检查=%d。"
+			% [before_hp, after_hp, before_block, after_block, before_energy, after_energy, result]
+	)
 	if result == TypesScript.TerminalResult.COMBAT_WIN:
 		if game_flow != null and game_flow.get_current_room() != null:
 			game_flow.complete_current_room()
@@ -1496,11 +1537,13 @@ func _rebuild_hand_buttons() -> void:
 
 **j) 修改 `_play_card_from_hand()` —— 出牌后如果战斗胜利则触发房间完成**
 
-在 `_play_card_from_hand()` 调用 `combat.play_card()` 之后：
+在 `_refresh_display()` 调用之前插入 COMBAT_WIN 检查。完整的修改后函数（保留现有安全检查，在 result 检查处扩展）：
 
 ```gdscript
 	var result = combat.play_card(game_state, card, targets)
-	# ... 现有日志 ...
+	var card_name := _card_display_name(card)
+	status_message = _result_message(result, "已打出%s" % card_name)
+	_append_card_log(card, before_player, before_enemy_hp, result)
 	if result == TypesScript.TerminalResult.COMBAT_WIN:
 		if game_flow != null and game_flow.get_current_room() != null:
 			game_flow.complete_current_room()
@@ -1518,14 +1561,11 @@ func _on_reset_pressed() -> void:
 	start_debug_combat()
 ```
 
-- [ ] **Step 4: 更新测试以匹配新结构**
+- [ ] **Step 4: 更新现有测试以匹配新结构**
 
-修改 `scripts/stm/tests/test_battle_debug_scene.gd`：
+修改 `scripts/stm/tests/test_battle_debug_scene.gd`，逐个更新以下测试方法：
 
-- 将 `test_debug_scene_shows_initial_combat_state()` 中的断言更新为检查 MapPanel 节点（因为场景现在以地图面板开始，而非立即战斗）。
-- 保留现有其他测试方法但跳过直接检查战斗 UI 的测试（因为现在需要先进入房间才有战斗 UI）。
-
-更新后的关键测试方法：
+**test_debug_scene_shows_initial_combat_state()** — 场景现在以地图面板开始，不再立即显示战斗：
 
 ```gdscript
 func test_debug_scene_shows_initial_combat_state() -> void:
@@ -1539,6 +1579,175 @@ func test_debug_scene_shows_initial_combat_state() -> void:
 	assert_not_null(scene.get_node_or_null("Layout/MainPanel/MapPanel"))
 	assert_true(_label_text(scene, "Layout/MainPanel/MapPanel/CurrentFloorLabel").length() > 0)
 	assert_not_null(scene.get_node_or_null("Layout/MainPanel/MapPanel/EnterRoomButton"))
+```
+
+**test_debug_scene_shows_planner_tool_surface()** — 改为验证地图模式下显示楼层信息而非初始战斗状态：
+
+```gdscript
+func test_debug_scene_shows_planner_tool_surface() -> void:
+	# Given：策划打开固定测试战斗的调试工具。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	# When：场景完成初始化并刷新所有调试面板。
+	var title_text := _label_text(scene, "Layout/TitleLabel")
+	# Then：界面展示标题、地图导航面板（当前楼层、可选房间）、重开按钮和日志。
+	assert_eq(title_text, "战斗调试工具")
+	assert_true(_label_text(scene, "Layout/MainPanel/MapPanel/CurrentFloorLabel").contains("第 1 层"))
+	assert_false(_label_text(scene, "Layout/MainPanel/MapPanel/RoomChoicesLabel").is_empty())
+	assert_not_null(scene.get_node_or_null("Layout/Buttons/ResetButton"))
+	assert_not_null(scene.get_node_or_null("Layout/LogPanel/DetailedLogCheckBox"))
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("地图加载完成"))
+```
+
+**test_strike_button_plays_strike_and_refreshes_display()** — 需要先进入战斗房间：
+
+```gdscript
+func test_clicking_hand_attack_card_plays_that_card_and_refreshes_display() -> void:
+	# Given：调试场景已启动，进入战斗房间后手牌中有打击。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	_ensure_card_in_hand(scene, "打击")
+	# When：点击手牌中的打击。
+	_press_hand_card_button(scene, "打击")
+	# Then：敌人受到 6 点伤害，能量减少，日志更新。
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：14/20")
+	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：2/3")
+	assert_true(_label_text(scene, "Layout/PilesPanel/DiscardPileLabel").contains("打击"))
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("打出 打击，敌人受到 6 点伤害"))
+```
+
+**test_defend_button_plays_defend_and_refreshes_display()** — 需要先进入战斗房间：
+
+```gdscript
+func test_clicking_hand_skill_card_plays_that_card_and_refreshes_display() -> void:
+	# Given：调试场景已启动，进入战斗房间后手牌中有防御。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	_ensure_card_in_hand(scene, "防御")
+	# When：点击手牌中的防御。
+	_press_hand_card_button(scene, "防御")
+	# Then：玩家获得 5 点格挡，能量减少，日志更新。
+	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：5")
+	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：2/3")
+	assert_true(_label_text(scene, "Layout/PilesPanel/DiscardPileLabel").contains("防御"))
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("打出 防御，获得 5 点格挡"))
+```
+
+**test_end_turn_button_starts_next_player_turn_and_reenables_card_buttons()** — 需要先进入战斗房间：
+
+```gdscript
+func test_end_turn_button_starts_next_player_turn_and_reenables_card_buttons() -> void:
+	# Given：调试场景已启动，进入战斗房间后打出防御保留格挡。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	_ensure_card_in_hand(scene, "防御")
+	_press_hand_card_button(scene, "防御")
+	# When：点击结束回合。
+	_press_button(scene, "Layout/Buttons/EndTurnButton")
+	# Then：玩家受到伤害，格挡清零，能量回满，下一回合开始。
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：69/70")
+	assert_eq(_label_text(scene, "Layout/Metrics/BlockLabel"), "格挡：0")
+	assert_eq(_label_text(scene, "Layout/Metrics/EnergyLabel"), "能量：3/3")
+	assert_true(_hand_card_button_count(scene) > 0)
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("结束回合"))
+```
+
+**test_detailed_log_toggle_switches_between_simple_and_detailed_entries()** — 需要先进入战斗房间：
+
+```gdscript
+func test_detailed_log_toggle_switches_between_simple_and_detailed_entries() -> void:
+	# Given：进入战斗房间并打出打击。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	_ensure_card_in_hand(scene, "打击")
+	_press_hand_card_button(scene, "打击")
+	# When：打开详细日志开关 / 关闭详细日志开关。
+	# Then：日志在简洁和详细之间切换。
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("打出 打击，敌人受到 6 点伤害"))
+	assert_false(_label_text(scene, "Layout/LogPanel/LogLabel").contains("能量 3 -> 2"))
+	_set_check_box_pressed(scene, "Layout/LogPanel/DetailedLogCheckBox", true)
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("能量 3 -> 2"))
+	_set_check_box_pressed(scene, "Layout/LogPanel/DetailedLogCheckBox", false)
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("打出 打击，敌人受到 6 点伤害"))
+	assert_false(_label_text(scene, "Layout/LogPanel/LogLabel").contains("能量 3 -> 2"))
+```
+
+**test_reset_button_restarts_fixed_debug_battle()** — 回到地图面板不是直接战斗：
+
+```gdscript
+func test_reset_button_restarts_fixed_debug_battle() -> void:
+	# Given：进入战斗房间并打出打击。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	_ensure_card_in_hand(scene, "打击")
+	_press_hand_card_button(scene, "打击")
+	# When：点击重开战斗按钮。
+	_press_button(scene, "Layout/Buttons/ResetButton")
+	# Then：回到地图导航面板，显示第 1 层战斗房间。
+	assert_not_null(scene.get_node_or_null("Layout/MainPanel/MapPanel"))
+	assert_true(_label_text(scene, "Layout/MainPanel/MapPanel/CurrentFloorLabel").contains("第 1 层"))
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("地图加载完成"))
+```
+
+**test_debug_scene_fixture_failure_clears_old_display_and_disables_all_actions()** — 保留，Fixture 失败保护仍然有效：
+
+```gdscript
+func test_debug_scene_fixture_failure_clears_old_display_and_disables_all_actions() -> void:
+	# Given：场景创建后，手动清空 game_flow 和 game_state 模拟失败。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	scene.game_flow = null
+	scene.game_state = null
+	scene._handle_fixture_failure()
+	# When：场景刷新。
+	scene._refresh_display()
+	# Then：所有显示项清空为无，所有交互按钮禁用。
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerHpLabel"), "玩家血量：无")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyHpLabel"), "敌人血量：无")
+	assert_eq(_label_text(scene, "Layout/MainPanel/MapPanel/CurrentFloorLabel"), "当前楼层：无")
+	assert_eq(_label_text(scene, "Layout/MainPanel/MapPanel/RoomChoicesLabel"), "可选房间：无")
+	assert_eq(_label_text(scene, "Layout/MainPanel/MapPanel/EnterRoomButton").disabled, true)
+	assert_eq(_hand_card_button_count(scene), 0)
+	assert_true(_label_text(scene, "Layout/Metrics/PlayerPowersLabel").contains("无"))
+	assert_true(_label_text(scene, "Layout/EnemyPanel/EnemyPowersLabel").contains("无"))
+```
+
+**test_debug_scene_displays_player_and_enemy_powers()** — 需要先进入战斗房间：
+
+```gdscript
+func test_debug_scene_displays_player_and_enemy_powers() -> void:
+	# Given：进入战斗房间后，手动给玩家和敌人添加状态。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	scene.game_state.player.add_power(StrengthScript.new(2))
+	scene.enemy.add_power(VulnerableScript.new(3))
+	# When：刷新显示。
+	scene._refresh_display()
+	# Then：界面显示状态效果。
+	assert_eq(_label_text(scene, "Layout/Metrics/PlayerPowersLabel"), "玩家状态效果：力量 2")
+	assert_eq(_label_text(scene, "Layout/EnemyPanel/EnemyPowersLabel"), "敌人状态效果：易伤 3")
 ```
 
 - [ ] **Step 5: 运行测试确认通过**
