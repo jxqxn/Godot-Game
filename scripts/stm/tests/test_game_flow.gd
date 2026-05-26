@@ -115,10 +115,10 @@ func test_game_flow_advance_to_next_floor() -> void:
 
 
 func test_game_flow_rest_room_is_completed_on_enter_and_unlocks_branch() -> void:
-	# Given：GameFlow 直接导航到第 3 层休息房。
+	# Given：GameFlow 通过调试入口定位到第 3 层休息房。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
-	flow._map_manager.navigate_to_floor(3)
+	assert_true(flow.debug_navigate_to_floor_for_test(3))
 	# When：进入休息房。
 	var entered = flow.enter_current_room()
 	var options = flow.get_available_next_floors()
@@ -130,11 +130,23 @@ func test_game_flow_rest_room_is_completed_on_enter_and_unlocks_branch() -> void
 	assert_eq(options[1]["floor_index"], 5)
 
 
-func test_game_flow_boss_does_not_complete_without_combat_win() -> void:
-	# Given：GameFlow 直接导航到第 6 层 BossRoom。
+func test_game_flow_debug_navigation_rejects_active_room() -> void:
+	# Given：GameFlow 已经进入当前楼层房间。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
-	flow._map_manager.navigate_to_floor(6)
+	flow.enter_current_room()
+	# When：尝试使用调试入口强行切楼层。
+	var changed = flow.debug_navigate_to_floor_for_test(3)
+	# Then：调试入口也会拒绝破坏活跃房间状态。
+	assert_false(changed)
+	assert_eq(flow.get_current_floor_index(), 0)
+
+
+func test_game_flow_boss_does_not_complete_without_combat_win() -> void:
+	# Given：GameFlow 通过调试入口定位到第 6 层 BossRoom。
+	var game_state = _create_minimal_game_state()
+	var flow = GameFlowScript.new(game_state)
+	assert_true(flow.debug_navigate_to_floor_for_test(6))
 	flow.enter_current_room()
 	# When：尝试不通过战斗胜利直接完成 Boss 房间。
 	var completed_directly = flow.complete_current_room()
@@ -146,10 +158,10 @@ func test_game_flow_boss_does_not_complete_without_combat_win() -> void:
 
 
 func test_game_flow_at_boss_floor_sets_flow_completed_on_combat_win() -> void:
-	# Given：GameFlow 直接导航到第 6 层 BossRoom。
+	# Given：GameFlow 通过调试入口定位到第 6 层 BossRoom。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
-	flow._map_manager.navigate_to_floor(6)
+	assert_true(flow.debug_navigate_to_floor_for_test(6))
 	flow.enter_current_room()
 	# When：传入战斗胜利结果。
 	var completed = flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
