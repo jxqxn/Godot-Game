@@ -60,6 +60,21 @@ func test_game_flow_combat_win_unlocks_next_options() -> void:
 	assert_eq(options[0]["floor_index"], 1)
 
 
+func test_game_flow_cannot_reenter_completed_room_before_advancing() -> void:
+	# Given：GameFlow 处于第 0 层，当前战斗房间已经完成但还没有推进下一层。
+	var game_state = _create_minimal_game_state()
+	var flow = GameFlowScript.new(game_state)
+	flow.enter_current_room()
+	flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
+	var completed_room = flow.get_current_room()
+	# When：再次尝试进入当前楼层房间。
+	var reentered = flow.enter_current_room()
+	# Then：规则层拒绝重复进入，当前房间实例不变。
+	assert_false(reentered)
+	assert_eq(flow.get_current_room(), completed_room)
+	assert_eq(flow.get_current_floor_index(), 0)
+
+
 func test_game_flow_cannot_advance_before_current_room_completed() -> void:
 	# Given：GameFlow 处于第 0 层，已进入但未完成战斗房间。
 	var game_state = _create_minimal_game_state()
