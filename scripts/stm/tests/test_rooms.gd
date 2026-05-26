@@ -7,6 +7,7 @@ const GameStateScript := preload("res://scripts/stm/engine/game_state.gd")
 const GameBootstrapScript := preload("res://scripts/stm/engine/game_bootstrap.gd")
 const RestRoomScript := preload("res://scripts/stm/rooms/rest.gd")
 const BossRoomScript := preload("res://scripts/stm/rooms/boss_room.gd")
+const TypesScript := preload("res://scripts/stm/utils/types.gd")
 
 
 func _create_minimal_game_state():
@@ -41,20 +42,32 @@ func test_combat_room_enter_creates_battle_context() -> void:
 	var game_state = _create_minimal_game_state()
 	# When：进入战斗房间。
 	room.enter(game_state)
-	# Then：战斗上下文已创建（game_state 持有 player 和 combat）。
+	# Then：战斗上下文已创建（game_state 持有 player 和 combat），且使用可玩的固定牌组。
 	assert_not_null(game_state.player)
 	assert_not_null(game_state.current_combat)
 	assert_not_null(room.get_player())
+	assert_eq(game_state.player.card_manager.get_pile("deck").size(), 7)
 
 
-func test_combat_room_complete_sets_is_completed() -> void:
+func test_combat_room_does_not_complete_without_combat_win() -> void:
 	# Given：一个已经进入的 CombatRoom。
 	var room = CombatRoomScript.new()
 	var game_state = _create_minimal_game_state()
 	room.enter(game_state)
-	# When：调用 complete()。
-	room.complete(game_state)
-	# Then：is_completed 为 true。
+	# When：传入非胜利战斗结果。
+	room.handle_combat_result(TypesScript.TerminalResult.NONE, game_state)
+	# Then：房间仍未完成。
+	assert_false(room.is_completed)
+
+
+func test_combat_room_marks_completed_after_combat_win() -> void:
+	# Given：一个已经进入的 CombatRoom。
+	var room = CombatRoomScript.new()
+	var game_state = _create_minimal_game_state()
+	room.enter(game_state)
+	# When：传入战斗胜利结果。
+	room.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN, game_state)
+	# Then：房间标记完成。
 	assert_true(room.is_completed)
 
 
@@ -75,8 +88,11 @@ func test_rest_room_restores_thirty_percent_max_hp() -> void:
 	var room = RestRoomScript.new()
 	# When：进入休息房间。
 	room.enter(game_state)
-	# Then：玩家恢复 30% 最大 HP（70 × 0.3 = 21），HP 变为 61。
+	# Then：玩家恢复 30% 最大 HP（70 × 0.3 = 21），HP 变为 61，并记录实际恢复量。
 	assert_eq(player.hp, 61)
+	assert_eq(room.last_hp_before, 40)
+	assert_eq(room.last_hp_after, 61)
+	assert_eq(room.last_heal_amount, 21)
 	assert_true(room.is_completed)
 
 
@@ -88,8 +104,9 @@ func test_rest_room_does_not_exceed_max_hp() -> void:
 	var room = RestRoomScript.new()
 	# When：进入休息房间。
 	room.enter(game_state)
-	# Then：HP 不会超过最大值 70。
+	# Then：HP 不会超过最大值 70，实际恢复量为 5。
 	assert_eq(player.hp, 70)
+	assert_eq(room.last_heal_amount, 5)
 
 
 func test_rest_room_get_room_type_returns_rest() -> void:
@@ -134,3 +151,16 @@ func test_boss_room_creates_stronger_enemy() -> void:
 	assert_eq(enemy.max_hp, 40)
 	assert_eq(enemy.hp, 40)
 	assert_eq(enemy.intent_damage, 12)
+
+
+func test_boss_room_marks_completed_only_after_combat_win() -> void:
+	# Given：一个已经进入的 BossRoom。
+	var room = BossRoomScript.new()
+	var game_state = _create_minimal_game_state()
+	room.enter(game_state)
+	# When：先传入非胜利结果，再传入胜利结果。
+	room.handle_combat_result(TypesScript.TerminalResult.NONE, game_state)
+	# Then：非胜利不会完成，胜利才会完成。
+	assert_false(room.is_completed)
+	room.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN, game_state)
+	assert_true(room.is_completed)
