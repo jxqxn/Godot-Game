@@ -93,6 +93,33 @@ func test_debug_scene_boss_victory_shows_flow_victory() -> void:
 	assert_true(_debug_node_or_null(scene, "Layout/MainPanel/MapPanel/VictoryLabel").visible)
 
 
+func test_debug_scene_rest_room_log_uses_recorded_heal_amount() -> void:
+	# Given：玩家受伤后直接来到第 4 层休息房。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	scene.game_state.player.hp = 40
+	scene.game_flow._map_manager.navigate_to_floor(3)
+	# When：进入休息房。
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	# Then：日志使用 RestRoom 记录的真实恢复量，而不是进入后再计算出的 0。
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("休息房间：恢复 21 点 HP（40 → 61）"))
+
+
+func test_debug_scene_failed_next_floor_advance_keeps_current_state() -> void:
+	# Given：玩家还在第 1 层，房间没有完成。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	# When：调试代码尝试直接前往 Boss 层。
+	scene._on_next_floor_selected(6)
+	# Then：UI 报告失败，楼层不变。
+	assert_eq(scene.game_flow.get_current_floor_index(), 0)
+	assert_true(_label_text(scene, "Layout/StatusLabel").contains("无法前往"))
+
+
 func test_debug_scene_displays_power_summaries() -> void:
 	# Given：调试战斗中玩家和敌人分别有力量与易伤。
 	var scene = _instantiate_debug_scene()
