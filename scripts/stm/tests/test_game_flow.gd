@@ -3,6 +3,7 @@ extends GutTest
 const GameFlowScript := preload("res://scripts/stm/engine/game_flow.gd")
 const PlayerScript := preload("res://scripts/stm/player/player.gd")
 const GameBootstrapScript := preload("res://scripts/stm/engine/game_bootstrap.gd")
+const TypesScript := preload("res://scripts/stm/utils/types.gd")
 
 
 func _create_minimal_game_state():
@@ -26,47 +27,120 @@ func test_game_flow_enter_combat_room_creates_battle() -> void:
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
 	# When：进入当前楼层的战斗房间。
-	flow.enter_current_room()
+	var entered = flow.enter_current_room()
 	# Then：game_state 中创建了战斗上下文。
+	assert_true(entered)
 	assert_not_null(game_state.current_combat)
 	assert_not_null(game_state.player)
 	assert_not_null(flow.get_current_room())
 
 
-func test_game_flow_complete_room_then_get_next_options() -> void:
+func test_game_flow_cannot_get_next_options_before_room_completed() -> void:
+	# Given：GameFlow 已进入第 0 层战斗房间，但还没有获胜。
+	var game_state = _create_minimal_game_state()
+	var flow = GameFlowScript.new(game_state)
+	flow.enter_current_room()
+	# When：查询可选的下一层。
+	var options = flow.get_available_next_floors()
+	# Then：房间未完成前没有可用下一层。
+	assert_eq(options.size(), 0)
+
+
+func test_game_flow_combat_win_unlocks_next_options() -> void:
 	# Given：GameFlow 处于第 0 层，已进入战斗房间。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
 	flow.enter_current_room()
-	flow.get_current_room().complete(game_state)
-	# When：查询可选的下一层。
+	# When：通过战斗胜利结果完成房间，再查询可选下一层。
+	var completed = flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
 	var options = flow.get_available_next_floors()
-	# Then：返回第 1 层作为下一层选项。
+	# Then：战斗胜利会完成房间并返回第 1 层作为下一层选项。
+	assert_true(completed)
 	assert_eq(options.size(), 1)
 	assert_eq(options[0]["floor_index"], 1)
 
 
-func test_game_flow_advance_to_next_floor() -> void:
-	# Given：GameFlow 处于第 0 层，房间已完成。
+func test_game_flow_cannot_advance_before_current_room_completed() -> void:
+	# Given：GameFlow 处于第 0 层，已进入但未完成战斗房间。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
 	flow.enter_current_room()
-	flow.get_current_room().complete(game_state)
+	# When：尝试推进到下一层。
+	var advanced = flow.advance_to_next_floor(1)
+	# Then：推进失败且仍停留在第 0 层。
+	assert_false(advanced)
+	assert_eq(flow.get_current_floor_index(), 0)
+
+
+func test_game_flow_cannot_advance_to_unreachable_floor() -> void:
+	# Given：GameFlow 处于第 0 层且战斗房间已完成。
+	var game_state = _create_minimal_game_state()
+	var flow = GameFlowScript.new(game_state)
+	flow.enter_current_room()
+	flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
+	# When：尝试直接跳到 Boss 层。
+	var advanced = flow.advance_to_next_floor(6)
+	# Then：推进失败且仍停留在第 0 层。
+	assert_false(advanced)
+	assert_eq(flow.get_current_floor_index(), 0)
+
+
+func test_game_flow_advance_to_next_floor() -> void:
+	# Given：GameFlow 处于第 0 层，房间已通过战斗胜利完成。
+	var game_state = _create_minimal_game_state()
+	var flow = GameFlowScript.new(game_state)
+	flow.enter_current_room()
+	flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
 	# When：推进到下一层。
-	flow.advance_to_next_floor(1)
-	# Then：当前楼层索引变为 1。
+	var advanced = flow.advance_to_next_floor(1)
+	# Then：当前楼层索引变为 1，且当前房间被离开。
+	assert_true(advanced)
 	assert_eq(flow.get_current_floor_index(), 1)
+	assert_null(flow.get_current_room())
 
 
-func test_game_flow_at_boss_floor_sets_flow_completed_on_win() -> void:
+func test_game_flow_rest_room_is_completed_on_enter_and_unlocks_branch() -> void:
+	# Given：GameFlow 直接导航到第 3 层休息房。
+	var game_state = _create_minimal_game_state()
+	var flow = GameFlowScript.new(game_state)
+	flow._map_manager.navigate_to_floor(3)
+	# When：进入休息房。
+	var entered = flow.enter_current_room()
+	var options = flow.get_available_next_floors()
+	# Then：休息房自动完成，并解锁前往层 5 战斗或层 6 休息的路径。
+	assert_true(entered)
+	assert_true(flow.get_current_room().is_completed)
+	assert_eq(options.size(), 2)
+	assert_eq(options[0]["floor_index"], 4)
+	assert_eq(options[1]["floor_index"], 5)
+
+
+func test_game_flow_boss_does_not_complete_without_combat_win() -> void:
 	# Given：GameFlow 直接导航到第 6 层 BossRoom。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
 	flow._map_manager.navigate_to_floor(6)
-	# When：进入 BOSS 房间并直接标记完成。
 	flow.enter_current_room()
-	flow.get_current_room().complete(game_state)
-	# Then：flow_completed 为 true。
+	# When：尝试不通过战斗胜利直接完成 Boss 房间。
+	var completed_directly = flow.complete_current_room()
+	var completed_without_win = flow.handle_combat_result(TypesScript.TerminalResult.NONE)
+	# Then：Boss 不会完成，也不会通关。
+	assert_false(completed_directly)
+	assert_false(completed_without_win)
+	assert_false(flow.is_flow_completed())
+
+
+func test_game_flow_at_boss_floor_sets_flow_completed_on_combat_win() -> void:
+	# Given：GameFlow 直接导航到第 6 层 BossRoom。
+	var game_state = _create_minimal_game_state()
+	var flow = GameFlowScript.new(game_state)
+	flow._map_manager.navigate_to_floor(6)
+	flow.enter_current_room()
+	# When：传入战斗胜利结果。
+	var completed = flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
+	# Then：Boss 房间完成，并设置 flow_completed。
+	assert_true(completed)
+	assert_true(flow.get_current_room().is_completed)
 	assert_true(flow.is_flow_completed())
 
 
@@ -75,7 +149,7 @@ func test_game_flow_not_completed_at_non_boss_floor() -> void:
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
 	flow.enter_current_room()
-	flow.get_current_room().complete(game_state)
+	flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
 	# When：检查 flow_completed。
 	var is_completed = flow.is_flow_completed()
 	# Then：普通战斗完成不应触发通关。
