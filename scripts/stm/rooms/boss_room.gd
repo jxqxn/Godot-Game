@@ -9,16 +9,13 @@ func enter(game_state) -> void:
 	if game_state == null or game_state.player == null:
 		return
 	_player = game_state.player
-	var boss_enemy = EnemyScript.new(40, "BossEnemy", 12)
+	_enemy = EnemyScript.new(40, "BossEnemy", 12)
 	var combat_script = load("res://scripts/stm/engine/combat.gd")
 	if combat_script != null:
-		_combat = combat_script.new([boss_enemy], "boss")
-	_enemy = boss_enemy
+		_combat = combat_script.new([_enemy], "boss")
 	game_state.player = _player
 	game_state.current_combat = _combat
-	# 每次进入 Boss 房间重置牌堆
-	if _player != null and _player.card_manager != null:
-		_player.card_manager.reset_for_combat()
+	# Combat.start() 是唯一的战斗初始化入口，避免重复 reset 牌堆和推进随机状态。
 	if _combat != null:
 		_combat.start(game_state)
 
