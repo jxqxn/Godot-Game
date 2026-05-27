@@ -10,6 +10,7 @@ func _init() -> void:
 	card_rarity = "starter"
 	target_type = "enemy_select"
 	cost = 2
+	play_priority = 20
 	base_damage = 8
 	base_magic = 2
 	upgrade_damage = 10
