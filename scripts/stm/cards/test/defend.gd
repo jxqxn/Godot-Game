@@ -7,6 +7,7 @@ func _init() -> void:
 	card_rarity = "starter"
 	target_type = "self"
 	cost = 1
+	play_priority = 5
 	base_block = 5
 	upgrade_block = 8
 	reset_values()
