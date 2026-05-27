@@ -52,5 +52,4 @@ enum TerminalResult {
 	GAME_LOSE,
 	COMBAT_ESCAPE,
 	COMBAT_LOSE = GAME_LOSE,
-	EVENT_COMPLETE = 4,
 }
