@@ -8,6 +8,7 @@ var card_rarity = StmTypes.RarityType.BASIC
 var target_type = StmTypes.TargetType.NONE
 
 var cost: int = 0
+var play_priority: int = 0
 var base_damage: int = 0
 var base_block: int = 0
 var base_magic: int = 0
@@ -71,6 +72,7 @@ func copy():
 	card.card_rarity = card_rarity
 	card.target_type = target_type
 	card.cost = cost
+	card.play_priority = play_priority
 	card.base_damage = base_damage
 	card.base_block = base_block
 	card.base_magic = base_magic
