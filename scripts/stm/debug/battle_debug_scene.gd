@@ -33,6 +33,7 @@ var discard_pile_label: Label
 var hand_buttons_container: GridContainer
 var status_label: Label
 var end_turn_button: Button
+var auto_play_button: Button
 var player_hp_input: LineEdit
 var energy_input: LineEdit
 var block_input: LineEdit
@@ -206,6 +207,9 @@ func _build_ui() -> void:
 	end_turn_button = _new_button("EndTurnButton", "结束回合")
 	end_turn_button.pressed.connect(_on_end_turn_pressed)
 	buttons.add_child(end_turn_button)
+	auto_play_button = _new_button("AutoPlayButton", "自动出牌")
+	auto_play_button.pressed.connect(_on_auto_play_pressed)
+	buttons.add_child(auto_play_button)
 	reset_button = _new_button("ResetButton", "重开战斗")
 	reset_button.pressed.connect(_on_reset_pressed)
 	buttons.add_child(reset_button)
@@ -336,6 +340,21 @@ func _on_end_turn_pressed() -> void:
 	_refresh_display()
 
 
+func _on_auto_play_pressed() -> void:
+	if game_state == null or combat == null or game_state.player == null or game_state.player.card_manager == null:
+		status_message = "战斗尚未开始"
+		_append_log("自动出牌失败", "自动出牌失败：战斗尚未开始。")
+		_refresh_display()
+		return
+	var card = game_state.player.card_manager.find_highest_priority_playable_card(game_state)
+	if card == null:
+		status_message = "没有可自动打出的牌"
+		_append_log(status_message)
+		_refresh_display()
+		return
+	_play_card_from_hand(card)
+
+
 func _play_card_from_hand(card) -> void:
 	if game_state == null or combat == null or game_state.player == null:
 		status_message = "战斗尚未开始"
@@ -456,6 +475,7 @@ func _refresh_display() -> void:
 	_sync_value_inputs()
 	_refresh_log()
 	end_turn_button.disabled = combat == null
+	auto_play_button.disabled = combat == null or game_state == null or game_state.player == null
 	apply_values_button.disabled = game_state == null or game_state.player == null or enemy == null
 
 
@@ -519,6 +539,8 @@ func _show_no_combat_display() -> void:
 	_rebuild_hand_buttons()
 	if end_turn_button != null:
 		end_turn_button.disabled = true
+	if auto_play_button != null:
+		auto_play_button.disabled = true
 	if apply_values_button != null:
 		apply_values_button.disabled = true
 
@@ -530,7 +552,7 @@ func _refresh_hand_buttons(player = null) -> void:
 		button_node.queue_free()
 	if player == null or player.card_manager == null:
 		return
-	var hand: Array = player.card_manager.get_pile("hand")
+	var hand: Array = player.card_manager.get_hand_sorted_by_priority()
 	for index in range(hand.size()):
 		var card = hand[index]
 		var button = _new_button("HandCardButton%d" % index, _card_button_text(card))
@@ -699,30 +721,47 @@ func _append_card_log(card, before_player: Dictionary, before_enemy_hp: int, res
 	var card_name := _card_display_name(card)
 	var after_player := _player_snapshot()
 	var after_enemy_hp := _enemy_hp_value()
-	var damage: int = max(before_enemy_hp - after_enemy_hp, 0)
+	var enemy_damage: int = max(before_enemy_hp - after_enemy_hp, 0)
 	var block_gain: int = max(int(after_player["block"]) - int(before_player["block"]), 0)
-	if damage > 0:
-		_append_log("打出 %s，敌人受到 %d 点伤害" % [card_name, damage], "打出 %s：结局检查 %d。" % [card_name, result])
-	elif block_gain > 0:
-		_append_log("打出 %s，获得 %d 点格挡" % [card_name, block_gain], "打出 %s：结局检查 %d。" % [card_name, result])
-	else:
-		_append_log("打出 %s" % card_name, "打出 %s：结局检查 %d。" % [card_name, result])
+	var energy_spent: int = max(int(before_player["energy"]) - int(after_player["energy"]), 0)
+	var simple := "打出 %s" % card_name
+	var detail_parts: Array[String] = []
+	if enemy_damage > 0:
+		simple += "，敌人受到 %d 点伤害" % enemy_damage
+		detail_parts.append("敌人 HP %d → %d" % [before_enemy_hp, after_enemy_hp])
+	if block_gain > 0:
+		simple += "，获得 %d 点格挡" % block_gain
+		detail_parts.append("玩家格挡 %d → %d" % [before_player["block"], after_player["block"]])
+	if energy_spent > 0:
+		detail_parts.append("能量 %d → %d" % [before_player["energy"], after_player["energy"]])
+	if result == TypesScript.TerminalResult.COMBAT_WIN:
+		simple += "，战斗胜利"
+		detail_parts.append("战斗结果：胜利")
+	_append_log(simple, "%s：%s。" % [simple, "；".join(detail_parts)] if not detail_parts.is_empty() else simple)
 
 
-func _result_message(result: int, fallback: String) -> String:
-	match result:
-		TypesScript.TerminalResult.COMBAT_WIN:
-			return "战斗结果：胜利"
-		TypesScript.TerminalResult.COMBAT_LOSE:
-			return "战斗结果：失败"
-		_:
-			return fallback
+func _append_log(simple: String, detail: String = "") -> void:
+	if simple.is_empty():
+		return
+	simple_log_entries.append(simple)
+	detail_log_entries.append(detail if not detail.is_empty() else simple)
+	_refresh_log()
+
+
+func _reset_log() -> void:
+	simple_log_entries.clear()
+	detail_log_entries.clear()
+	_refresh_log()
+
+
+func _refresh_log() -> void:
+	if log_label == null:
+		return
+	var entries = detail_log_entries if detailed_log_check_box != null and detailed_log_check_box.button_pressed else simple_log_entries
+	log_label.text = "\n".join(entries)
 
 
 func _get_floor_display_name(floor_index: int) -> String:
-	var floors = StmMapDataScript.FLOORS
-	if floor_index >= 0 and floor_index < floors.size():
-		return str(floors[floor_index].get("name", "第 %d 层" % (floor_index + 1)))
 	return "第 %d 层" % (floor_index + 1)
 
 
@@ -730,27 +769,25 @@ func _get_room_type_cn(room_type: String) -> String:
 	match room_type:
 		"combat":
 			return "战斗房间"
+		"elite":
+			return "精英房间"
+		"boss":
+			return "Boss 房间"
 		"rest":
 			return "休息房间"
-		"boss":
-			return "BOSS 房间"
+		"event":
+			return "事件房间"
 		_:
 			return room_type
 
 
-func _reset_log() -> void:
-	simple_log_entries.clear()
-	detail_log_entries.clear()
-
-
-func _append_log(simple_text: String, detail_text: String = "") -> void:
-	simple_log_entries.append(simple_text)
-	detail_log_entries.append(simple_text if detail_text.is_empty() else detail_text)
-	_refresh_log()
-
-
-func _refresh_log() -> void:
-	if log_label == null:
-		return
-	var entries := detail_log_entries if detailed_log_check_box != null and detailed_log_check_box.button_pressed else simple_log_entries
-	log_label.text = "\n".join(entries)
+func _result_message(result: int, fallback: String) -> String:
+	match result:
+		TypesScript.TerminalResult.COMBAT_WIN:
+			return "战斗胜利"
+		TypesScript.TerminalResult.COMBAT_LOSE:
+			return "战斗失败"
+		TypesScript.TerminalResult.EVENT_COMPLETE:
+			return "事件完成"
+		_:
+			return fallback
