@@ -8,6 +8,7 @@ func _init() -> void:
 	card_rarity = "common"
 	target_type = "self"
 	cost = 1
+	play_priority = 15
 	base_block = 8
 	base_magic = 1
 	upgrade_block = 11
