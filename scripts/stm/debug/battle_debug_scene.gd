@@ -254,6 +254,7 @@ func _build_ui() -> void:
 	log_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	log_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	log_panel.add_child(log_label)
+	_refresh_button_states()
 
 
 func _new_label(label_name: String) -> Label:
@@ -444,18 +445,21 @@ func _clear_combat_view() -> void:
 
 func _refresh_display() -> void:
 	if game_state == null or game_state.player == null:
+		_refresh_button_states()
 		return
 	if game_flow != null and game_flow.is_flow_completed():
 		map_panel.visible = true
 		victory_label.visible = true
 		_show_map_panel_state()
 		status_label.text = "游戏通关"
+		_refresh_button_states()
 		_refresh_log()
 		return
 	if game_flow != null and combat == null:
 		map_panel.visible = true
 		_show_map_panel_state()
 		status_label.text = status_message
+		_refresh_button_states()
 		_refresh_log()
 		return
 	var player = game_state.player
@@ -473,10 +477,8 @@ func _refresh_display() -> void:
 	_refresh_hand_buttons(player)
 	status_label.text = status_message
 	_sync_value_inputs()
+	_refresh_button_states()
 	_refresh_log()
-	end_turn_button.disabled = combat == null
-	auto_play_button.disabled = combat == null or game_state == null or game_state.player == null
-	apply_values_button.disabled = game_state == null or game_state.player == null or enemy == null
 
 
 func _show_map_panel_state() -> void:
@@ -537,12 +539,16 @@ func _show_no_combat_display() -> void:
 	if discard_pile_label != null:
 		discard_pile_label.text = "弃牌堆（0）：无"
 	_rebuild_hand_buttons()
+	_refresh_button_states()
+
+
+func _refresh_button_states() -> void:
 	if end_turn_button != null:
-		end_turn_button.disabled = true
+		end_turn_button.disabled = combat == null
 	if auto_play_button != null:
-		auto_play_button.disabled = true
+		auto_play_button.disabled = combat == null or game_state == null or game_state.player == null
 	if apply_values_button != null:
-		apply_values_button.disabled = true
+		apply_values_button.disabled = game_state == null or game_state.player == null or enemy == null
 
 
 func _refresh_hand_buttons(player = null) -> void:
@@ -787,7 +793,5 @@ func _result_message(result: int, fallback: String) -> String:
 			return "战斗胜利"
 		TypesScript.TerminalResult.COMBAT_LOSE:
 			return "战斗失败"
-		TypesScript.TerminalResult.EVENT_COMPLETE:
-			return "事件完成"
 		_:
 			return fallback
