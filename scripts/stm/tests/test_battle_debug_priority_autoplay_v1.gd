@@ -7,6 +7,20 @@ const BashScript := preload("res://scripts/stm/cards/test/bash.gd")
 const InflameScript := preload("res://scripts/stm/cards/test/inflame.gd")
 
 
+func test_auto_play_button_is_disabled_before_entering_combat_room() -> void:
+	# Given：调试场景停留在地图选择状态。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	# Then：自动出牌按钮存在，但战斗开始前不可用。
+	var button = _debug_node_or_null(scene, "Layout/Buttons/AutoPlayButton")
+	assert_not_null(button)
+	if button == null:
+		return
+	assert_true(button.disabled)
+
+
 func test_debug_scene_displays_hand_buttons_sorted_by_priority() -> void:
 	# Given：调试战斗手牌原始顺序不是优先级顺序。
 	var scene = _instantiate_debug_scene()
