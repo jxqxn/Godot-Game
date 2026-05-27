@@ -10,6 +10,7 @@ func _init() -> void:
 	card_rarity = "uncommon"
 	target_type = "self"
 	cost = 1
+	play_priority = 30
 	base_magic = 2
 	upgrade_magic = 3
 	reset_values()
