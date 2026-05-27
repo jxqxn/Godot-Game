@@ -57,6 +57,19 @@ func test_card_manager_priority_sort_is_stable_for_equal_priority() -> void:
 	assert_eq(_card_names(sorted), ["第一", "第二", "第三"])
 
 
+func test_card_manager_priority_sort_preserves_duplicate_reference_positions() -> void:
+	# Given：同一个卡牌对象因错误数据重复出现在 hand 中。
+	var repeated = _priority_card("重复", 10, 0)
+	var low = _priority_card("低", 1, 0)
+	var manager = StmCardManager.new()
+	manager.hand = [repeated, low, repeated]
+	# When：读取排序视图。
+	var sorted: Array = manager.get_hand_sorted_by_priority()
+	# Then：排序仍按原始位置稳定返回两个重复引用，而不是因为 hand.find() 都指向第一个位置导致不稳定。
+	assert_eq(sorted, [low, repeated, repeated])
+	assert_eq(manager.hand, [repeated, low, repeated])
+
+
 func test_find_highest_priority_playable_card_returns_highest_playable() -> void:
 	# Given：三张牌都能支付，其中最高优先级为“高”。
 	var low = _priority_card("低", 1, 0)
