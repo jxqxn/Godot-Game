@@ -43,6 +43,21 @@ func get_pile(pile_name: String) -> Array:
 			return []
 
 
+func get_hand_sorted_by_priority() -> Array:
+	var sorted_hand: Array = hand.duplicate()
+	sorted_hand.sort_custom(_compare_cards_by_play_priority)
+	return sorted_hand
+
+
+func find_highest_priority_playable_card(game_state):
+	var sorted_hand: Array = get_hand_sorted_by_priority()
+	for index in range(sorted_hand.size() - 1, -1, -1):
+		var card = sorted_hand[index]
+		if card != null and card.has_method("can_play") and card.can_play(game_state):
+			return card
+	return null
+
+
 func add_to_pile(pile_name: String, card, pos_type = StmTypes.PilePosType.TOP) -> bool:
 	var pile: Array = get_pile(pile_name)
 	if pile.is_empty() and pile_name not in ["deck", "draw_pile", "discard_pile", "hand", "exhaust_pile"]:
@@ -149,6 +164,20 @@ func exhaust_card(card) -> bool:
 	remove_from_pile(location, card)
 	exhaust_pile.append(card)
 	return true
+
+
+func _compare_cards_by_play_priority(a, b) -> bool:
+	var a_priority := _card_play_priority(a)
+	var b_priority := _card_play_priority(b)
+	if a_priority == b_priority:
+		return hand.find(a) < hand.find(b)
+	return a_priority < b_priority
+
+
+func _card_play_priority(card) -> int:
+	if card != null and card.get("play_priority") != null:
+		return int(card.get("play_priority"))
+	return 0
 
 
 func _shuffled_copy(source: Array) -> Array:
