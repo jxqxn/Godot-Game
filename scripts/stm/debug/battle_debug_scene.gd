@@ -109,36 +109,36 @@ func _build_ui() -> void:
 	var layout = VBoxContainer.new()
 	layout.name = "Layout"
 	layout.set_anchors_preset(Control.PRESET_FULL_RECT)
-	layout.offset_left = 24.0
-	layout.offset_top = 24.0
-	layout.offset_right = -24.0
-	layout.offset_bottom = -24.0
-	layout.add_theme_constant_override("separation", 12)
+	layout.offset_left = 10.0
+	layout.offset_top = 10.0
+	layout.offset_right = -10.0
+	layout.offset_bottom = -10.0
+	layout.add_theme_constant_override("separation", 6)
 	add_child(layout)
 
 	var title = Label.new()
 	title.name = "TitleLabel"
 	title.text = "战斗调试工具"
-	title.add_theme_font_size_override("font_size", 24)
+	title.add_theme_font_size_override("font_size", 20)
 	layout.add_child(title)
 
 	var body = HBoxContainer.new()
 	body.name = "Body"
 	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	body.add_theme_constant_override("separation", 16)
+	body.add_theme_constant_override("separation", 8)
 	layout.add_child(body)
 
 	var main_panel = VBoxContainer.new()
 	main_panel.name = "MainPanel"
 	main_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main_panel.add_theme_constant_override("separation", 12)
+	main_panel.add_theme_constant_override("separation", 6)
 	body.add_child(main_panel)
 
 	map_panel = VBoxContainer.new()
 	map_panel.name = "MapPanel"
-	map_panel.add_theme_constant_override("separation", 8)
+	map_panel.add_theme_constant_override("separation", 4)
 	main_panel.add_child(map_panel)
 	current_floor_label = _new_label("CurrentFloorLabel")
 	map_panel.add_child(current_floor_label)
@@ -159,7 +159,7 @@ func _build_ui() -> void:
 
 	var metrics = HBoxContainer.new()
 	metrics.name = "Metrics"
-	metrics.add_theme_constant_override("separation", 16)
+	metrics.add_theme_constant_override("separation", 8)
 	main_panel.add_child(metrics)
 	player_hp_label = _new_label("PlayerHpLabel")
 	metrics.add_child(player_hp_label)
@@ -172,6 +172,7 @@ func _build_ui() -> void:
 
 	var enemy_panel = VBoxContainer.new()
 	enemy_panel.name = "EnemyPanel"
+	enemy_panel.add_theme_constant_override("separation", 4)
 	main_panel.add_child(enemy_panel)
 	enemy_hp_label = _new_label("EnemyHpLabel")
 	enemy_panel.add_child(enemy_hp_label)
@@ -184,13 +185,14 @@ func _build_ui() -> void:
 
 	var piles_panel = VBoxContainer.new()
 	piles_panel.name = "PilesPanel"
+	piles_panel.add_theme_constant_override("separation", 4)
 	main_panel.add_child(piles_panel)
 	hand_label = _new_label("HandLabel")
 	hand_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	piles_panel.add_child(hand_label)
 	hand_buttons_container = GridContainer.new()
 	hand_buttons_container.name = "HandButtons"
-	hand_buttons_container.columns = 4
+	hand_buttons_container.columns = 5
 	piles_panel.add_child(hand_buttons_container)
 	draw_pile_label = _new_label("DrawPileLabel")
 	draw_pile_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -203,6 +205,7 @@ func _build_ui() -> void:
 	main_panel.add_child(status_label)
 	var buttons = HBoxContainer.new()
 	buttons.name = "Buttons"
+	buttons.add_theme_constant_override("separation", 6)
 	main_panel.add_child(buttons)
 	end_turn_button = _new_button("EndTurnButton", "结束回合")
 	end_turn_button.pressed.connect(_on_end_turn_pressed)
@@ -239,7 +242,7 @@ func _build_ui() -> void:
 
 	var log_panel = VBoxContainer.new()
 	log_panel.name = "LogPanel"
-	log_panel.custom_minimum_size = Vector2(360.0, 0.0)
+	log_panel.custom_minimum_size = Vector2(300.0, 0.0)
 	log_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	body.add_child(log_panel)
 	detailed_log_check_box = CheckBox.new()
@@ -250,7 +253,7 @@ func _build_ui() -> void:
 	log_label = TextEdit.new()
 	log_label.name = "LogLabel"
 	log_label.editable = false
-	log_label.custom_minimum_size = Vector2(0.0, 360.0)
+	log_label.custom_minimum_size = Vector2(0.0, 220.0)
 	log_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	log_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	log_panel.add_child(log_label)
@@ -273,7 +276,7 @@ func _new_label_with_text(label_name: String, label_text: String) -> Label:
 func _new_line_edit(input_name: String) -> LineEdit:
 	var input = LineEdit.new()
 	input.name = input_name
-	input.custom_minimum_size = Vector2(120.0, 36.0)
+	input.custom_minimum_size = Vector2(100.0, 30.0)
 	return input
 
 
@@ -281,7 +284,7 @@ func _new_button(button_name: String, button_text: String) -> Button:
 	var button = Button.new()
 	button.name = button_name
 	button.text = button_text
-	button.custom_minimum_size = Vector2(120.0, 40.0)
+	button.custom_minimum_size = Vector2(104.0, 32.0)
 	return button
 
 
