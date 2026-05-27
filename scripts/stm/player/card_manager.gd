@@ -44,8 +44,18 @@ func get_pile(pile_name: String) -> Array:
 
 
 func get_hand_sorted_by_priority() -> Array:
-	var sorted_hand: Array = hand.duplicate()
-	sorted_hand.sort_custom(_compare_cards_by_play_priority)
+	var entries: Array = []
+	for index in range(hand.size()):
+		var card = hand[index]
+		entries.append({
+			"card": card,
+			"index": index,
+			"priority": _card_play_priority(card),
+		})
+	entries.sort_custom(_compare_priority_entries)
+	var sorted_hand: Array = []
+	for entry in entries:
+		sorted_hand.append(entry["card"])
 	return sorted_hand
 
 
@@ -166,11 +176,11 @@ func exhaust_card(card) -> bool:
 	return true
 
 
-func _compare_cards_by_play_priority(a, b) -> bool:
-	var a_priority := _card_play_priority(a)
-	var b_priority := _card_play_priority(b)
+func _compare_priority_entries(a: Dictionary, b: Dictionary) -> bool:
+	var a_priority := int(a.get("priority", 0))
+	var b_priority := int(b.get("priority", 0))
 	if a_priority == b_priority:
-		return hand.find(a) < hand.find(b)
+		return int(a.get("index", 0)) < int(b.get("index", 0))
 	return a_priority < b_priority
 
 
