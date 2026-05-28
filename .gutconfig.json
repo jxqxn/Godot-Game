@@ -8,7 +8,8 @@
     "res://scripts/stm/tests/test_rooms.gd",
     "res://scripts/stm/tests/test_game_flow.gd",
     "res://scripts/stm/tests/test_card_priority_autoplay_v1.gd",
-    "res://scripts/stm/tests/test_battle_debug_priority_autoplay_v1.gd"
+    "res://scripts/stm/tests/test_battle_debug_priority_autoplay_v1.gd",
+    "res://scripts/stm/tests/test_combat_can_play_guard.gd"
   ],
   "should_exit": true,
   "should_exit_on_success": true,
