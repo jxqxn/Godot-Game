@@ -52,6 +52,8 @@ func end_turn(game_state):
 func _execute_play_card(game_state, card, targets: Array = []):
 	if game_state == null or game_state.player == null or card == null:
 		return _result_none()
+	if card.has_method("can_play") and not card.can_play(game_state):
+		return _result_none()
 	var cost: int = int(card.get("cost") if "cost" in card else 0)
 	if game_state.player.energy < cost:
 		return _result_none()
