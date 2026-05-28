@@ -48,6 +48,23 @@ func _can_play_card_from_hand(card) -> bool:
 	return true
 
 
+func _refresh_hand_buttons(player = null) -> void:
+	if hand_buttons_container == null:
+		return
+	for button_node in hand_buttons_container.get_children():
+		hand_buttons_container.remove_child(button_node)
+		button_node.queue_free()
+	if player == null or player.card_manager == null:
+		return
+	var hand: Array = player.card_manager.get_hand_sorted_by_priority()
+	for index in range(hand.size()):
+		var card = hand[index]
+		var button = _new_button("HandCardButton%d" % index, _card_button_text(card))
+		button.disabled = not _can_play_card_from_hand(card)
+		button.pressed.connect(_play_card_from_hand.bind(card))
+		hand_buttons_container.add_child(button)
+
+
 func _pile_text(title: String, pile_name: String) -> String:
 	if game_state == null or game_state.player == null:
 		return "%s（0）：无" % title
