@@ -24,6 +24,9 @@
 → 复用现有 StmCombat.play_card / PlayCardAction / ActionQueue 流程结算
 ```
 
+当前 v1 已完成：手牌优先级排序与自动出牌。
+下一步建议推进 v1.1：自动出牌预览与不可打原因展示。
+
 ## 运行入口
 
 Godot 工程入口：
@@ -79,13 +82,21 @@ docs/superpowers/specs/2026-05-27-sts2-card-priority-autoplay-v1-design.md
 docs/superpowers/plans/2026-05-27-sts2-card-priority-autoplay-v1.md
 ```
 
+实现状态：
+
+```text
+docs/superpowers/status/2026-05-29-sts2-card-priority-autoplay-v1-status.md
+```
+
 ## 关键代码区域
 
 ```text
 scripts/stm/cards/          卡牌定义与测试卡
 scripts/stm/player/         玩家与卡牌管理器
-scripts/stm/actions/        战斗行动定义
-scripts/stm/engine/         战斗、流程、房间、地图主干
+scripts/stm/actions/        战斗行动与 ActionQueue
+scripts/stm/engine/         Combat / GameState / GameFlow 主干
+scripts/stm/map/            固定地图与楼层导航
+scripts/stm/rooms/          战斗房、休息房、Boss 房
 scripts/stm/debug/          战斗调试场景与固定测试夹具
 scripts/stm/tests/          GUT 测试
 ```
