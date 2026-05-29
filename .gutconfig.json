@@ -11,7 +11,10 @@
     "res://scripts/stm/tests/test_battle_debug_priority_autoplay_v1.gd",
     "res://scripts/stm/tests/test_combat_can_play_guard.gd",
     "res://scripts/stm/tests/test_autoplay_preview_v1_1.gd",
-    "res://scripts/stm/tests/test_battle_debug_autoplay_preview_v1_1.gd"
+    "res://scripts/stm/tests/test_battle_debug_autoplay_preview_v1_1.gd",
+    "res://scripts/stm/tests/test_choice_request_v1.gd",
+    "res://scripts/stm/tests/test_combat_card_reward_choice_v1.gd",
+    "res://scripts/stm/tests/test_battle_debug_choice_reward_v1.gd"
   ],
   "should_exit": true,
   "should_exit_on_success": true,
