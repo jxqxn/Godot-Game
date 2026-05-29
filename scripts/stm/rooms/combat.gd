@@ -4,6 +4,11 @@ extends "res://scripts/stm/rooms/base.gd"
 const FixedBattleFixtureScript := preload("res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd")
 const CombatScript := preload("res://scripts/stm/engine/combat.gd")
 const TypesScript := preload("res://scripts/stm/utils/types.gd")
+const ChoiceOptionScript := preload("res://scripts/stm/choices/choice_option.gd")
+const ChoiceRequestScript := preload("res://scripts/stm/choices/choice_request.gd")
+const StrikeScript := preload("res://scripts/stm/cards/test/strike.gd")
+const DefendScript := preload("res://scripts/stm/cards/test/defend.gd")
+const BashScript := preload("res://scripts/stm/cards/test/bash.gd")
 
 var _player = null
 var _combat = null
@@ -25,8 +30,15 @@ func leave(_game_state) -> void:
 
 
 func handle_combat_result(result: int, game_state) -> void:
-	if result == TypesScript.TerminalResult.COMBAT_WIN:
-		complete(game_state)
+	if result != TypesScript.TerminalResult.COMBAT_WIN:
+		return
+	if is_completed:
+		return
+	if game_state != null and game_state.current_choice_request != null:
+		var request_type := str(game_state.current_choice_request.get("request_type"))
+		if request_type == "card_reward":
+			return
+	game_state.set_choice_request(_create_card_reward_request())
 
 
 func get_player():
@@ -43,6 +55,57 @@ func get_enemy():
 
 func get_room_type() -> String:
 	return "combat"
+
+
+func _create_card_reward_request():
+	return ChoiceRequestScript.new(
+		"combat_card_reward",
+		"选择一张奖励卡牌",
+		"card_reward",
+		_create_card_reward_options(),
+		1,
+		false,
+		{"room": self}
+	)
+
+
+func _create_card_reward_options() -> Array:
+	return [
+		_reward_card_option("take_strike", StrikeScript.new()),
+		_reward_card_option("take_defend", DefendScript.new()),
+		_reward_card_option("take_bash", BashScript.new()),
+		_skip_reward_option(),
+	]
+
+
+func _reward_card_option(option_id: String, card):
+	return ChoiceOptionScript.new(
+		option_id,
+		_card_reward_label(card),
+		"",
+		{"action": "take_card", "card": card},
+		true
+	)
+
+
+func _skip_reward_option():
+	return ChoiceOptionScript.new(
+		"skip_reward",
+		"跳过奖励",
+		"",
+		{"action": "skip", "card": null},
+		true
+	)
+
+
+func _card_reward_label(card) -> String:
+	if card == null:
+		return "未知"
+	var card_name = card.get("card_name")
+	var cost = card.get("cost")
+	if cost == null:
+		return str(card_name) if card_name != null else "未知"
+	return "%s（%d）" % [str(card_name), int(cost)]
 
 
 func _start_combat_with_enemy(game_state, battle_enemy, combat_type: String = "debug", fixture = null) -> bool:
