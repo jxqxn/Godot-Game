@@ -66,7 +66,7 @@ test_battle_debug_priority_autoplay_v1.gd
 test_combat_can_play_guard.gd
 ```
 
-2026-05-29：已人工确认当前 GUT 测试通过。
+2026-05-29：上次人工确认 GUT 测试通过；后续每次变更合并前应重新运行完整测试。
 
 ## 当前主线文档
 
