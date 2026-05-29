@@ -35,6 +35,20 @@ func test_debug_scene_displays_hand_buttons_sorted_by_priority() -> void:
 	assert_eq(_hand_button_texts(scene), ["防御（1）", "打击（1）", "痛击（2）", "燃烧（1）"])
 
 
+func test_debug_scene_displays_hand_label_sorted_by_priority() -> void:
+	# Given：调试战斗手牌原始顺序不是优先级顺序。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	_replace_hand(scene, [InflameScript.new(), DefendScript.new(), BashScript.new(), StrikeScript.new()])
+	# When：刷新显示。
+	scene._refresh_display()
+	# Then：手牌文本和按钮一致，也按 play_priority 升序排列。
+	assert_eq(_label_text(scene, "Layout/PilesPanel/HandLabel"), "手牌（4）：防御, 打击, 痛击, 燃烧")
+
+
 func test_auto_play_button_plays_highest_priority_playable_card() -> void:
 	# Given：燃烧优先级最高且可打。
 	var scene = _instantiate_debug_scene()
