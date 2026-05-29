@@ -32,6 +32,7 @@ var draw_pile_label: Label
 var discard_pile_label: Label
 var hand_buttons_container: GridContainer
 var status_label: Label
+var auto_play_preview_label: Label
 var end_turn_button: Button
 var auto_play_button: Button
 var player_hp_input: LineEdit
@@ -203,6 +204,9 @@ func _build_ui() -> void:
 
 	status_label = _new_label("StatusLabel")
 	main_panel.add_child(status_label)
+	auto_play_preview_label = _new_label("AutoPlayPreviewLabel")
+	auto_play_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	main_panel.add_child(auto_play_preview_label)
 	var buttons = HBoxContainer.new()
 	buttons.name = "Buttons"
 	buttons.add_theme_constant_override("separation", 6)
@@ -258,6 +262,7 @@ func _build_ui() -> void:
 	log_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	log_panel.add_child(log_label)
 	_refresh_button_states()
+	_refresh_auto_play_preview_label()
 
 
 func _new_label(label_name: String) -> Label:
@@ -350,13 +355,14 @@ func _on_auto_play_pressed() -> void:
 		_append_log("自动出牌失败", "自动出牌失败：战斗尚未开始。")
 		_refresh_display()
 		return
-	var card = game_state.player.card_manager.find_highest_priority_playable_card(game_state)
-	if card == null:
-		status_message = "没有可自动打出的牌"
+	var preview: Dictionary = combat.get_auto_play_preview(game_state)
+	if not bool(preview.get("ok", false)):
+		var reason := str(preview.get("blocked_reason_text", "没有可自动打出的牌"))
+		status_message = "没有可自动打出的牌（%s）" % reason
 		_append_log(status_message)
 		_refresh_display()
 		return
-	_play_card_from_hand(card)
+	_play_card_from_hand(preview.get("selected_card"))
 
 
 func _play_card_from_hand(card) -> void:
@@ -446,10 +452,12 @@ func _clear_combat_view() -> void:
 	if game_state != null:
 		game_state.current_combat = null
 	_rebuild_hand_buttons()
+	_refresh_auto_play_preview_label()
 
 
 func _refresh_display() -> void:
 	if game_state == null or game_state.player == null:
+		_refresh_auto_play_preview_label()
 		_refresh_button_states()
 		return
 	if game_flow != null and game_flow.is_flow_completed():
@@ -457,6 +465,7 @@ func _refresh_display() -> void:
 		victory_label.visible = true
 		_show_map_panel_state()
 		status_label.text = "游戏通关"
+		_refresh_auto_play_preview_label()
 		_refresh_button_states()
 		_refresh_log()
 		return
@@ -464,6 +473,7 @@ func _refresh_display() -> void:
 		map_panel.visible = true
 		_show_map_panel_state()
 		status_label.text = status_message
+		_refresh_auto_play_preview_label()
 		_refresh_button_states()
 		_refresh_log()
 		return
@@ -481,6 +491,7 @@ func _refresh_display() -> void:
 	discard_pile_label.text = _pile_text("弃牌堆", "discard_pile")
 	_refresh_hand_buttons(player)
 	status_label.text = status_message
+	_refresh_auto_play_preview_label()
 	_sync_value_inputs()
 	_refresh_button_states()
 	_refresh_log()
@@ -544,6 +555,7 @@ func _show_no_combat_display() -> void:
 	if discard_pile_label != null:
 		discard_pile_label.text = "弃牌堆（0）：无"
 	_rebuild_hand_buttons()
+	_refresh_auto_play_preview_label()
 	_refresh_button_states()
 
 
@@ -575,6 +587,37 @@ func _refresh_hand_buttons(player = null) -> void:
 
 func _rebuild_hand_buttons() -> void:
 	_refresh_hand_buttons(game_state.player if game_state != null and game_state.player != null else null)
+
+
+func _refresh_auto_play_preview_label() -> void:
+	if auto_play_preview_label == null:
+		return
+	if game_state == null or combat == null or game_state.player == null:
+		auto_play_preview_label.text = "自动出牌预览：战斗尚未开始"
+		return
+	var preview: Dictionary = combat.get_auto_play_preview(game_state)
+	auto_play_preview_label.text = _auto_play_preview_text(preview)
+
+
+func _auto_play_preview_text(preview: Dictionary) -> String:
+	if bool(preview.get("ok", false)):
+		var selected_card = preview.get("selected_card")
+		var text := "自动出牌预览：将打出 %s" % _card_display_name(selected_card)
+		var skipped_text := _auto_play_skipped_text(preview.get("skipped", []))
+		if not skipped_text.is_empty():
+			text += "；%s" % skipped_text
+		return text
+	var reason := str(preview.get("blocked_reason_text", "没有可自动打出的牌"))
+	return "自动出牌预览：没有可自动打出的牌（%s）" % reason
+
+
+func _auto_play_skipped_text(skipped: Array) -> String:
+	if skipped.is_empty():
+		return ""
+	var first = skipped[0]
+	var card_name := str(first.get("card_name", _card_display_name(first.get("card"))))
+	var reason := str(first.get("reason_text", "无法打出"))
+	return "跳过：%s（%s）" % [card_name, reason]
 
 
 func _can_play_card_from_hand(card) -> bool:
