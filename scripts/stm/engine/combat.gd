@@ -49,6 +49,120 @@ func end_turn(game_state):
 	return game_state.drive_actions()
 
 
+func get_auto_play_preview(game_state) -> Dictionary:
+	if game_state == null or game_state.current_combat == null:
+		return _auto_play_preview_failure("NO_COMBAT", "战斗尚未开始")
+	if game_state.player == null or game_state.player.card_manager == null:
+		return _auto_play_preview_failure("NO_PLAYER", "玩家不存在")
+	var player = game_state.player
+	var hand: Array = player.card_manager.get_pile("hand")
+	if hand.is_empty():
+		return _auto_play_preview_failure("EMPTY_HAND", "没有手牌")
+	var skipped: Array = []
+	var sorted_hand: Array = player.card_manager.get_hand_sorted_by_priority()
+	for index in range(sorted_hand.size() - 1, -1, -1):
+		var card = sorted_hand[index]
+		var reason := _card_auto_play_block_reason(game_state, card)
+		if reason.is_empty():
+			return {
+				"ok": true,
+				"selected_card": card,
+				"selected_reason": "将自动打出：%s" % _card_display_name_for_preview(card),
+				"blocked_reason_code": "",
+				"blocked_reason_text": "",
+				"skipped": skipped,
+			}
+		skipped.append({
+			"card": card,
+			"card_name": _card_display_name_for_preview(card),
+			"reason_code": str(reason.get("code", "UNKNOWN")),
+			"reason_text": str(reason.get("text", "无法打出")),
+		})
+	if skipped.size() > 0:
+		return _auto_play_preview_failure(str(skipped[0].reason_code), str(skipped[0].reason_text), skipped)
+	return _auto_play_preview_failure("UNKNOWN", "没有可自动打出的牌", skipped)
+
+
+func _card_auto_play_block_reason(game_state, card) -> Dictionary:
+	if card == null:
+		return {"code": "UNKNOWN", "text": "未知卡牌，无法打出"}
+	if game_state == null or game_state.player == null or game_state.player.card_manager == null:
+		return {"code": "NO_PLAYER", "text": "玩家不存在"}
+	var player = game_state.player
+	if not player.card_manager.get_pile("hand").has(card):
+		return {"code": "NOT_IN_HAND", "text": "%s 不在手牌中" % _card_display_name_for_preview(card)}
+	var cost: int = int(card.get("cost") if card.get("cost") != null else 0)
+	if int(player.energy) < cost:
+		return {"code": "NOT_ENOUGH_ENERGY", "text": "能量不足：需要 %d，当前 %d" % [cost, int(player.energy)]}
+	if card.has_method("can_play") and not card.can_play(game_state):
+		return {"code": "CAN_PLAY_REJECTED", "text": "卡牌规则限制，无法打出"}
+	if _card_targets_enemy_for_preview(card) and _first_alive_enemy_for_preview() == null:
+		return {"code": "NO_LEGAL_TARGET", "text": "没有可选敌人"}
+	return {}
+
+
+func _auto_play_preview_failure(code: String, text: String, skipped: Array = []) -> Dictionary:
+	return {
+		"ok": false,
+		"selected_card": null,
+		"selected_reason": "",
+		"blocked_reason_code": code,
+		"blocked_reason_text": text,
+		"skipped": skipped,
+	}
+
+
+func _first_alive_enemy_for_preview():
+	for candidate in enemies:
+		if candidate != null and (not candidate.has_method("is_dead") or not candidate.is_dead()):
+			return candidate
+	return null
+
+
+func _card_targets_enemy_for_preview(card) -> bool:
+	var target_kind := _card_target_kind_for_preview(card)
+	return target_kind == "enemy" or target_kind == "all_enemies"
+
+
+func _card_target_kind_for_preview(card) -> String:
+	if card == null:
+		return "none"
+	var raw_target = card.get("target_type")
+	if raw_target == null:
+		return "none"
+	if typeof(raw_target) == TYPE_INT:
+		match int(raw_target):
+			StmTypes.TargetType.SELF:
+				return "self"
+			StmTypes.TargetType.ENEMY:
+				return "enemy"
+			StmTypes.TargetType.ALL_ENEMIES:
+				return "all_enemies"
+			StmTypes.TargetType.ALL:
+				return "all"
+			_:
+				return "none"
+	var target_text := str(raw_target).to_lower()
+	match target_text:
+		"self", "targettype.self":
+			return "self"
+		"enemy", "enemy_select", "targettype.enemy", "targettype.enemy_select":
+			return "enemy"
+		"all_enemies", "all_enemy", "targettype.all_enemies":
+			return "all_enemies"
+		"all", "targettype.all":
+			return "all"
+		_:
+			return "none"
+
+
+func _card_display_name_for_preview(card) -> String:
+	if card == null:
+		return "未知"
+	var card_name = card.get("card_name")
+	return str(card_name) if card_name != null else "未知"
+
+
 func _execute_play_card(game_state, card, targets: Array = []):
 	if game_state == null or game_state.player == null or card == null:
 		return _result_none()
