@@ -97,7 +97,44 @@ func drive_actions():
 
 func _resolve_card_reward_choice(request, option) -> Dictionary:
 	var request_type := str(request.get("request_type"))
-	return _choice_result(false, "INVALID_PAYLOAD", "卡牌奖励尚未接入", request_type, str(option.get("id")))
+	var option_id := str(option.get("id"))
+	var payload = option.get("payload")
+	if not payload is Dictionary:
+		return _choice_result(false, "INVALID_PAYLOAD", "奖励选项无效", request_type, option_id)
+	var action := str(payload.get("action", ""))
+	match action:
+		"skip":
+			clear_choice_request()
+			_complete_choice_context_room(request)
+			return _choice_result(true, "CARD_REWARD_SKIPPED", "跳过奖励", request_type, option_id)
+		"take_card":
+			var card = payload.get("card")
+			if card == null or player == null or player.card_manager == null:
+				return _choice_result(false, "INVALID_PAYLOAD", "奖励卡牌无效", request_type, option_id)
+			player.card_manager.add_to_pile("deck", card, StmTypes.PilePosType.BOTTOM)
+			clear_choice_request()
+			_complete_choice_context_room(request)
+			return _choice_result(true, "CARD_REWARD_TAKEN", "获得 %s" % _choice_card_display_name(card), request_type, option_id)
+		_:
+			return _choice_result(false, "INVALID_PAYLOAD", "奖励选项无效", request_type, option_id)
+
+
+func _complete_choice_context_room(request) -> void:
+	if request == null:
+		return
+	var context = request.get("context")
+	if not context is Dictionary:
+		return
+	var room = context.get("room")
+	if room != null and room.has_method("complete"):
+		room.complete(self)
+
+
+func _choice_card_display_name(card) -> String:
+	if card == null:
+		return "未知"
+	var card_name = card.get("card_name")
+	return str(card_name) if card_name != null else "未知"
 
 
 func _choice_result(ok: bool, code: String, message: String, request_type: String = "", selected_option_id: String = "") -> Dictionary:
