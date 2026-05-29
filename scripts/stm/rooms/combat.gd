@@ -32,9 +32,11 @@ func leave(_game_state) -> void:
 func handle_combat_result(result: int, game_state) -> void:
 	if result != TypesScript.TerminalResult.COMBAT_WIN:
 		return
+	if game_state == null:
+		return
 	if is_completed:
 		return
-	if game_state != null and game_state.current_choice_request != null:
+	if game_state.current_choice_request != null:
 		var request_type := str(game_state.current_choice_request.get("request_type"))
 		if request_type == "card_reward":
 			return
