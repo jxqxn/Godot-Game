@@ -371,7 +371,7 @@ func _play_card_from_hand(card) -> void:
 		_refresh_display()
 		return
 	var targets: Array = []
-	if card != null and str(card.get("target_type")) == "enemy_select":
+	if _card_targets_enemy(card):
 		var target = _first_alive_enemy()
 		if target == null:
 			status_message = "没有可选敌人"
@@ -379,6 +379,8 @@ func _play_card_from_hand(card) -> void:
 			_refresh_display()
 			return
 		targets.append(target)
+	elif _card_targets_self(card):
+		targets.append(game_state.player)
 	var before_player := _player_snapshot()
 	var before_enemy_hp := _enemy_hp_value()
 	var result = combat.play_card(game_state, card, targets)
@@ -558,6 +560,7 @@ func _refresh_hand_buttons(player = null) -> void:
 	if hand_buttons_container == null:
 		return
 	for button_node in hand_buttons_container.get_children():
+		hand_buttons_container.remove_child(button_node)
 		button_node.queue_free()
 	if player == null or player.card_manager == null:
 		return
@@ -581,7 +584,9 @@ func _can_play_card_from_hand(card) -> bool:
 		return false
 	if card != null and card.has_method("can_play") and not card.can_play(game_state):
 		return false
-	if card != null and str(card.get("target_type")) == "enemy_select" and _first_alive_enemy() == null:
+	if _card_targets_enemy(card) and _first_alive_enemy() == null:
+		return false
+	if _card_targets_self(card) and game_state.player == null:
 		return false
 	return true
 
@@ -667,6 +672,47 @@ func _first_alive_enemy():
 	return null
 
 
+func _card_targets_enemy(card) -> bool:
+	var target_kind := _card_target_kind(card)
+	return target_kind == "enemy" or target_kind == "all_enemies"
+
+
+func _card_targets_self(card) -> bool:
+	return _card_target_kind(card) == "self"
+
+
+func _card_target_kind(card) -> String:
+	if card == null:
+		return "none"
+	var raw_target = card.get("target_type")
+	if raw_target == null:
+		return "none"
+	if typeof(raw_target) == TYPE_INT:
+		match int(raw_target):
+			StmTypes.TargetType.SELF:
+				return "self"
+			StmTypes.TargetType.ENEMY:
+				return "enemy"
+			StmTypes.TargetType.ALL_ENEMIES:
+				return "all_enemies"
+			StmTypes.TargetType.ALL:
+				return "all"
+			_:
+				return "none"
+	var target_text := str(raw_target).to_lower()
+	match target_text:
+		"self", "targettype.self":
+			return "self"
+		"enemy", "enemy_select", "targettype.enemy":
+			return "enemy"
+		"all_enemies", "all_enemy", "targettype.all_enemies":
+			return "all_enemies"
+		"all", "targettype.all":
+			return "all"
+		_:
+			return "none"
+
+
 func _player_snapshot() -> Dictionary:
 	if game_state == null or game_state.player == null:
 		return {"hp": 0, "energy": 0, "block": 0}
@@ -706,9 +752,13 @@ func _power_text(title: String, creature) -> String:
 
 
 func _pile_text(title: String, pile_name: String) -> String:
-	if game_state == null or game_state.player == null:
+	if game_state == null or game_state.player == null or game_state.player.card_manager == null:
 		return "%s（0）：无" % title
-	var pile = game_state.player.card_manager.get_pile(pile_name)
+	var pile: Array = []
+	if pile_name == "hand" and game_state.player.card_manager.has_method("get_hand_sorted_by_priority"):
+		pile = game_state.player.card_manager.get_hand_sorted_by_priority()
+	else:
+		pile = game_state.player.card_manager.get_pile(pile_name)
 	if pile.is_empty():
 		return "%s（0）：无" % title
 	var names := PackedStringArray()
