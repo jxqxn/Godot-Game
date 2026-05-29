@@ -5,6 +5,7 @@ var current_act: int = 1
 var floor_in_act: int = 1
 var player = null
 var current_combat = null
+var current_choice_request = null
 var action_queue = null
 var _pending_actions: Array = []
 
@@ -17,6 +18,37 @@ var current_floor: int:
 func _init(p_player = null) -> void:
 	player = p_player
 	action_queue = _try_new_global("StmActionQueue")
+
+
+func set_choice_request(request) -> void:
+	current_choice_request = request
+
+
+func clear_choice_request() -> void:
+	current_choice_request = null
+
+
+func has_choice_request() -> bool:
+	return current_choice_request != null
+
+
+func submit_choice(option_id: String) -> Dictionary:
+	if current_choice_request == null:
+		return _choice_result(false, "NO_CHOICE_REQUEST", "当前没有等待处理的选择")
+	var request = current_choice_request
+	if not request.has_method("get_option"):
+		return _choice_result(false, "UNSUPPORTED_REQUEST_TYPE", "选择请求无效", str(request.get("request_type") if request.get("request_type") != null else ""), option_id)
+	var option = request.get_option(option_id)
+	if option == null:
+		return _choice_result(false, "OPTION_NOT_FOUND", "选项不存在", str(request.get("request_type")), option_id)
+	if not bool(option.get("enabled")):
+		return _choice_result(false, "OPTION_DISABLED", "选项不可用", str(request.get("request_type")), option_id)
+	var request_type := str(request.get("request_type"))
+	match request_type:
+		"card_reward":
+			return _resolve_card_reward_choice(request, option)
+		_:
+			return _choice_result(false, "UNSUPPORTED_REQUEST_TYPE", "暂不支持该选择类型", request_type, option_id)
 
 
 func add_action(action, to_front: bool = false) -> void:
@@ -61,6 +93,21 @@ func drive_actions():
 			if terminal_result != none_result:
 				return terminal_result
 	return none_result
+
+
+func _resolve_card_reward_choice(request, option) -> Dictionary:
+	var request_type := str(request.get("request_type"))
+	return _choice_result(false, "INVALID_PAYLOAD", "卡牌奖励尚未接入", request_type, str(option.get("id")))
+
+
+func _choice_result(ok: bool, code: String, message: String, request_type: String = "", selected_option_id: String = "") -> Dictionary:
+	return {
+		"ok": ok,
+		"code": code,
+		"message": message,
+		"request_type": request_type,
+		"selected_option_id": selected_option_id,
+	}
 
 
 func _try_new_global(class_name_text: String):
