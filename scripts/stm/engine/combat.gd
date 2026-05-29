@@ -50,7 +50,7 @@ func end_turn(game_state):
 
 
 func get_auto_play_preview(game_state) -> Dictionary:
-	if game_state == null or game_state.current_combat == null:
+	if game_state == null or game_state.current_combat == null or game_state.current_combat != self:
 		return _auto_play_preview_failure("NO_COMBAT", "战斗尚未开始")
 	if game_state.player == null or game_state.player.card_manager == null:
 		return _auto_play_preview_failure("NO_PLAYER", "玩家不存在")
