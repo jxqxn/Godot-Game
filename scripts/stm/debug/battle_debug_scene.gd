@@ -33,6 +33,9 @@ var discard_pile_label: Label
 var hand_buttons_container: GridContainer
 var status_label: Label
 var auto_play_preview_label: Label
+var choice_panel: VBoxContainer
+var choice_title_label: Label
+var choice_options_container: VBoxContainer
 var end_turn_button: Button
 var auto_play_button: Button
 var player_hp_input: LineEdit
@@ -207,6 +210,19 @@ func _build_ui() -> void:
 	auto_play_preview_label = _new_label("AutoPlayPreviewLabel")
 	auto_play_preview_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	main_panel.add_child(auto_play_preview_label)
+
+	choice_panel = VBoxContainer.new()
+	choice_panel.name = "ChoicePanel"
+	choice_panel.visible = false
+	choice_panel.add_theme_constant_override("separation", 4)
+	main_panel.add_child(choice_panel)
+	choice_title_label = _new_label("ChoiceTitleLabel")
+	choice_panel.add_child(choice_title_label)
+	choice_options_container = VBoxContainer.new()
+	choice_options_container.name = "ChoiceOptionsContainer"
+	choice_options_container.add_theme_constant_override("separation", 4)
+	choice_panel.add_child(choice_options_container)
+
 	var buttons = HBoxContainer.new()
 	buttons.name = "Buttons"
 	buttons.add_theme_constant_override("separation", 6)
@@ -261,6 +277,7 @@ func _build_ui() -> void:
 	log_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	log_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	log_panel.add_child(log_label)
+	_refresh_choice_panel()
 	_refresh_button_states()
 	_refresh_auto_play_preview_label()
 
@@ -317,10 +334,7 @@ func _on_enter_room_pressed() -> void:
 		var after_hp: int = int(room.get("last_hp_after"))
 		var healed: int = int(room.get("last_heal_amount"))
 		status_message = "休息房间已完成"
-		_append_log(
-			"休息房间：恢复 %d 点 HP（%d → %d）" % [healed, before_hp, after_hp],
-			"休息房间：HP %d → %d。" % [before_hp, after_hp]
-		)
+		_append_log("休息房间：恢复 %d 点 HP（%d → %d）" % [healed, before_hp, after_hp], "休息房间：HP %d → %d。" % [before_hp, after_hp])
 		_on_room_completed()
 		return
 	map_panel.visible = false
@@ -332,6 +346,10 @@ func _on_enter_room_pressed() -> void:
 
 
 func _on_end_turn_pressed() -> void:
+	if _has_active_choice_request():
+		status_message = "等待选择奖励"
+		_refresh_display()
+		return
 	if game_state == null or combat == null:
 		status_message = "战斗尚未开始"
 		_append_log("结束回合失败", "结束回合失败：战斗尚未开始。")
@@ -350,6 +368,10 @@ func _on_end_turn_pressed() -> void:
 
 
 func _on_auto_play_pressed() -> void:
+	if _has_active_choice_request():
+		status_message = "等待选择奖励"
+		_refresh_display()
+		return
 	if game_state == null or combat == null or game_state.player == null or game_state.player.card_manager == null:
 		status_message = "战斗尚未开始"
 		_append_log("自动出牌失败", "自动出牌失败：战斗尚未开始。")
@@ -366,6 +388,10 @@ func _on_auto_play_pressed() -> void:
 
 
 func _play_card_from_hand(card) -> void:
+	if _has_active_choice_request():
+		status_message = "等待选择奖励"
+		_refresh_display()
+		return
 	if game_state == null or combat == null or game_state.player == null:
 		status_message = "战斗尚未开始"
 		_append_log("出牌失败")
@@ -401,7 +427,14 @@ func _play_card_from_hand(card) -> void:
 func _finish_combat_result(result: int) -> void:
 	if game_flow != null and game_flow.get_current_room() != null:
 		game_flow.handle_combat_result(result)
-		_on_room_completed()
+		if _has_active_choice_request():
+			status_message = "战斗胜利，选择奖励"
+			_refresh_display()
+			return
+		if game_flow.get_current_room() != null and game_flow.get_current_room().is_completed:
+			_on_room_completed()
+			return
+		_refresh_display()
 	else:
 		_refresh_display()
 
@@ -453,10 +486,12 @@ func _clear_combat_view() -> void:
 		game_state.current_combat = null
 	_rebuild_hand_buttons()
 	_refresh_auto_play_preview_label()
+	_refresh_choice_panel()
 
 
 func _refresh_display() -> void:
 	if game_state == null or game_state.player == null:
+		_refresh_choice_panel()
 		_refresh_auto_play_preview_label()
 		_refresh_button_states()
 		return
@@ -465,6 +500,7 @@ func _refresh_display() -> void:
 		victory_label.visible = true
 		_show_map_panel_state()
 		status_label.text = "游戏通关"
+		_refresh_choice_panel()
 		_refresh_auto_play_preview_label()
 		_refresh_button_states()
 		_refresh_log()
@@ -473,6 +509,7 @@ func _refresh_display() -> void:
 		map_panel.visible = true
 		_show_map_panel_state()
 		status_label.text = status_message
+		_refresh_choice_panel()
 		_refresh_auto_play_preview_label()
 		_refresh_button_states()
 		_refresh_log()
@@ -491,6 +528,7 @@ func _refresh_display() -> void:
 	discard_pile_label.text = _pile_text("弃牌堆", "discard_pile")
 	_refresh_hand_buttons(player)
 	status_label.text = status_message
+	_refresh_choice_panel()
 	_refresh_auto_play_preview_label()
 	_sync_value_inputs()
 	_refresh_button_states()
@@ -555,17 +593,23 @@ func _show_no_combat_display() -> void:
 	if discard_pile_label != null:
 		discard_pile_label.text = "弃牌堆（0）：无"
 	_rebuild_hand_buttons()
+	_refresh_choice_panel()
 	_refresh_auto_play_preview_label()
 	_refresh_button_states()
 
 
+func _has_active_choice_request() -> bool:
+	return game_state != null and game_state.has_method("has_choice_request") and game_state.has_choice_request()
+
+
 func _refresh_button_states() -> void:
+	var has_choice := _has_active_choice_request()
 	if end_turn_button != null:
-		end_turn_button.disabled = combat == null
+		end_turn_button.disabled = combat == null or has_choice
 	if auto_play_button != null:
-		auto_play_button.disabled = combat == null or game_state == null or game_state.player == null
+		auto_play_button.disabled = combat == null or game_state == null or game_state.player == null or has_choice
 	if apply_values_button != null:
-		apply_values_button.disabled = game_state == null or game_state.player == null or enemy == null
+		apply_values_button.disabled = game_state == null or game_state.player == null or enemy == null or has_choice
 
 
 func _refresh_hand_buttons(player = null) -> void:
@@ -576,11 +620,12 @@ func _refresh_hand_buttons(player = null) -> void:
 		button_node.queue_free()
 	if player == null or player.card_manager == null:
 		return
+	var has_choice := _has_active_choice_request()
 	var hand: Array = player.card_manager.get_hand_sorted_by_priority()
 	for index in range(hand.size()):
 		var card = hand[index]
 		var button = _new_button("HandCardButton%d" % index, _card_button_text(card))
-		button.disabled = not _can_play_card_from_hand(card)
+		button.disabled = has_choice or not _can_play_card_from_hand(card)
 		button.pressed.connect(_play_card_from_hand.bind(card))
 		hand_buttons_container.add_child(button)
 
@@ -592,11 +637,58 @@ func _rebuild_hand_buttons() -> void:
 func _refresh_auto_play_preview_label() -> void:
 	if auto_play_preview_label == null:
 		return
+	if _has_active_choice_request():
+		auto_play_preview_label.text = "自动出牌预览：等待选择奖励"
+		return
 	if game_state == null or combat == null or game_state.player == null:
 		auto_play_preview_label.text = "自动出牌预览：战斗尚未开始"
 		return
 	var preview: Dictionary = combat.get_auto_play_preview(game_state)
 	auto_play_preview_label.text = _auto_play_preview_text(preview)
+
+
+func _refresh_choice_panel() -> void:
+	if choice_panel == null or choice_title_label == null or choice_options_container == null:
+		return
+	for child in choice_options_container.get_children():
+		choice_options_container.remove_child(child)
+		child.queue_free()
+	if not _has_active_choice_request():
+		choice_panel.visible = false
+		choice_title_label.text = ""
+		return
+	var request = game_state.current_choice_request
+	choice_panel.visible = true
+	choice_title_label.text = str(request.get("title"))
+	for option in request.options:
+		var button = _new_button(str(option.get("id")), _choice_option_button_text(option))
+		button.disabled = not bool(option.get("enabled"))
+		button.pressed.connect(_on_choice_option_pressed.bind(str(option.get("id"))))
+		choice_options_container.add_child(button)
+
+
+func _choice_option_button_text(option) -> String:
+	var text := str(option.get("label"))
+	var detail := str(option.get("detail"))
+	if not detail.is_empty():
+		text += " - %s" % detail
+	return text
+
+
+func _on_choice_option_pressed(option_id: String) -> void:
+	if game_state == null:
+		return
+	var result: Dictionary = game_state.submit_choice(option_id)
+	status_message = str(result.get("message", "选择已处理"))
+	_append_log(_choice_result_log_text(result))
+	if bool(result.get("ok", false)) and game_flow != null and game_flow.get_current_room() != null and game_flow.get_current_room().is_completed:
+		_on_room_completed()
+		return
+	_refresh_display()
+
+
+func _choice_result_log_text(result: Dictionary) -> String:
+	return str(result.get("message", "选择已处理"))
 
 
 func _auto_play_preview_text(preview: Dictionary) -> String:
@@ -621,6 +713,8 @@ func _auto_play_skipped_text(skipped: Array) -> String:
 
 
 func _can_play_card_from_hand(card) -> bool:
+	if _has_active_choice_request():
+		return false
 	if game_state == null or combat == null or game_state.player == null or game_state.player.card_manager == null:
 		return false
 	if not game_state.player.card_manager.get_pile("hand").has(card):
@@ -746,7 +840,7 @@ func _card_target_kind(card) -> String:
 	match target_text:
 		"self", "targettype.self":
 			return "self"
-		"enemy", "enemy_select", "targettype.enemy":
+		"enemy", "enemy_select", "targettype.enemy", "targettype.enemy_select":
 			return "enemy"
 		"all_enemies", "all_enemy", "targettype.all_enemies":
 			return "all_enemies"
