@@ -68,11 +68,21 @@ func test_debug_scene_uses_game_flow_combat_result_for_room_completion() -> void
 	_ensure_card_in_hand(scene, "打击")
 	# When：打出打击获得 COMBAT_WIN。
 	_press_hand_card_button(scene, "打击")
-	# Then：当前房间完成，地图面板显示下一层选择。
+	# Then：普通战斗先进入奖励选择，不立即完成房间或显示下一层。
+	assert_false(scene.game_flow.get_current_room().is_completed)
+	assert_true(scene.game_state.has_choice_request())
+	assert_true(_debug_node_or_null(scene, "Layout/ChoicePanel").visible)
+	assert_true(_label_text(scene, "Layout/ChoicePanel/ChoiceTitleLabel").contains("选择一张奖励卡牌"))
+	assert_false(_debug_node_or_null(scene, "Layout/MainPanel/MapPanel/NextFloorContainer").visible)
+	assert_true(_label_text(scene, "Layout/StatusLabel").contains("选择奖励"))
+	# When：跳过奖励。
+	_press_choice_button(scene, "跳过奖励")
+	# Then：奖励处理后当前房间完成，地图面板显示下一层选择。
 	assert_true(scene.game_flow.get_current_room().is_completed)
 	assert_true(_debug_node_or_null(scene, "Layout/MainPanel/MapPanel").visible)
 	assert_true(_debug_node_or_null(scene, "Layout/MainPanel/MapPanel/NextFloorContainer").visible)
 	assert_true(_label_text(scene, "Layout/StatusLabel").contains("房间完成"))
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("跳过奖励"))
 
 
 func test_debug_scene_boss_victory_shows_flow_victory() -> void:
@@ -198,12 +208,30 @@ func _press_hand_card_button(scene: Node, card_name: String) -> void:
 	button.emit_signal("pressed")
 
 
+func _press_choice_button(scene: Node, label_prefix: String) -> void:
+	var button = _choice_button(scene, label_prefix)
+	assert_not_null(button)
+	if button == null:
+		return
+	button.emit_signal("pressed")
+
+
 func _hand_card_button(scene: Node, card_name: String):
 	var container = _debug_node_or_null(scene, "Layout/PilesPanel/HandButtons")
 	if container == null:
 		return null
 	for child in container.get_children():
 		if child is Button and str(child.text).begins_with(card_name):
+			return child
+	return null
+
+
+func _choice_button(scene: Node, label_prefix: String):
+	var container = _debug_node_or_null(scene, "Layout/ChoicePanel/ChoiceOptionsContainer")
+	if container == null:
+		return null
+	for child in container.get_children():
+		if child is Button and str(child.text).begins_with(label_prefix):
 			return child
 	return null
 
@@ -251,6 +279,8 @@ func _relocated_debug_path(node_path: String) -> String:
 		return node_path.replace("Layout/PilesPanel", "Layout/Body/MainPanel/PilesPanel")
 	if node_path.begins_with("Layout/StatusLabel"):
 		return node_path.replace("Layout/StatusLabel", "Layout/Body/MainPanel/StatusLabel")
+	if node_path.begins_with("Layout/ChoicePanel"):
+		return node_path.replace("Layout/ChoicePanel", "Layout/Body/MainPanel/ChoicePanel")
 	if node_path.begins_with("Layout/Buttons"):
 		return node_path.replace("Layout/Buttons", "Layout/Body/MainPanel/Buttons")
 	if node_path.begins_with("Layout/ValueEditor"):
