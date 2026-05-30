@@ -14,6 +14,7 @@ func test_submit_choice_take_card_adds_selected_card_and_completes_room() -> voi
 	var context = _entered_combat_room_with_reward_request()
 	var game_state = context.game_state
 	var room = context.room
+	var before_deck_size: int = game_state.player.card_manager.get_pile("deck").size()
 	# When：选择第一张奖励卡。
 	var result: Dictionary = game_state.submit_choice("take_strike")
 	# Then：卡牌进入牌组，选择被清空，房间完成。
@@ -21,7 +22,7 @@ func test_submit_choice_take_card_adds_selected_card_and_completes_room() -> voi
 	assert_eq(result.code, "CARD_REWARD_TAKEN")
 	assert_null(game_state.current_choice_request)
 	assert_true(room.is_completed)
-	assert_eq(game_state.player.card_manager.get_pile("deck").size(), 1)
+	assert_eq(game_state.player.card_manager.get_pile("deck").size(), before_deck_size + 1)
 
 
 func test_submit_choice_skip_card_reward_completes_room_without_card() -> void:
@@ -29,6 +30,7 @@ func test_submit_choice_skip_card_reward_completes_room_without_card() -> void:
 	var context = _entered_combat_room_with_reward_request()
 	var game_state = context.game_state
 	var room = context.room
+	var before_deck_size: int = game_state.player.card_manager.get_pile("deck").size()
 	# When：选择跳过。
 	var result: Dictionary = game_state.submit_choice("skip_reward")
 	# Then：不加卡，选择被清空，房间完成。
@@ -36,7 +38,7 @@ func test_submit_choice_skip_card_reward_completes_room_without_card() -> void:
 	assert_eq(result.code, "CARD_REWARD_SKIPPED")
 	assert_null(game_state.current_choice_request)
 	assert_true(room.is_completed)
-	assert_eq(game_state.player.card_manager.get_pile("deck").size(), 0)
+	assert_eq(game_state.player.card_manager.get_pile("deck").size(), before_deck_size)
 
 
 func test_submit_choice_rest_heals_player_and_completes_room() -> void:
