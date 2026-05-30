@@ -36,6 +36,8 @@ func display_room_name() -> String:
 			return "休息房间"
 		"boss":
 			return "Boss 房间"
+		"event":
+			return "事件房间"
 		_:
 			return room_type
 
