@@ -50,6 +50,22 @@ func submit_choice(option_id: String) -> Dictionary:
 	return _choice_resolver.resolve(self, request, option)
 
 
+func debug_apply_combat_values(values: Dictionary, enemy = null) -> Dictionary:
+	# 仅供 BattleDebugScene / 测试工具使用；正式规则不得通过该入口结算战斗或选择。
+	if player == null or enemy == null:
+		return {"ok": false, "error": "输入错误：战斗尚未开始"}
+	player.hp = int(values.get("player_hp", player.hp))
+	player.energy = int(values.get("energy", player.energy))
+	player.block = int(values.get("block", player.block))
+	enemy.hp = int(values.get("enemy_hp", enemy.hp))
+	return {"ok": true}
+
+
+func debug_clear_current_combat() -> void:
+	# 仅供调试视图离开战斗显示时清理展示状态；房间完成仍由 GameFlow / Room 负责。
+	current_combat = null
+
+
 func add_action(action, to_front: bool = false) -> void:
 	if action == null:
 		return
