@@ -50,6 +50,17 @@ func get_current_floor_room_types() -> Array:
 	return _map_manager.get_available_room_types()
 
 
+func debug_set_map_floors_for_test(floors: Array) -> bool:
+	# 仅供 GUT 测试注入最小地图；正式流程和 BattleDebugScene 不得调用。
+	if _current_room != null:
+		return false
+	if not _map_manager.has_method("debug_set_floors_for_test"):
+		return false
+	_map_manager.debug_set_floors_for_test(floors)
+	flow_completed = false
+	return true
+
+
 func enter_current_room(room_index: int = 0) -> bool:
 	if _current_room != null:
 		return false
