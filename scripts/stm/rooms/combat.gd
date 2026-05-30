@@ -2,6 +2,7 @@ class_name StmCombatRoom
 extends "res://scripts/stm/rooms/base.gd"
 
 const FixedBattleFixtureScript := preload("res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd")
+const EncounterFactoryScript := preload("res://scripts/stm/encounters/encounter_factory.gd")
 const CombatScript := preload("res://scripts/stm/engine/combat.gd")
 const TypesScript := preload("res://scripts/stm/utils/types.gd")
 const ChoiceOptionScript := preload("res://scripts/stm/choices/choice_option.gd")
@@ -10,6 +11,7 @@ const StrikeScript := preload("res://scripts/stm/cards/test/strike.gd")
 const DefendScript := preload("res://scripts/stm/cards/test/defend.gd")
 const BashScript := preload("res://scripts/stm/cards/test/bash.gd")
 
+var _encounter_factory = EncounterFactoryScript.new()
 var _player = null
 var _combat = null
 var _enemy = null
@@ -19,8 +21,14 @@ func enter(game_state) -> void:
 	super.enter(game_state)
 	if game_state == null:
 		return
-	var fixture = FixedBattleFixtureScript.new()
-	_start_combat_with_enemy(game_state, fixture.create_enemy(), "debug", fixture)
+	var encounter_id := str(room_payload.get("encounter_id", "debug_dummy"))
+	var encounter: Dictionary = _encounter_factory.create_encounter(encounter_id)
+	if not bool(encounter.get("ok", false)):
+		return
+	var enemies: Array = encounter.get("enemies", [])
+	if enemies.is_empty():
+		return
+	_start_combat_with_enemy(game_state, enemies[0], str(encounter.get("combat_type", "debug")), encounter.get("deck_fixture"))
 
 
 func leave(_game_state) -> void:
