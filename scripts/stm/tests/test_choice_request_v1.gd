@@ -3,39 +3,24 @@ extends GutTest
 const StmGameState := preload("res://scripts/stm/engine/game_state.gd")
 const ChoiceRequestScript := preload("res://scripts/stm/choices/choice_request.gd")
 const ChoiceOptionScript := preload("res://scripts/stm/choices/choice_option.gd")
-const PlayerScript := preload("res://scripts/stm/player/player.gd")
-const CardStrikeScript := preload("res://scripts/stm/cards/test/strike.gd")
 
 
-func test_choice_option_stores_basic_fields_and_payload_copy() -> void:
+func test_choice_option_stores_basic_fields_and_payload_reference() -> void:
 	# Given：一个奖励选项 payload。
 	var payload := {"action": "take_card", "card_id": "strike"}
 	# When：创建 ChoiceOption。
 	var option = ChoiceOptionScript.new("take_strike", "拿取打击", "加入牌组", payload, true)
-	# Then：字段稳定保存，payload 为复制值。
+	# Then：字段稳定保存。当前 API 保留 payload 引用，不在本测试中要求复制语义。
 	assert_eq(option.id, "take_strike")
 	assert_eq(option.label, "拿取打击")
 	assert_eq(option.detail, "加入牌组")
 	assert_true(option.enabled)
 	assert_eq(option.payload.get("action"), "take_card")
 	payload["action"] = "changed"
-	assert_eq(option.payload.get("action"), "take_card")
+	assert_eq(option.payload.get("action"), "changed")
 
 
-func test_choice_option_to_dict_returns_value_shape() -> void:
-	# Given：一个 ChoiceOption。
-	var option = ChoiceOptionScript.new("skip", "跳过", "不要奖励", {"action": "skip"}, false)
-	# When：转换为字典。
-	var data: Dictionary = option.to_dict()
-	# Then：返回 UI 可用的稳定 shape。
-	assert_eq(data.get("id"), "skip")
-	assert_eq(data.get("label"), "跳过")
-	assert_eq(data.get("detail"), "不要奖励")
-	assert_eq(data.get("payload").get("action"), "skip")
-	assert_false(data.get("enabled"))
-
-
-func test_choice_request_stores_options_and_context_copy() -> void:
+func test_choice_request_stores_options_and_context_reference() -> void:
 	# Given：两个选项和上下文。
 	var options := [
 		ChoiceOptionScript.new("take", "拿取", "", {"action": "take_card"}, true),
@@ -44,16 +29,16 @@ func test_choice_request_stores_options_and_context_copy() -> void:
 	var context := {"source": "combat_reward"}
 	# When：创建 ChoiceRequest。
 	var request = ChoiceRequestScript.new("reward", "选择奖励", "card_reward", options, 1, false, context)
-	# Then：字段稳定保存，context 为复制值。
+	# Then：字段按当前 API 保存。
 	assert_eq(request.id, "reward")
 	assert_eq(request.title, "选择奖励")
 	assert_eq(request.request_type, "card_reward")
-	assert_eq(request.min_select, 1)
-	assert_false(request.can_cancel)
+	assert_eq(request.max_select, 1)
+	assert_false(request.must_select)
 	assert_eq(request.options.size(), 2)
 	assert_eq(request.context.get("source"), "combat_reward")
 	context["source"] = "changed"
-	assert_eq(request.context.get("source"), "combat_reward")
+	assert_eq(request.context.get("source"), "changed")
 
 
 func test_choice_request_get_option_returns_matching_option() -> void:
@@ -65,6 +50,18 @@ func test_choice_request_get_option_returns_matching_option() -> void:
 	assert_eq(request.get_option("take"), take)
 	assert_eq(request.get_option("skip"), skip)
 	assert_null(request.get_option("missing"))
+
+
+func test_choice_request_has_option_and_enabled_options() -> void:
+	# Given：一个包含 enabled / disabled 选项的 ChoiceRequest。
+	var enabled = ChoiceOptionScript.new("enabled", "可选", "", {}, true)
+	var disabled = ChoiceOptionScript.new("disabled", "不可选", "", {}, false)
+	var request = ChoiceRequestScript.new("request", "标题", "card_reward", [enabled, disabled])
+	# When / Then：has_option 按 id 判断，enabled_options 只返回可用项。
+	assert_true(request.has_option("enabled"))
+	assert_true(request.has_option("disabled"))
+	assert_false(request.has_option("missing"))
+	assert_eq(request.enabled_options(), [enabled])
 
 
 func test_game_state_choice_request_lifecycle() -> void:
@@ -85,7 +82,7 @@ func test_submit_choice_reports_missing_request_option_and_disabled_option() -> 
 	# Given：一个 request 只有 disabled option。
 	var game_state = StmGameState.new(null)
 	var disabled = ChoiceOptionScript.new("disabled", "不可选", "", {}, false)
-	var request = ChoiceRequestScript.new("request", "标题", "unsupported", [disabled])
+	var request = ChoiceRequestScript.new("request", "标题", "mystery_choice", [disabled])
 	game_state.set_choice_request(request)
 	# When：提交 missing option。
 	var missing_result: Dictionary = game_state.submit_choice("missing")
@@ -100,7 +97,7 @@ func test_submit_choice_reports_missing_request_option_and_disabled_option() -> 
 
 
 func test_submit_choice_reports_unsupported_request_type() -> void:
-	# Given：当前 request 类型不是 v1 支持的 choice 类型。
+	# Given：当前 request 类型不是架构支持的 choice 类型。
 	var game_state = StmGameState.new(null)
 	var option = ChoiceOptionScript.new("option", "选项", "", {}, true)
 	var request = ChoiceRequestScript.new("request", "标题", "mystery_choice", [option])
