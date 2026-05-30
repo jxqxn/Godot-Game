@@ -328,19 +328,23 @@ func _on_enter_room_pressed() -> void:
 		_refresh_display()
 		return
 	var room_type = room.get_room_type()
-	if room_type == "rest":
+	if room_type == "rest" or room_type == "event":
 		map_panel.visible = false
 		combat = null
 		enemy = null
 		if _has_active_choice_request():
-			status_message = "选择休息行动"
-			_append_log("进入休息房", "进入休息房：请选择休息行动。")
+			if room_type == "event":
+				status_message = "选择事件行动"
+				_append_log("进入事件房", "进入事件房：请选择事件行动。")
+			else:
+				status_message = "选择休息行动"
+				_append_log("进入休息房", "进入休息房：请选择休息行动。")
 			_refresh_display()
 			return
 		if room.is_completed:
 			_on_room_completed()
 			return
-		status_message = "进入休息房失败"
+		status_message = "进入%s失败" % _get_room_type_cn(room_type)
 		_append_log(status_message)
 		_refresh_display()
 		return
