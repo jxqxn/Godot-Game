@@ -2,51 +2,49 @@ extends GutTest
 
 const BaseRoomScript := preload("res://scripts/stm/rooms/base.gd")
 const CombatRoomScript := preload("res://scripts/stm/rooms/combat.gd")
-const PlayerScript := preload("res://scripts/stm/player/player.gd")
-const GameStateScript := preload("res://scripts/stm/engine/game_state.gd")
-const GameBootstrapScript := preload("res://scripts/stm/engine/game_bootstrap.gd")
 const RestRoomScript := preload("res://scripts/stm/rooms/rest.gd")
 const BossRoomScript := preload("res://scripts/stm/rooms/boss_room.gd")
+const GameStateScript := preload("res://scripts/stm/engine/game_state.gd")
+const PlayerScript := preload("res://scripts/stm/player/player.gd")
 const TypesScript := preload("res://scripts/stm/utils/types.gd")
 
 
 func _create_minimal_game_state():
-	var bootstrap = GameBootstrapScript.new()
-	var player = PlayerScript.new([])
-	var game_state = bootstrap.create_game(player)
-	return game_state
+	return GameStateScript.new(PlayerScript.new([]))
 
 
-func test_room_enter_sets_is_completed_false() -> void:
-	# Given：一个房间实例。
+func test_base_room_marks_entered_and_completed() -> void:
+	# Given：一个基础房间。
 	var room = BaseRoomScript.new()
-	# When：调用 enter() 进入房间。
-	room.enter(null)
-	# Then：is_completed 为 false。
-	assert_false(room.is_completed)
+	var game_state = _create_minimal_game_state()
+	# When：进入并完成房间。
+	room.enter(game_state)
+	room.complete(game_state)
+	# Then：基础状态被记录。
+	assert_true(room.is_entered)
+	assert_true(room.is_completed)
 
 
-func test_room_leave_after_enter_does_not_crash() -> void:
-	# Given：一个已进入但未完成的房间。
+func test_base_room_get_room_type_returns_base() -> void:
+	# Given：一个基础房间。
 	var room = BaseRoomScript.new()
-	room.enter(null)
-	# When：调用 leave() 退出房间。
-	room.leave(null)
-	# Then：不崩溃，方法正常返回。
-	assert_not_null(room)
+	# When：查询房间类型。
+	var room_type = room.get_room_type()
+	# Then：返回 "base"。
+	assert_eq(room_type, "base")
 
 
-func test_combat_room_enter_creates_battle_context() -> void:
-	# Given：一个 CombatRoom 实例和一个 GameState。
+func test_combat_room_starts_combat_on_enter() -> void:
+	# Given：一个 CombatRoom 和一个 GameState。
 	var room = CombatRoomScript.new()
 	var game_state = _create_minimal_game_state()
 	# When：进入战斗房间。
 	room.enter(game_state)
-	# Then：战斗上下文已创建（game_state 持有 player 和 combat），且使用可玩的固定牌组。
-	assert_not_null(game_state.player)
+	# Then：战斗上下文创建，敌人存在，玩家有初始手牌。
 	assert_not_null(game_state.current_combat)
-	assert_not_null(room.get_player())
-	assert_eq(game_state.player.card_manager.get_pile("deck").size(), 7)
+	assert_not_null(room.get_combat())
+	assert_not_null(room.get_enemy())
+	assert_true(game_state.player.card_manager.get_pile("hand").size() > 0)
 
 
 func test_combat_room_does_not_complete_without_combat_win() -> void:
@@ -60,15 +58,24 @@ func test_combat_room_does_not_complete_without_combat_win() -> void:
 	assert_false(room.is_completed)
 
 
-func test_combat_room_marks_completed_after_combat_win() -> void:
+func test_combat_room_creates_card_reward_after_combat_win_and_completes_after_choice() -> void:
 	# Given：一个已经进入的 CombatRoom。
 	var room = CombatRoomScript.new()
 	var game_state = _create_minimal_game_state()
 	room.enter(game_state)
 	# When：传入战斗胜利结果。
 	room.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN, game_state)
-	# Then：房间标记完成。
+	# Then：普通战斗先等待奖励选择，不立即完成。
+	assert_false(room.is_completed)
+	assert_true(game_state.has_choice_request())
+	assert_eq(game_state.current_choice_request.request_type, "card_reward")
+	# When：跳过奖励。
+	var skip_option = _option_with_action(game_state.current_choice_request, "skip")
+	assert_not_null(skip_option)
+	game_state.submit_choice(skip_option.id)
+	# Then：选择处理后房间完成。
 	assert_true(room.is_completed)
+	assert_false(game_state.has_choice_request())
 
 
 func test_combat_room_get_room_type_returns_combat() -> void:
@@ -164,3 +171,10 @@ func test_boss_room_marks_completed_only_after_combat_win() -> void:
 	assert_false(room.is_completed)
 	room.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN, game_state)
 	assert_true(room.is_completed)
+
+
+func _option_with_action(request, action: String):
+	for option in request.options:
+		if option != null and option.payload.get("action") == action:
+			return option
+	return null
