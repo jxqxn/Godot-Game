@@ -122,20 +122,28 @@ func test_game_flow_advance_to_next_floor() -> void:
 	assert_null(flow.get_current_room())
 
 
-func test_game_flow_rest_room_is_completed_on_enter_and_unlocks_branch() -> void:
+func test_game_flow_rest_room_unlocks_branch_after_rest_choice() -> void:
 	# Given：GameFlow 通过调试入口定位到第 3 层休息房。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
 	assert_true(flow.debug_navigate_to_floor_for_test(3))
 	# When：进入休息房。
 	var entered = flow.enter_current_room()
-	var options = flow.get_available_next_floors()
-	# Then：休息房自动完成，并解锁前往层 5 战斗或层 6 休息的路径。
+	var options_before_choice = flow.get_available_next_floors()
+	# Then：休息房先等待选择，不立即完成或解锁分支。
 	assert_true(entered)
+	assert_false(flow.get_current_room().is_completed)
+	assert_true(game_state.has_choice_request())
+	assert_eq(game_state.current_choice_request.request_type, "rest_choice")
+	assert_eq(options_before_choice.size(), 0)
+	# When：跳过休息选择。
+	assert_true(_skip_pending_rest_choice(flow))
+	var options_after_choice = flow.get_available_next_floors()
+	# Then：选择处理后解锁前往层 5 战斗或层 6 休息的路径。
 	assert_true(flow.get_current_room().is_completed)
-	assert_eq(options.size(), 2)
-	assert_eq(options[0]["floor_index"], 4)
-	assert_eq(options[1]["floor_index"], 5)
+	assert_eq(options_after_choice.size(), 2)
+	assert_eq(options_after_choice[0]["floor_index"], 4)
+	assert_eq(options_after_choice[1]["floor_index"], 5)
 
 
 func test_game_flow_debug_navigation_rejects_active_room() -> void:
@@ -227,6 +235,8 @@ func _enter_rest_room_and_advance(flow, next_floor_index: int) -> bool:
 		return false
 	if flow.get_current_room().get_room_type() != "rest":
 		return false
+	if not _skip_pending_rest_choice(flow):
+		return false
 	if not flow.get_current_room().is_completed:
 		return false
 	return flow.advance_to_next_floor(next_floor_index)
@@ -238,6 +248,20 @@ func _skip_pending_card_reward(flow) -> bool:
 		return false
 	var request = game_state.current_choice_request
 	if request.request_type != "card_reward":
+		return false
+	for option in request.options:
+		if option != null and option.payload.get("action") == "skip":
+			var result: Dictionary = game_state.submit_choice(option.id)
+			return bool(result.get("ok", false))
+	return false
+
+
+func _skip_pending_rest_choice(flow) -> bool:
+	var game_state = flow.get_game_state()
+	if game_state == null or not game_state.has_choice_request():
+		return false
+	var request = game_state.current_choice_request
+	if request.request_type != "rest_choice":
 		return false
 	for option in request.options:
 		if option != null and option.payload.get("action") == "skip":
