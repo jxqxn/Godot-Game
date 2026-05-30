@@ -1,6 +1,8 @@
 class_name StmGameState
 extends RefCounted
 
+const ChoiceResolverScript := preload("res://scripts/stm/choices/choice_resolver.gd")
+
 var current_act: int = 1
 var floor_in_act: int = 1
 var player = null
@@ -8,6 +10,7 @@ var current_combat = null
 var current_choice_request = null
 var action_queue = null
 var _pending_actions: Array = []
+var _choice_resolver = ChoiceResolverScript.new()
 
 
 var current_floor: int:
@@ -34,23 +37,17 @@ func has_choice_request() -> bool:
 
 func submit_choice(option_id: String) -> Dictionary:
 	if current_choice_request == null:
-		return _choice_result(false, "NO_CHOICE_REQUEST", "当前没有等待处理的选择")
+		return _choice_resolver.choice_result(false, "NO_CHOICE_REQUEST", "当前没有等待处理的选择")
 	var request = current_choice_request
+	var request_type := str(request.get("request_type") if request.get("request_type") != null else "")
 	if not request.has_method("get_option"):
-		return _choice_result(false, "UNSUPPORTED_REQUEST_TYPE", "选择请求无效", str(request.get("request_type") if request.get("request_type") != null else ""), option_id)
+		return _choice_resolver.choice_result(false, "UNSUPPORTED_REQUEST_TYPE", "选择请求无效", request_type, option_id)
 	var option = request.get_option(option_id)
 	if option == null:
-		return _choice_result(false, "OPTION_NOT_FOUND", "选项不存在", str(request.get("request_type")), option_id)
+		return _choice_resolver.choice_result(false, "OPTION_NOT_FOUND", "选项不存在", request_type, option_id)
 	if not bool(option.get("enabled")):
-		return _choice_result(false, "OPTION_DISABLED", "选项不可用", str(request.get("request_type")), option_id)
-	var request_type := str(request.get("request_type"))
-	match request_type:
-		"card_reward":
-			return _resolve_card_reward_choice(request, option)
-		"rest_choice":
-			return _resolve_rest_choice(request, option)
-		_:
-			return _choice_result(false, "UNSUPPORTED_REQUEST_TYPE", "暂不支持该选择类型", request_type, option_id)
+		return _choice_resolver.choice_result(false, "OPTION_DISABLED", "选项不可用", request_type, option_id)
+	return _choice_resolver.resolve(self, request, option)
 
 
 func add_action(action, to_front: bool = false) -> void:
@@ -95,101 +92,6 @@ func drive_actions():
 			if terminal_result != none_result:
 				return terminal_result
 	return none_result
-
-
-func _resolve_card_reward_choice(request, option) -> Dictionary:
-	var request_type := str(request.get("request_type"))
-	var option_id := str(option.get("id"))
-	var payload = option.get("payload")
-	if not payload is Dictionary:
-		return _choice_result(false, "INVALID_PAYLOAD", "奖励选项无效", request_type, option_id)
-	var action := str(payload.get("action", ""))
-	match action:
-		"skip":
-			clear_choice_request()
-			_complete_choice_context_room(request)
-			return _choice_result(true, "CARD_REWARD_SKIPPED", "跳过奖励", request_type, option_id)
-		"take_card":
-			var card = payload.get("card")
-			if card == null or player == null or player.card_manager == null:
-				return _choice_result(false, "INVALID_PAYLOAD", "奖励卡牌无效", request_type, option_id)
-			player.card_manager.add_to_pile("deck", card, StmTypes.PilePosType.BOTTOM)
-			clear_choice_request()
-			_complete_choice_context_room(request)
-			return _choice_result(true, "CARD_REWARD_TAKEN", "获得 %s" % _choice_card_display_name(card), request_type, option_id)
-		_:
-			return _choice_result(false, "INVALID_PAYLOAD", "奖励选项无效", request_type, option_id)
-
-
-func _resolve_rest_choice(request, option) -> Dictionary:
-	var request_type := str(request.get("request_type"))
-	var option_id := str(option.get("id"))
-	var payload = option.get("payload")
-	if not payload is Dictionary:
-		return _choice_result(false, "INVALID_PAYLOAD", "休息选项无效", request_type, option_id)
-	var action := str(payload.get("action", ""))
-	match action:
-		"rest":
-			if player == null:
-				return _choice_result(false, "INVALID_PAYLOAD", "休息选项无效", request_type, option_id)
-			var before_hp := int(player.hp)
-			var heal_amount := int(float(player.max_hp) * 0.3)
-			player.hp = min(player.max_hp, player.hp + heal_amount)
-			var after_hp := int(player.hp)
-			_record_rest_result(request, before_hp, after_hp)
-			clear_choice_request()
-			_complete_choice_context_room(request)
-			return _choice_result(true, "REST_TAKEN", "休息：恢复 %d 点 HP（%d → %d）" % [max(0, after_hp - before_hp), before_hp, after_hp], request_type, option_id)
-		"skip":
-			var current_hp := int(player.hp) if player != null else 0
-			_record_rest_result(request, current_hp, current_hp)
-			clear_choice_request()
-			_complete_choice_context_room(request)
-			return _choice_result(true, "REST_SKIPPED", "跳过休息", request_type, option_id)
-		_:
-			return _choice_result(false, "INVALID_PAYLOAD", "休息选项无效", request_type, option_id)
-
-
-func _record_rest_result(request, before_hp: int, after_hp: int) -> void:
-	if request == null:
-		return
-	var context = request.get("context")
-	if not context is Dictionary:
-		return
-	var room = context.get("room")
-	if room == null:
-		return
-	room.last_hp_before = before_hp
-	room.last_hp_after = after_hp
-	room.last_heal_amount = max(0, after_hp - before_hp)
-
-
-func _complete_choice_context_room(request) -> void:
-	if request == null:
-		return
-	var context = request.get("context")
-	if not context is Dictionary:
-		return
-	var room = context.get("room")
-	if room != null and room.has_method("complete"):
-		room.complete(self)
-
-
-func _choice_card_display_name(card) -> String:
-	if card == null:
-		return "未知"
-	var card_name = card.get("card_name")
-	return str(card_name) if card_name != null else "未知"
-
-
-func _choice_result(ok: bool, code: String, message: String, request_type: String = "", selected_option_id: String = "") -> Dictionary:
-	return {
-		"ok": ok,
-		"code": code,
-		"message": message,
-		"request_type": request_type,
-		"selected_option_id": selected_option_id,
-	}
 
 
 func _try_new_global(class_name_text: String):
