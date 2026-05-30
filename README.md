@@ -171,14 +171,10 @@ BattleDebugScene
 当前仓库根目录存在：
 
 ```text
-AGENT.md
-```
-
-该文件记录了中文思维规则、BDD 要求和完整 GUT 命令。后续建议把它扩展为更完整的协作规则文档，并考虑改名为更通用的：
-
-```text
 AGENTS.md
 ```
+
+该文件记录项目协作规则、BDD/TDD 流程、架构边界、开发红线和完整 GUT 命令。后续开发前应先阅读 `AGENTS.md`。
 
 ## 开发红线
 
@@ -220,7 +216,6 @@ ActionQueue / add_action / drive_actions
 在进入新玩法前，建议先完成文档同步：
 
 ```text
-更新 / 扩展 AGENT.md 或重命名为 AGENTS.md
 新增 Core Runtime Architecture Spine v1 status 文档
 ```
 
