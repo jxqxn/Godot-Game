@@ -73,6 +73,16 @@ func test_map_node_from_dict_reads_current_map_data_shape() -> void:
 	assert_true(node.has_next_node(1, 0))
 
 
+func test_map_manager_current_nodes_expose_explicit_room_payloads() -> void:
+	# Given：MapData 已显式声明 combat / boss encounter payload。
+	var manager = MapManagerScript.new()
+	# Then：第 1 层 combat 节点携带 debug_dummy。
+	assert_eq(manager.get_current_node().room_payload.get("encounter_id"), "debug_dummy")
+	# And：Boss 节点携带 boss_dummy。
+	assert_true(manager.navigate_to_node(6, 0))
+	assert_eq(manager.get_current_node().room_payload.get("encounter_id"), "boss_dummy")
+
+
 func test_map_manager_available_next_nodes_remains_compatible() -> void:
 	# Given：地图管理器位于第 4 层 node 0。
 	var manager = MapManagerScript.new()
