@@ -6,6 +6,7 @@ const MapNodeScript := preload("res://scripts/stm/map/map_node.gd")
 
 var _current_floor_index: int = 0
 var _current_node_index: int = 0
+var _debug_floors_override = null
 
 
 func get_current_floor_index() -> int:
@@ -17,9 +18,10 @@ func get_current_node_index() -> int:
 
 
 func get_current_floor_info() -> Dictionary:
-	if _current_floor_index < 0 or _current_floor_index >= _MapData.FLOORS.size():
+	var floors := _floors()
+	if _current_floor_index < 0 or _current_floor_index >= floors.size():
 		return {}
-	return _MapData.FLOORS[_current_floor_index].duplicate(true)
+	return floors[_current_floor_index].duplicate(true)
 
 
 func get_current_node():
@@ -28,6 +30,13 @@ func get_current_node():
 
 func get_current_node_info() -> Dictionary:
 	return _node_info(_current_floor_index, _current_node_index)
+
+
+func debug_set_floors_for_test(floors: Array) -> void:
+	# 仅供 GUT 测试注入最小地图；正式流程和 BattleDebugScene 不得调用。
+	_debug_floors_override = floors.duplicate(true)
+	_current_floor_index = 0
+	_current_node_index = 0
 
 
 func navigate_to_node(floor_index: int, node_index: int) -> bool:
@@ -98,13 +107,14 @@ func get_available_room_types() -> Array:
 
 
 func is_final_floor() -> bool:
-	return _current_floor_index >= _MapData.FLOORS.size() - 1
+	return _current_floor_index >= _floors().size() - 1
 
 
 func _node_at(floor_index: int, node_index: int):
-	if floor_index < 0 or floor_index >= _MapData.FLOORS.size():
+	var floors := _floors()
+	if floor_index < 0 or floor_index >= floors.size():
 		return null
-	var floor_info: Dictionary = _MapData.FLOORS[floor_index]
+	var floor_info: Dictionary = floors[floor_index]
 	var nodes: Array = floor_info.get("nodes", [])
 	if node_index < 0 or node_index >= nodes.size():
 		return null
@@ -126,6 +136,13 @@ func _first_next_node_for_floor(floor_index: int) -> Dictionary:
 
 
 func _floor_name(floor_index: int) -> String:
-	if floor_index < 0 or floor_index >= _MapData.FLOORS.size():
+	var floors := _floors()
+	if floor_index < 0 or floor_index >= floors.size():
 		return ""
-	return str(_MapData.FLOORS[floor_index].get("name", ""))
+	return str(floors[floor_index].get("name", ""))
+
+
+func _floors() -> Array:
+	if _debug_floors_override is Array:
+		return _debug_floors_override
+	return _MapData.FLOORS
