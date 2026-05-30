@@ -8,7 +8,7 @@ func test_battle_debug_scene_shows_event_choice_panel() -> void:
 	var scene = _scene_at_event_room(40)
 	# When：点击进入事件房。
 	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
-	# Then：显示 event_choice，不立即完成房间或显示下一节点。
+	# Then：显示 event_choice，不立即完成房间或显示下一节点，也不记录战斗开始。
 	assert_true(scene.game_state.has_choice_request())
 	assert_eq(scene.game_state.current_choice_request.request_type, "event_choice")
 	assert_false(scene.game_flow.get_current_room().is_completed)
@@ -17,6 +17,9 @@ func test_battle_debug_scene_shows_event_choice_panel() -> void:
 	assert_true(_choice_button_texts(scene).any(func(text): return text.contains("饮用泉水")))
 	assert_true(_choice_button_texts(scene).any(func(text): return text.contains("离开")))
 	assert_false(_debug_node_or_null(scene, "Layout/MainPanel/MapPanel/NextFloorContainer").visible)
+	var log_text := _label_text(scene, "Layout/LogPanel/LogLabel")
+	assert_true(log_text.contains("进入事件房"))
+	assert_false(log_text.contains("战斗开始"))
 
 
 func test_battle_debug_scene_submits_event_choice_through_game_state() -> void:
