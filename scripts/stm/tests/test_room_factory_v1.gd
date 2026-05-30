@@ -40,6 +40,18 @@ func test_room_factory_creates_boss_room_from_boss_node() -> void:
 	assert_eq(room.get_room_type(), "boss")
 
 
+func test_room_factory_creates_event_room_from_event_node() -> void:
+	# Given：一个 event MapNode。
+	var factory = RoomFactoryScript.new()
+	var node = MapNodeScript.new(0, 0, "event", [], {"event_id": "debug_fountain"})
+	# When：通过 RoomFactory 创建房间。
+	var room = factory.create_room(node)
+	# Then：返回 EventRoom，并注入 event payload。
+	assert_not_null(room)
+	assert_eq(room.get_room_type(), "event")
+	assert_eq(room.get("room_payload").get("event_id"), "debug_fountain")
+
+
 func test_room_factory_returns_null_for_unknown_room_type() -> void:
 	# Given：未知 room_type。
 	var factory = RoomFactoryScript.new()
