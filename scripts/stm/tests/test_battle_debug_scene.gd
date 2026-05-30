@@ -103,7 +103,7 @@ func test_debug_scene_boss_victory_shows_flow_victory() -> void:
 	assert_true(_debug_node_or_null(scene, "Layout/MainPanel/MapPanel/VictoryLabel").visible)
 
 
-func test_debug_scene_rest_room_log_uses_recorded_heal_amount() -> void:
+func test_debug_scene_rest_room_log_uses_recorded_heal_amount_after_rest_choice() -> void:
 	# Given：玩家受伤后直接来到第 4 层休息房。
 	var scene = _instantiate_debug_scene()
 	assert_not_null(scene)
@@ -113,8 +113,17 @@ func test_debug_scene_rest_room_log_uses_recorded_heal_amount() -> void:
 	scene.game_flow._map_manager.navigate_to_floor(3)
 	# When：进入休息房。
 	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	# Then：休息房先显示选择请求，不立即恢复 HP 或完成房间。
+	assert_true(scene.game_state.has_choice_request())
+	assert_eq(scene.game_state.current_choice_request.request_type, "rest_choice")
+	assert_false(scene.game_flow.get_current_room().is_completed)
+	assert_true(_debug_node_or_null(scene, "Layout/ChoicePanel").visible)
+	assert_true(_label_text(scene, "Layout/ChoicePanel/ChoiceTitleLabel").contains("选择休息行动"))
+	# When：点击休息。
+	_press_choice_button(scene, "休息")
 	# Then：日志使用 RestRoom 记录的真实恢复量，而不是进入后再计算出的 0。
-	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("休息房间：恢复 21 点 HP（40 → 61）"))
+	assert_true(scene.game_flow.get_current_room().is_completed)
+	assert_true(_label_text(scene, "Layout/LogPanel/LogLabel").contains("休息：恢复 21 点 HP（40 → 61）"))
 
 
 func test_debug_scene_failed_next_floor_advance_keeps_current_state() -> void:
