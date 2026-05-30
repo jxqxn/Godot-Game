@@ -56,7 +56,7 @@ MapNode room_type = event
 4. 扩展 RoomFactory 支持 event
 5. 扩展 MapNode 显示 event 房间名
 6. 扩展 ChoiceResolver 支持 event_choice
-7. 处理 event 测试地图路径
+7. 新增最小 test-only 地图注入能力
 8. 增加 GameFlow event 房间流程测试
 9. 增加 BattleDebugScene event_choice 展示/提交测试
 10. 更新 .gutconfig.json
@@ -452,56 +452,122 @@ event_choice 选择结算通过 GameState.submit_choice() 完成。
 
 ---
 
-## 步骤 7：处理 event 测试地图路径
+## 步骤 7：新增最小 test-only 地图注入能力
 
 本步骤目标是为步骤 8 的 GameFlow event 房间流程测试准备可达 event 节点。
 
-优先级：
+本步骤采用唯一方案：
 
 ```text
-方案 A：最小测试专用地图注入能力。
-方案 B：不破坏旧测试的前提下，在默认固定地图中加入 event 节点并同步更新受影响测试。
-方案 C：如果已有 debug/test-only 导航能力足够，则复用现有能力构造 event 节点路径。
+新增最小 test-only 地图注入能力。
+不修改默认 MapData。
+不新增第二套 MapManager。
 ```
 
-硬性要求：
+修改文件：
 
 ```text
-必须为 GameFlow event 房间流程测试提供真实路径。
-不能只测 RoomFactory + ChoiceResolver 就跳过 GameFlow 验收。
+scripts/stm/map/map_manager.gd
+scripts/stm/engine/game_flow.gd
+```
+
+### MapManager 最小改法
+
+在 `StmMapManager` 中新增测试专用字段和方法：
+
+```gdscript
+var _debug_floors_override = null
+
+func debug_set_floors_for_test(floors: Array) -> void:
+    _debug_floors_override = floors.duplicate(true)
+    _current_floor_index = 0
+    _current_node_index = 0
+
+func _floors() -> Array:
+    if _debug_floors_override is Array:
+        return _debug_floors_override
+    return _MapData.FLOORS
+```
+
+并把以下读取 `_MapData.FLOORS` 的地方改为读取 `_floors()`：
+
+```text
+get_current_floor_info()
+is_final_floor()
+_node_at()
+_floor_name()
+```
+
+### GameFlow 最小改法
+
+在 `StmGameFlow` 中新增测试专用转发方法：
+
+```gdscript
+func debug_set_map_floors_for_test(floors: Array) -> bool:
+    if _current_room != null:
+        return false
+    _map_manager.debug_set_floors_for_test(floors)
+    return true
+```
+
+### 测试地图形状
+
+步骤 8 使用以下最小测试地图：
+
+```gdscript
+[
+    {
+        "name": "测试第 1 层",
+        "nodes": [
+            {"type": "event", "room_payload": {"event_id": "debug_fountain"}, "next_nodes": [{"floor_index": 1, "node_index": 0}]}
+        ]
+    },
+    {
+        "name": "测试第 2 层",
+        "nodes": [
+            {"type": "rest", "room_payload": {}, "next_nodes": []}
+        ]
+    }
+]
 ```
 
 实现约束：
 
 ```text
-不要破坏现有固定 7 层地图测试。
-不要借机新增随机地图。
-不要新增第二套 MapManager。
-不要暴露正式玩法不需要的宽泛状态写入口。
+方法名必须包含 debug 与 for_test，避免被误认为正式玩法入口。
+正式玩法代码不得调用 debug_set_floors_for_test() 或 debug_set_map_floors_for_test()。
+BattleDebugScene 不得调用这些 test-only 方法。
+不修改默认 StmMapData.FLOORS。
+不新增第二套 MapManager。
+不新增随机地图。
+不暴露通用 set_map_state / set_map_manager / set_current_node 入口。
 ```
 
 完成标准：
 
 ```text
-存在一个可用于 GameFlow 测试的 event 节点路径。
+GameFlow 测试可以使用 debug_set_map_floors_for_test() 注入最小 event 测试地图。
+旧固定地图行为保持不变。
 ```
 
 ### 步骤 7 歧义自检
 
 ```text
 是否明确本步骤目的：是，为 GameFlow event 测试准备路径。
-是否必须修改默认 MapData：否，优先测试专用能力。
+是否明确唯一方案：是，新增最小 test-only 地图注入能力。
+是否修改默认 MapData：否。
 是否允许跳过 GameFlow 验收：否。
 是否允许新增第二套 MapManager：否。
 是否允许新增随机地图：否。
-是否有歧义：无。实现时只需在 A/B/C 中选择最小安全方案。
+是否允许 BattleDebugScene 调用 test-only 方法：否。
+是否有歧义：无。
 ```
 
 ---
 
 ## 步骤 8：增加 GameFlow event 房间流程测试
 
-新增独立文件优先：
+新增独立文件：
 
 ```text
 scripts/stm/tests/test_game_flow_event_room_v1.gd
@@ -510,11 +576,12 @@ scripts/stm/tests/test_game_flow_event_room_v1.gd
 测试目标：
 
 ```text
-1. GameFlow 通过 RoomFactory 进入 event 房间。
-2. EventRoom.enter() 创建 event_choice。
-3. 通过 GameState.submit_choice("drink") 或 submit_choice("leave") 完成事件。
-4. event_choice 完成后，当前 room.is_completed = true。
-5. room 完成后，GameFlow 可以 advance_to_next_node。
+1. GameFlow 通过 debug_set_map_floors_for_test() 注入最小 event 测试地图。
+2. GameFlow.enter_current_room() 通过 RoomFactory 进入 event 房间。
+3. EventRoom.enter() 创建 event_choice。
+4. 通过 GameState.submit_choice("drink") 或 submit_choice("leave") 完成事件。
+5. event_choice 完成后，当前 room.is_completed = true。
+6. room 完成后，GameFlow 可以 advance_to_next_node(1, 0)。
 ```
 
 硬性要求：
@@ -528,22 +595,23 @@ scripts/stm/tests/test_game_flow_event_room_v1.gd
 
 ```text
 不新增第二套 GameFlow。
-不为了测试暴露正式玩法不需要的宽泛写入口。
 不让测试直接 room.complete() 绕过 submit_choice。
+不直接修改 MapManager 私有字段。
 ```
 
 完成标准：
 
 ```text
-GameFlow 层面对 event 房间至少有一条完整最小验证路径。
+GameFlow 层面对 event 房间有一条完整最小验证路径。
 ```
 
 ### 步骤 8 歧义自检
 
 ```text
-是否明确测试文件：是，优先 test_game_flow_event_room_v1.gd。
+是否明确测试文件：是，test_game_flow_event_room_v1.gd。
+是否明确测试地图来源：是，通过 debug_set_map_floors_for_test() 注入。
 是否明确测试入口：是，GameFlow.enter_current_room() 与 GameState.submit_choice()。
-是否明确推进验证：是，advance_to_next_node。
+是否明确推进验证：是，advance_to_next_node(1, 0)。
 是否允许只测 RoomFactory + ChoiceResolver：否。
 是否允许直接 room.complete()：否。
 是否有歧义：无。
@@ -553,7 +621,7 @@ GameFlow 层面对 event 房间至少有一条完整最小验证路径。
 
 ## 步骤 9：增加 BattleDebugScene event_choice 展示/提交测试
 
-新增文件优先：
+新增文件：
 
 ```text
 scripts/stm/tests/test_battle_debug_event_choice_v1.gd
@@ -574,6 +642,7 @@ scripts/stm/tests/test_battle_debug_event_choice_v1.gd
 如果现有 BattleDebugScene 的 choice UI 已通用支持 request/options，则优先复用旧入口。
 不要新增事件专用 UI 运行时。
 不要把 event_choice payload 解析写进 BattleDebugScene。
+不要让 BattleDebugScene 调用 debug_set_map_floors_for_test()。
 ```
 
 完成标准：
@@ -589,6 +658,7 @@ scripts/stm/tests/test_battle_debug_event_choice_v1.gd
 是否明确 UI 职责：是，只显示和提交。
 是否允许 UI 解析 payload：否。
 是否允许 UI 修改 HP 或 complete room：否。
+是否允许 UI 调用 test-only 地图注入：否。
 是否有歧义：无。
 ```
 
@@ -704,6 +774,7 @@ RoomFactory 是否只负责创建房间
 GameFlow 是否没有事件专用结算分支
 BattleDebugScene 是否没有直接修改事件规则状态
 是否没有新增平行 ChoiceRequest / GameFlow / MapManager / ActionQueue
+正式玩法代码是否没有调用 debug_set_floors_for_test() / debug_set_map_floors_for_test()
 ```
 
 如发现必须修复项，必须先修复，再进入最终验证。
@@ -713,6 +784,7 @@ BattleDebugScene 是否没有直接修改事件规则状态
 ```text
 是否明确审查类型：是，规格审查 + 代码质量审查。
 是否明确 GameFlow 测试是审查项：是。
+是否明确 test-only 注入入口的使用边界：是，只允许测试使用。
 是否明确发现问题后的处理：是，必须先修复再最终验证。
 是否有歧义：无。
 ```
@@ -727,9 +799,9 @@ BattleDebugScene 是否没有直接修改事件规则状态
 
 ### 是否应该修改默认地图加入 event？
 
-结论：不强制。
+结论：不应该。
 
-但必须存在 GameFlow event 房间流程测试路径。如果不改默认地图，就必须提供最小测试专用路径能力。
+本轮已收敛为 test-only 地图注入方案，不修改默认 MapData。
 
 ### 是否可以跳过 GameFlow event 测试？
 
@@ -771,14 +843,16 @@ BattleDebugScene 只能显示与提交选择
 HP 修改只能在 ChoiceResolver 中发生
 ```
 
-### 风险 3：为了测试新增过宽 debug 入口
+### 风险 3：test-only 地图注入变成正式玩法入口
 
 控制：
 
 ```text
-优先构造最小 event 测试路径能力
-GameFlow 测试只做最小验证
-不暴露正式运行时不需要的宽泛状态写入口
+方法名必须包含 debug 与 for_test
+只允许测试调用
+BattleDebugScene 不得调用
+正式玩法代码不得调用
+不暴露通用 set_map_state / set_map_manager / set_current_node 入口
 ```
 
 ### 风险 4：破坏既有固定地图测试
@@ -786,8 +860,9 @@ GameFlow 测试只做最小验证
 控制：
 
 ```text
-默认不改 MapData
-如必须改，先补测试并逐项确认旧行为变化
+不修改默认 MapData
+旧测试仍读取 StmMapData.FLOORS
+完整 GUT 回归验证
 ```
 
 ## 等待执行确认
