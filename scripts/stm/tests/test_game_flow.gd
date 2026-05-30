@@ -46,16 +46,21 @@ func test_game_flow_cannot_get_next_options_before_room_completed() -> void:
 	assert_eq(options.size(), 0)
 
 
-func test_game_flow_combat_win_unlocks_next_options() -> void:
+func test_game_flow_combat_win_unlocks_next_options_after_reward_choice() -> void:
 	# Given：GameFlow 处于第 0 层，已进入战斗房间。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
 	flow.enter_current_room()
-	# When：通过战斗胜利结果完成房间，再查询可选下一层。
+	# When：通过战斗胜利进入奖励阶段。
 	var completed = flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
+	# Then：普通战斗不会立刻完成，必须先处理奖励。
+	assert_false(completed)
+	assert_true(game_state.has_choice_request())
+	assert_eq(flow.get_available_next_floors().size(), 0)
+	# When：跳过奖励。
+	assert_true(_skip_pending_card_reward(flow))
 	var options = flow.get_available_next_floors()
-	# Then：战斗胜利会完成房间并返回第 1 层作为下一层选项。
-	assert_true(completed)
+	# Then：奖励处理后房间完成并返回第 1 层作为下一层选项。
 	assert_eq(options.size(), 1)
 	assert_eq(options[0]["floor_index"], 1)
 
@@ -66,6 +71,7 @@ func test_game_flow_cannot_reenter_completed_room_before_advancing() -> void:
 	var flow = GameFlowScript.new(game_state)
 	flow.enter_current_room()
 	flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
+	assert_true(_skip_pending_card_reward(flow))
 	var completed_room = flow.get_current_room()
 	# When：再次尝试进入当前楼层房间。
 	var reentered = flow.enter_current_room()
@@ -93,6 +99,7 @@ func test_game_flow_cannot_advance_to_unreachable_floor() -> void:
 	var flow = GameFlowScript.new(game_state)
 	flow.enter_current_room()
 	flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
+	assert_true(_skip_pending_card_reward(flow))
 	# When：尝试直接跳到 Boss 层。
 	var advanced = flow.advance_to_next_floor(6)
 	# Then：推进失败且仍停留在第 0 层。
@@ -101,11 +108,12 @@ func test_game_flow_cannot_advance_to_unreachable_floor() -> void:
 
 
 func test_game_flow_advance_to_next_floor() -> void:
-	# Given：GameFlow 处于第 0 层，房间已通过战斗胜利完成。
+	# Given：GameFlow 处于第 0 层，房间已通过战斗胜利和奖励选择完成。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
 	flow.enter_current_room()
 	flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
+	assert_true(_skip_pending_card_reward(flow))
 	# When：推进到下一层。
 	var advanced = flow.advance_to_next_floor(1)
 	# Then：当前楼层索引变为 1，且当前房间被离开。
@@ -171,12 +179,13 @@ func test_game_flow_at_boss_floor_sets_flow_completed_on_combat_win() -> void:
 	assert_true(flow.is_flow_completed())
 
 
-func test_game_flow_not_completed_at_non_boss_floor() -> void:
+func test_game_flow_not_completed_at_non_boss_floor_after_reward_choice() -> void:
 	# Given：GameFlow 处于第 0 层 CombatRoom。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
 	flow.enter_current_room()
 	flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
+	assert_true(_skip_pending_card_reward(flow))
 	# When：检查 flow_completed。
 	var is_completed = flow.is_flow_completed()
 	# Then：普通战斗完成不应触发通关。
@@ -207,7 +216,8 @@ func _win_current_combat_room_and_advance(flow, next_floor_index: int) -> bool:
 		return false
 	if flow.get_current_room().get_room_type() != "combat":
 		return false
-	if not flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN):
+	flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
+	if not _skip_pending_card_reward(flow):
 		return false
 	return flow.advance_to_next_floor(next_floor_index)
 
@@ -220,3 +230,17 @@ func _enter_rest_room_and_advance(flow, next_floor_index: int) -> bool:
 	if not flow.get_current_room().is_completed:
 		return false
 	return flow.advance_to_next_floor(next_floor_index)
+
+
+func _skip_pending_card_reward(flow) -> bool:
+	var game_state = flow.get_game_state()
+	if game_state == null or not game_state.has_choice_request():
+		return false
+	var request = game_state.current_choice_request
+	if request.request_type != "card_reward":
+		return false
+	for option in request.options:
+		if option != null and option.payload.get("action") == "skip":
+			var result: Dictionary = game_state.submit_choice(option.id)
+			return bool(result.get("ok", false))
+	return false
