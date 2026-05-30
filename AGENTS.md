@@ -155,6 +155,26 @@ StmCard.can_play(game_state) bool 语义
 Python 参考项目
 ```
 
+## 调试工具边界
+
+`BattleDebugScene` 是当前唯一允许提供数值编辑器的调试 UI，但它不应新增正式规则职责。
+
+允许的 debug-only 状态入口：
+
+```text
+StmGameState.debug_apply_combat_values(values, enemy)
+StmGameState.debug_clear_current_combat()
+```
+
+规则：
+
+```text
+正式玩法规则不得调用 debug_* 入口。
+BattleDebugScene 后续新增调试写状态行为时，应优先走 debug_* 入口。
+BattleDebugScene 不得直接修改 MapManager / Room 完成状态 / Deck 规则状态。
+不要把 debug_* 入口扩展成第二套 Combat 结算或第二套 GameFlow。
+```
+
 ## Python 参考项目使用规则
 
 Python 项目只作为架构和规格参考，不作为 Godot 运行时的一部分。
@@ -185,6 +205,8 @@ MapNode room_type = event
 ```
 
 不要把事件选择直接写进 `GameState`，不要让 `BattleDebugScene` 直接修改 HP / Deck / MapManager。
+
+如果确实需要调试数值编辑，应通过 `StmGameState.debug_apply_combat_values()` 等明确 debug-only 入口，并保持正式规则路径不依赖这些入口。
 
 ## 文档维护规则
 
