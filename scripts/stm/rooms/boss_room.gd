@@ -1,5 +1,5 @@
 class_name StmBossRoom
-extends StmCombatRoom
+extends "res://scripts/stm/rooms/combat.gd"
 
 const EnemyScript := preload("res://scripts/stm/enemies/enemy.gd")
 const TypesScript := preload("res://scripts/stm/utils/types.gd")
