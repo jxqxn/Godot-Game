@@ -285,6 +285,128 @@ BattleDebugScene 不得：
 6. BattleDebugScene 不直接处理事件规则，只通过 submit_choice。
 ```
 
+## 规格自检：边界
+
+### 功能边界
+
+```text
+范围内：
+1. 一个固定事件 debug_fountain。
+2. 两个固定选项 drink / leave。
+3. 一个新房间类型 event。
+4. 一个新选择类型 event_choice。
+5. 通过 ChoiceResolver 结算 HP 恢复或离开。
+6. 通过 GameFlow 验证 event 房间完成后可继续推进。
+
+范围外：
+1. 随机事件池。
+2. 多事件注册表。
+3. EventFactory。
+4. 商店、遗物、精英房。
+5. 正式地图 UI。
+6. 复杂事件脚本系统。
+7. Python 运行时依赖。
+```
+
+结论：边界清晰，EventRoom v1 是架构验证阶段，不是正式事件系统阶段。
+
+### 架构边界
+
+```text
+EventRoom：只创建 event_choice，不结算规则。
+ChoiceResolver：结算 event_choice，并负责 HP 变化与完成 context.room。
+GameState：保留 submit_choice 公共入口，不写 event_choice 私有规则分支。
+RoomFactory：只根据 room_type 创建 EventRoom，不处理完成逻辑。
+MapNode：只表达 room_type / payload / next_nodes，不创建房间。
+GameFlow：只进入房间、完成房间、推进节点，不写事件专用结算分支。
+BattleDebugScene：只显示与提交选择，不解析 payload，不直接改 HP。
+```
+
+结论：没有新增平行系统，必须复用现有主干。
+
+## 规格自检：安全
+
+### 状态安全
+
+```text
+1. heal 只能修改 player.hp。
+2. heal 后 player.hp 不得超过 player.max_hp。
+3. leave 不得修改 HP、Deck、MapManager 或 Combat。
+4. invalid payload 不得清空 current_choice_request，不得完成房间。
+5. EventRoom 不得直接修改玩家状态。
+6. BattleDebugScene 不得直接修改玩家 HP 或 room completion。
+```
+
+结论：玩家状态修改被限制在 ChoiceResolver 的 event_choice 分支内。
+
+### 运行时安全
+
+```text
+1. 不新增文件读写。
+2. 不新增网络访问。
+3. 不新增外部进程调用。
+4. 不新增 Python 运行时调用。
+5. 不新增 autoload。
+6. 不修改 project.godot。
+7. 不修改 StmTypes.TerminalResult。
+8. 不修改 StmCard.can_play(game_state) bool 语义。
+```
+
+结论：本功能只在 Godot 现有运行时内扩展，不引入外部执行风险。
+
+### UI 安全
+
+```text
+1. UI 只提交 option_id。
+2. UI 不解析 event_choice payload。
+3. UI 不直接调用 room.complete()。
+4. UI 不直接改 MapManager。
+5. UI 不新增事件专用规则分支。
+```
+
+结论：避免把正式规则写进 BattleDebugScene。
+
+## 规格自检：依赖
+
+### 允许依赖
+
+```text
+StmRoom
+StmRoomFactory
+StmMapNode
+StmGameFlow
+StmGameState.submit_choice()
+StmChoiceResolver
+StmChoiceRequest
+StmChoiceOption
+BattleDebugScene 现有 choice 显示/提交能力
+GUT 测试框架
+```
+
+### 禁止依赖
+
+```text
+Python 参考项目运行时
+第二套 ChoiceRequest / InputRequest
+第二套 GameFlow
+第二套 MapManager
+第二套 ActionQueue
+第二套 DebugScene 运行时
+随机事件生成器
+事件 DSL
+商店 / 遗物 / 精英房系统
+```
+
+### 依赖缺口
+
+```text
+1. 如果 GameFlow 当前无法构造 event 节点测试路径，必须用最小方式补测试能力。
+2. 该测试能力不得变成正式玩法的宽泛状态写入口。
+3. 不能因为测试困难而取消 GameFlow 层验收。
+```
+
+结论：依赖可控，但 GameFlow event 流程测试是硬性验收，不得降级为可选项。
+
 ## 验收标准
 
 ```text
@@ -294,6 +416,8 @@ BattleDebugScene 不得：
 4. 不修改 Python 参考项目。
 5. 不引入随机事件池、商店、遗物、正式地图 UI。
 6. 不新增任何平行运行时系统。
+7. 必须有 GameFlow 层面的 event 房间流程测试。
+8. BattleDebugScene 必须只通过 GameState.submit_choice() 提交事件选择。
 ```
 
 完整验证命令：
