@@ -60,9 +60,10 @@ func test_game_flow_combat_win_unlocks_next_options_after_reward_choice() -> voi
 	# When：跳过奖励。
 	assert_true(_skip_pending_card_reward(flow))
 	var options = flow.get_available_next_floors()
-	# Then：奖励处理后房间完成并返回第 1 层作为下一层选项。
+	# Then：奖励处理后房间完成并返回第 2 层 node 0 作为下一节点选项。
 	assert_eq(options.size(), 1)
 	assert_eq(options[0]["floor_index"], 1)
+	assert_eq(options[0]["node_index"], 0)
 
 
 func test_game_flow_cannot_reenter_completed_room_before_advancing() -> void:
@@ -116,20 +117,21 @@ func test_game_flow_advance_to_next_floor() -> void:
 	assert_true(_skip_pending_card_reward(flow))
 	# When：推进到下一层。
 	var advanced = flow.advance_to_next_floor(1)
-	# Then：当前楼层索引变为 1，且当前房间被离开。
+	# Then：当前楼层索引变为 1，当前节点为 node 0，且当前房间被离开。
 	assert_true(advanced)
 	assert_eq(flow.get_current_floor_index(), 1)
+	assert_eq(flow.get_current_node_index(), 0)
 	assert_null(flow.get_current_room())
 
 
 func test_game_flow_rest_room_unlocks_branch_after_rest_choice() -> void:
-	# Given：GameFlow 通过调试入口定位到第 3 层休息房。
+	# Given：GameFlow 通过调试入口定位到第 4 层 node 0 休息房。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
-	assert_true(flow.debug_navigate_to_floor_for_test(3))
+	assert_true(flow.debug_navigate_to_node_for_test(3, 0))
 	# When：进入休息房。
 	var entered = flow.enter_current_room()
-	var options_before_choice = flow.get_available_next_floors()
+	var options_before_choice = flow.get_available_next_nodes()
 	# Then：休息房先等待选择，不立即完成或解锁分支。
 	assert_true(entered)
 	assert_false(flow.get_current_room().is_completed)
@@ -138,12 +140,16 @@ func test_game_flow_rest_room_unlocks_branch_after_rest_choice() -> void:
 	assert_eq(options_before_choice.size(), 0)
 	# When：跳过休息选择。
 	assert_true(_skip_pending_rest_choice(flow))
-	var options_after_choice = flow.get_available_next_floors()
-	# Then：选择处理后解锁前往层 5 战斗或层 6 休息的路径。
+	var options_after_choice = flow.get_available_next_nodes()
+	# Then：选择处理后解锁两个第 5 层节点，而不是第 5 / 第 6 层跳转。
 	assert_true(flow.get_current_room().is_completed)
 	assert_eq(options_after_choice.size(), 2)
 	assert_eq(options_after_choice[0]["floor_index"], 4)
-	assert_eq(options_after_choice[1]["floor_index"], 5)
+	assert_eq(options_after_choice[0]["node_index"], 0)
+	assert_eq(options_after_choice[0]["room_type"], "combat")
+	assert_eq(options_after_choice[1]["floor_index"], 4)
+	assert_eq(options_after_choice[1]["node_index"], 1)
+	assert_eq(options_after_choice[1]["room_type"], "rest")
 
 
 func test_game_flow_debug_navigation_rejects_active_room() -> void:
@@ -159,10 +165,10 @@ func test_game_flow_debug_navigation_rejects_active_room() -> void:
 
 
 func test_game_flow_boss_does_not_complete_without_combat_win() -> void:
-	# Given：GameFlow 通过调试入口定位到第 6 层 BossRoom。
+	# Given：GameFlow 通过调试入口定位到第 7 层 BossRoom。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
-	assert_true(flow.debug_navigate_to_floor_for_test(6))
+	assert_true(flow.debug_navigate_to_node_for_test(6, 0))
 	flow.enter_current_room()
 	# When：尝试不通过战斗胜利直接完成 Boss 房间。
 	var completed_directly = flow.complete_current_room()
@@ -174,10 +180,10 @@ func test_game_flow_boss_does_not_complete_without_combat_win() -> void:
 
 
 func test_game_flow_at_boss_floor_sets_flow_completed_on_combat_win() -> void:
-	# Given：GameFlow 通过调试入口定位到第 6 层 BossRoom。
+	# Given：GameFlow 通过调试入口定位到第 7 层 BossRoom。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
-	assert_true(flow.debug_navigate_to_floor_for_test(6))
+	assert_true(flow.debug_navigate_to_node_for_test(6, 0))
 	flow.enter_current_room()
 	# When：传入战斗胜利结果。
 	var completed = flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
@@ -200,26 +206,32 @@ func test_game_flow_not_completed_at_non_boss_floor_after_reward_choice() -> voi
 	assert_false(is_completed)
 
 
-func test_game_flow_short_path_reaches_boss_and_completes_flow() -> void:
-	# Given：GameFlow 从第 1 层开始，选择最短路径跳过第 5 层战斗。
+func test_game_flow_rest_branch_reaches_boss_and_completes_flow() -> void:
+	# Given：GameFlow 从第 1 层开始，选择第 5 层 rest 分支。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
-	# When：依次完成 1-3 层战斗，进入第 4 层休息，跳到第 6 层休息，再进入第 7 层 Boss 并胜利。
-	assert_true(_win_current_combat_room_and_advance(flow, 1))
-	assert_true(_win_current_combat_room_and_advance(flow, 2))
-	assert_true(_win_current_combat_room_and_advance(flow, 3))
-	assert_true(_enter_rest_room_and_advance(flow, 5))
-	assert_true(_enter_rest_room_and_advance(flow, 6))
+	# When：依次完成 1-3 层战斗，完成第 4 层休息，进入第 5 层 rest，再进入第 6 层 rest，最后进入 Boss 并胜利。
+	assert_true(_win_current_combat_room_and_advance_to_node(flow, 1, 0))
+	assert_true(_win_current_combat_room_and_advance_to_node(flow, 2, 0))
+	assert_true(_win_current_combat_room_and_advance_to_node(flow, 3, 0))
+	assert_true(_enter_rest_room_and_advance_to_node(flow, 4, 1))
+	assert_true(_enter_rest_room_and_advance_to_node(flow, 5, 0))
+	assert_true(_enter_rest_room_and_advance_to_node(flow, 6, 0))
 	assert_true(flow.enter_current_room())
 	assert_eq(flow.get_current_room().get_room_type(), "boss")
 	var boss_completed = flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
 	# Then：流程停留在 Boss 层，并被标记为通关。
 	assert_true(boss_completed)
 	assert_eq(flow.get_current_floor_index(), 6)
+	assert_eq(flow.get_current_node_index(), 0)
 	assert_true(flow.is_flow_completed())
 
 
 func _win_current_combat_room_and_advance(flow, next_floor_index: int) -> bool:
+	return _win_current_combat_room_and_advance_to_node(flow, next_floor_index, 0)
+
+
+func _win_current_combat_room_and_advance_to_node(flow, next_floor_index: int, next_node_index: int) -> bool:
 	if not flow.enter_current_room():
 		return false
 	if flow.get_current_room().get_room_type() != "combat":
@@ -227,10 +239,14 @@ func _win_current_combat_room_and_advance(flow, next_floor_index: int) -> bool:
 	flow.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN)
 	if not _skip_pending_card_reward(flow):
 		return false
-	return flow.advance_to_next_floor(next_floor_index)
+	return flow.advance_to_next_node(next_floor_index, next_node_index)
 
 
 func _enter_rest_room_and_advance(flow, next_floor_index: int) -> bool:
+	return _enter_rest_room_and_advance_to_node(flow, next_floor_index, 0)
+
+
+func _enter_rest_room_and_advance_to_node(flow, next_floor_index: int, next_node_index: int) -> bool:
 	if not flow.enter_current_room():
 		return false
 	if flow.get_current_room().get_room_type() != "rest":
@@ -239,7 +255,7 @@ func _enter_rest_room_and_advance(flow, next_floor_index: int) -> bool:
 		return false
 	if not flow.get_current_room().is_completed:
 		return false
-	return flow.advance_to_next_floor(next_floor_index)
+	return flow.advance_to_next_node(next_floor_index, next_node_index)
 
 
 func _skip_pending_card_reward(flow) -> bool:
