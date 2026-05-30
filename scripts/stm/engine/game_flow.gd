@@ -21,6 +21,10 @@ func get_current_floor_index() -> int:
 	return _map_manager.get_current_floor_index()
 
 
+func get_current_node_index() -> int:
+	return _map_manager.get_current_node_index()
+
+
 func get_current_room():
 	return _current_room
 
@@ -33,10 +37,14 @@ func is_flow_completed() -> bool:
 	return flow_completed
 
 
-func get_available_next_floors() -> Array:
+func get_available_next_nodes() -> Array:
 	if _current_room == null or not _current_room.is_completed:
 		return []
-	return _map_manager.get_available_next_floors()
+	return _map_manager.get_available_next_nodes()
+
+
+func get_available_next_floors() -> Array:
+	return get_available_next_nodes()
 
 
 func get_current_floor_room_types() -> Array:
@@ -82,6 +90,15 @@ func handle_combat_result(result: int) -> bool:
 	return _current_room.is_completed
 
 
+func advance_to_next_node(floor_index: int, node_index: int) -> bool:
+	if _current_room == null or not _current_room.is_completed:
+		return false
+	if not _map_manager.can_navigate_to_next_node(floor_index, node_index):
+		return false
+	leave_current_room()
+	return _map_manager.navigate_to_next_node(floor_index, node_index)
+
+
 func advance_to_next_floor(floor_index: int) -> bool:
 	if _current_room == null or not _current_room.is_completed:
 		return false
@@ -91,11 +108,15 @@ func advance_to_next_floor(floor_index: int) -> bool:
 	return _map_manager.navigate_to_next_floor(floor_index)
 
 
-func debug_navigate_to_floor_for_test(floor_index: int) -> bool:
-	# 仅供测试/调试场景定位楼层使用；正常游戏流程必须走 advance_to_next_floor()。
+func debug_navigate_to_node_for_test(floor_index: int, node_index: int = 0) -> bool:
+	# 仅供测试/调试场景定位节点使用；正常游戏流程必须走 advance_to_next_node()。
 	if _current_room != null:
 		return false
-	return _map_manager.navigate_to_floor(floor_index)
+	return _map_manager.navigate_to_node(floor_index, node_index)
+
+
+func debug_navigate_to_floor_for_test(floor_index: int) -> bool:
+	return debug_navigate_to_node_for_test(floor_index, 0)
 
 
 func leave_current_room() -> void:
