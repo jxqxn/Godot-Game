@@ -111,7 +111,7 @@ EventRoom 只负责：
 
 ```text
 1. 进入房间时创建 event_choice。
-2. 把事件 id、标题、描述、选项 payload 放入 ChoiceRequest。
+2. 把事件 id、标题、选项 payload 放入 ChoiceRequest。
 3. 被 ChoiceResolver 完成后标记房间完成。
 ```
 
@@ -137,12 +137,6 @@ event_id = debug_fountain
 
 ```text
 清泉
-```
-
-描述：
-
-```text
-你发现了一处安静的清泉。
 ```
 
 ## 事件选项
@@ -199,12 +193,13 @@ EventRoom.enter(game_state) 应设置：
 ```text
 request_type = event_choice
 title = 清泉
-source = event_room
-min_select = 1
-can_cancel = false
+max_select = 1
+must_select = false
 context.room = self
 context.event_id = debug_fountain
 ```
+
+说明：当前 `StmChoiceRequest` API 使用 `max_select / must_select` 字段，不使用 `min_select / can_cancel` 命名。
 
 ## ChoiceResolver 规格
 
@@ -237,21 +232,28 @@ code = UNSUPPORTED_REQUEST_TYPE
 
 ## MapData 规格
 
-可以在固定测试地图中加入一个 event 节点，但必须保持整体流程极小。
+EventRoom v1 不强制修改默认 `StmMapData.FLOORS`。
 
-建议最小改法：
-
-```text
-第 2 层或第 3 层替换为 event 节点
-```
-
-示例：
+为满足 GameFlow 层验收，本阶段使用最小 test-only 地图注入能力构造 event 节点路径：
 
 ```gdscript
-{"type": "event", "room_payload": {"event_id": "debug_fountain"}, "next_nodes": [...]}
+[
+    {
+        "name": "测试第 1 层",
+        "nodes": [
+            {"type": "event", "room_payload": {"event_id": "debug_fountain"}, "next_nodes": [{"floor_index": 1, "node_index": 0}]}
+        ]
+    },
+    {
+        "name": "测试第 2 层",
+        "nodes": [
+            {"type": "rest", "room_payload": {}, "next_nodes": []}
+        ]
+    }
+]
 ```
 
-如果替换现有 combat 节点会破坏大量旧测试，则本阶段允许只在测试中构造 event MapNode，不立即改默认主线地图。
+该 test-only 能力不得变成正式玩法入口。
 
 ## BattleDebugScene 规格
 
@@ -270,6 +272,7 @@ BattleDebugScene 不得：
 直接调用 room.complete()
 直接修改 MapManager
 直接解析 event_choice payload
+把事件房记录为战斗开始
 ```
 
 ## 测试要求
@@ -283,6 +286,7 @@ BattleDebugScene 不得：
 4. 选择 leave 后 HP 不变，清空 choice，完成房间。
 5. GameFlow 可以进入 event 房并在完成后推进到下一个节点。
 6. BattleDebugScene 不直接处理事件规则，只通过 submit_choice。
+7. BattleDebugScene 进入事件房时记录“进入事件房”，不得记录“战斗开始”。
 ```
 
 ## 规格自检：边界
@@ -397,27 +401,36 @@ Python 参考项目运行时
 商店 / 遗物 / 精英房系统
 ```
 
-### 依赖缺口
+### 依赖缺口处理
 
 ```text
-1. 如果 GameFlow 当前无法构造 event 节点测试路径，必须用最小方式补测试能力。
-2. 该测试能力不得变成正式玩法的宽泛状态写入口。
-3. 不能因为测试困难而取消 GameFlow 层验收。
+1. GameFlow event 节点路径通过最小 test-only 地图注入能力解决。
+2. test-only 地图注入不得变成正式玩法入口。
+3. GameFlow 层验收不得降级。
 ```
 
-结论：依赖可控，但 GameFlow event 流程测试是硬性验收，不得降级为可选项。
+结论：依赖可控，GameFlow event 流程测试是硬性验收，且已通过 GUT。
 
 ## 验收标准
 
 ```text
 1. 新增 EventRoom v1 相关测试通过。
-2. 既有 187 个测试保持通过。
+2. 既有测试保持通过。
 3. 完整 GUT 通过。
 4. 不修改 Python 参考项目。
 5. 不引入随机事件池、商店、遗物、正式地图 UI。
 6. 不新增任何平行运行时系统。
 7. 必须有 GameFlow 层面的 event 房间流程测试。
 8. BattleDebugScene 必须只通过 GameState.submit_choice() 提交事件选择。
+```
+
+2026-05-30 人工确认完整 GUT 通过：
+
+```text
+Scripts: 28
+Tests: 199
+Passing Tests: 199
+Asserts: 962
 ```
 
 完整验证命令：
