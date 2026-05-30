@@ -13,25 +13,27 @@ func _create_minimal_game_state():
 	return GameStateScript.new(PlayerScript.new([]))
 
 
-func test_base_room_marks_entered_and_completed() -> void:
+func test_base_room_resets_and_completes() -> void:
 	# Given：一个基础房间。
 	var room = BaseRoomScript.new()
 	var game_state = _create_minimal_game_state()
-	# When：进入并完成房间。
-	room.enter(game_state)
 	room.complete(game_state)
-	# Then：基础状态被记录。
-	assert_true(room.is_entered)
+	assert_true(room.is_completed)
+	# When：重新进入并完成房间。
+	room.enter(game_state)
+	assert_false(room.is_completed)
+	room.complete(game_state)
+	# Then：基础 completed 状态被记录。
 	assert_true(room.is_completed)
 
 
-func test_base_room_get_room_type_returns_base() -> void:
+func test_base_room_get_room_type_returns_empty_string() -> void:
 	# Given：一个基础房间。
 	var room = BaseRoomScript.new()
 	# When：查询房间类型。
 	var room_type = room.get_room_type()
-	# Then：返回 "base"。
-	assert_eq(room_type, "base")
+	# Then：基础房间默认没有具体类型。
+	assert_eq(room_type, "")
 
 
 func test_combat_room_starts_combat_on_enter() -> void:
