@@ -23,7 +23,11 @@
     "res://scripts/stm/tests/test_choice_resolver_v1.gd",
     "res://scripts/stm/tests/test_map_node_v1.gd",
     "res://scripts/stm/tests/test_room_factory_v1.gd",
-    "res://scripts/stm/tests/test_encounter_factory_v1.gd"
+    "res://scripts/stm/tests/test_encounter_factory_v1.gd",
+    "res://scripts/stm/tests/test_event_room_v1.gd",
+    "res://scripts/stm/tests/test_choice_resolver_event_choice_v1.gd",
+    "res://scripts/stm/tests/test_game_flow_event_room_v1.gd",
+    "res://scripts/stm/tests/test_battle_debug_event_choice_v1.gd"
   ],
   "should_exit": true,
   "should_exit_on_success": true,
