@@ -89,7 +89,7 @@ func test_combat_room_get_room_type_returns_combat() -> void:
 	assert_eq(room_type, "combat")
 
 
-func test_rest_room_restores_thirty_percent_max_hp() -> void:
+func test_rest_room_creates_choice_and_heals_after_rest_choice() -> void:
 	# Given：玩家 HP 低于最大值，进入休息房间。
 	var player = PlayerScript.new([])
 	player.hp = 40
@@ -97,25 +97,39 @@ func test_rest_room_restores_thirty_percent_max_hp() -> void:
 	var room = RestRoomScript.new()
 	# When：进入休息房间。
 	room.enter(game_state)
+	# Then：休息房先等待选择，不立即回血或完成。
+	assert_eq(player.hp, 40)
+	assert_false(room.is_completed)
+	assert_true(game_state.has_choice_request())
+	assert_eq(game_state.current_choice_request.request_type, "rest_choice")
+	# When：选择休息。
+	var rest_option = _option_with_action(game_state.current_choice_request, "rest")
+	assert_not_null(rest_option)
+	game_state.submit_choice(rest_option.id)
 	# Then：玩家恢复 30% 最大 HP（70 × 0.3 = 21），HP 变为 61，并记录实际恢复量。
 	assert_eq(player.hp, 61)
 	assert_eq(room.last_hp_before, 40)
 	assert_eq(room.last_hp_after, 61)
 	assert_eq(room.last_heal_amount, 21)
 	assert_true(room.is_completed)
+	assert_false(game_state.has_choice_request())
 
 
-func test_rest_room_does_not_exceed_max_hp() -> void:
-	# Given：玩家 HP 接近满值。
+func test_rest_choice_does_not_exceed_max_hp() -> void:
+	# Given：玩家 HP 接近满值并进入休息房间。
 	var player = PlayerScript.new([])
 	player.hp = 65
 	var game_state = GameStateScript.new(player)
 	var room = RestRoomScript.new()
-	# When：进入休息房间。
 	room.enter(game_state)
+	# When：选择休息。
+	var rest_option = _option_with_action(game_state.current_choice_request, "rest")
+	assert_not_null(rest_option)
+	game_state.submit_choice(rest_option.id)
 	# Then：HP 不会超过最大值 70，实际恢复量为 5。
 	assert_eq(player.hp, 70)
 	assert_eq(room.last_heal_amount, 5)
+	assert_true(room.is_completed)
 
 
 func test_rest_room_get_room_type_returns_rest() -> void:
