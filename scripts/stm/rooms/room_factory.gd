@@ -4,6 +4,7 @@ extends RefCounted
 const CombatRoomScript := preload("res://scripts/stm/rooms/combat.gd")
 const RestRoomScript := preload("res://scripts/stm/rooms/rest.gd")
 const BossRoomScript := preload("res://scripts/stm/rooms/boss_room.gd")
+const EventRoomScript := preload("res://scripts/stm/rooms/event_room.gd")
 
 
 func create_room(map_node):
@@ -17,6 +18,8 @@ func create_room(map_node):
 			room = RestRoomScript.new()
 		"boss":
 			room = BossRoomScript.new()
+		"event":
+			room = EventRoomScript.new()
 		_:
 			return null
 	_apply_room_payload(room, map_node.get("room_payload"))
