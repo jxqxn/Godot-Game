@@ -16,7 +16,10 @@
     "res://scripts/stm/tests/test_combat_card_reward_choice_v1.gd",
     "res://scripts/stm/tests/test_battle_debug_choice_reward_v1.gd",
     "res://scripts/stm/tests/test_rest_choice_v1.gd",
-    "res://scripts/stm/tests/test_battle_debug_rest_choice_v1.gd"
+    "res://scripts/stm/tests/test_battle_debug_rest_choice_v1.gd",
+    "res://scripts/stm/tests/test_fixed_map_node_branch_v1.gd",
+    "res://scripts/stm/tests/test_game_flow_node_branch_v1.gd",
+    "res://scripts/stm/tests/test_battle_debug_map_node_branch_v1.gd"
   ],
   "should_exit": true,
   "should_exit_on_success": true,
