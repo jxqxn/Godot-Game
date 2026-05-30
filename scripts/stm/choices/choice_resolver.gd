@@ -7,7 +7,7 @@ func resolve(game_state, request, option) -> Dictionary:
 		return _choice_result(false, "NO_CHOICE_REQUEST", "当前没有等待处理的选择")
 	if option == null:
 		return _choice_result(false, "OPTION_NOT_FOUND", "选项不存在", str(request.get("request_type")))
-	var request_type := str(request.get("request_type"))
+	var request_type: String = str(request.get("request_type"))
 	match request_type:
 		"card_reward":
 			return _resolve_card_reward_choice(game_state, request, option)
@@ -20,7 +20,7 @@ func resolve(game_state, request, option) -> Dictionary:
 
 
 func unsupported_choice_result(request, option_id: String, message: String = "暂不支持该选择类型") -> Dictionary:
-	var request_type := ""
+	var request_type: String = ""
 	if request != null:
 		request_type = str(request.get("request_type"))
 	return _choice_result(false, "UNSUPPORTED_REQUEST_TYPE", message, request_type, option_id)
@@ -31,12 +31,13 @@ func choice_result(ok: bool, code: String, message: String, request_type: String
 
 
 func _resolve_card_reward_choice(game_state, request, option) -> Dictionary:
-	var request_type := str(request.get("request_type"))
-	var option_id := str(option.get("id"))
-	var payload = option.get("payload")
-	if not payload is Dictionary:
+	var request_type: String = str(request.get("request_type"))
+	var option_id: String = str(option.get("id"))
+	var payload_variant = option.get("payload")
+	if not payload_variant is Dictionary:
 		return _choice_result(false, "INVALID_PAYLOAD", "奖励选项无效", request_type, option_id)
-	var action := str(payload.get("action", ""))
+	var payload: Dictionary = payload_variant
+	var action: String = str(payload.get("action", ""))
 	match action:
 		"skip":
 			game_state.clear_choice_request()
@@ -55,26 +56,27 @@ func _resolve_card_reward_choice(game_state, request, option) -> Dictionary:
 
 
 func _resolve_rest_choice(game_state, request, option) -> Dictionary:
-	var request_type := str(request.get("request_type"))
-	var option_id := str(option.get("id"))
-	var payload = option.get("payload")
-	if not payload is Dictionary:
+	var request_type: String = str(request.get("request_type"))
+	var option_id: String = str(option.get("id"))
+	var payload_variant = option.get("payload")
+	if not payload_variant is Dictionary:
 		return _choice_result(false, "INVALID_PAYLOAD", "休息选项无效", request_type, option_id)
-	var action := str(payload.get("action", ""))
+	var payload: Dictionary = payload_variant
+	var action: String = str(payload.get("action", ""))
 	match action:
 		"rest":
 			if game_state == null or game_state.player == null:
 				return _choice_result(false, "INVALID_PAYLOAD", "休息选项无效", request_type, option_id)
-			var before_hp := int(game_state.player.hp)
-			var heal_amount := int(float(game_state.player.max_hp) * 0.3)
+			var before_hp: int = int(game_state.player.hp)
+			var heal_amount: int = int(float(game_state.player.max_hp) * 0.3)
 			game_state.player.hp = min(game_state.player.max_hp, game_state.player.hp + heal_amount)
-			var after_hp := int(game_state.player.hp)
+			var after_hp: int = int(game_state.player.hp)
 			_record_rest_result(request, before_hp, after_hp)
 			game_state.clear_choice_request()
 			_complete_choice_context_room(game_state, request)
 			return _choice_result(true, "REST_TAKEN", "休息：恢复 %d 点 HP（%d → %d）" % [max(0, after_hp - before_hp), before_hp, after_hp], request_type, option_id)
 		"skip":
-			var current_hp := int(game_state.player.hp) if game_state != null and game_state.player != null else 0
+			var current_hp: int = int(game_state.player.hp) if game_state != null and game_state.player != null else 0
 			_record_rest_result(request, current_hp, current_hp)
 			game_state.clear_choice_request()
 			_complete_choice_context_room(game_state, request)
@@ -84,26 +86,27 @@ func _resolve_rest_choice(game_state, request, option) -> Dictionary:
 
 
 func _resolve_event_choice(game_state, request, option) -> Dictionary:
-	var request_type := str(request.get("request_type"))
-	var option_id := str(option.get("id"))
-	var payload = option.get("payload")
-	if not payload is Dictionary:
+	var request_type: String = str(request.get("request_type"))
+	var option_id: String = str(option.get("id"))
+	var payload_variant = option.get("payload")
+	if not payload_variant is Dictionary:
 		return _choice_result(false, "INVALID_PAYLOAD", "事件选项无效", request_type, option_id)
-	var action := str(payload.get("action", ""))
+	var payload: Dictionary = payload_variant
+	var action: String = str(payload.get("action", ""))
 	match action:
 		"heal":
 			if game_state == null or game_state.player == null:
 				return _choice_result(false, "INVALID_PAYLOAD", "事件选项无效", request_type, option_id)
-			var before_hp := int(game_state.player.hp)
-			var heal_amount := max(0, int(payload.get("amount", 0)))
+			var before_hp: int = int(game_state.player.hp)
+			var heal_amount: int = int(max(0, int(payload.get("amount", 0))))
 			game_state.player.hp = min(game_state.player.max_hp, game_state.player.hp + heal_amount)
-			var after_hp := int(game_state.player.hp)
+			var after_hp: int = int(game_state.player.hp)
 			_record_event_result(request, before_hp, after_hp, "heal")
 			game_state.clear_choice_request()
 			_complete_choice_context_room(game_state, request)
 			return _choice_result(true, "EVENT_HEAL_TAKEN", "饮用泉水：恢复 %d 点 HP（%d → %d）" % [max(0, after_hp - before_hp), before_hp, after_hp], request_type, option_id)
 		"leave":
-			var current_hp := int(game_state.player.hp) if game_state != null and game_state.player != null else 0
+			var current_hp: int = int(game_state.player.hp) if game_state != null and game_state.player != null else 0
 			_record_event_result(request, current_hp, current_hp, "leave")
 			game_state.clear_choice_request()
 			_complete_choice_context_room(game_state, request)
@@ -115,9 +118,10 @@ func _resolve_event_choice(game_state, request, option) -> Dictionary:
 func _record_rest_result(request, before_hp: int, after_hp: int) -> void:
 	if request == null:
 		return
-	var context = request.get("context")
-	if not context is Dictionary:
+	var context_variant = request.get("context")
+	if not context_variant is Dictionary:
 		return
+	var context: Dictionary = context_variant
 	var room = context.get("room")
 	if room == null:
 		return
@@ -129,9 +133,10 @@ func _record_rest_result(request, before_hp: int, after_hp: int) -> void:
 func _record_event_result(request, before_hp: int, after_hp: int, action: String) -> void:
 	if request == null:
 		return
-	var context = request.get("context")
-	if not context is Dictionary:
+	var context_variant = request.get("context")
+	if not context_variant is Dictionary:
 		return
+	var context: Dictionary = context_variant
 	var room = context.get("room")
 	if room == null:
 		return
@@ -143,9 +148,10 @@ func _record_event_result(request, before_hp: int, after_hp: int, action: String
 func _complete_choice_context_room(game_state, request) -> void:
 	if request == null:
 		return
-	var context = request.get("context")
-	if not context is Dictionary:
+	var context_variant = request.get("context")
+	if not context_variant is Dictionary:
 		return
+	var context: Dictionary = context_variant
 	var room = context.get("room")
 	if room != null and room.has_method("complete"):
 		room.complete(game_state)
