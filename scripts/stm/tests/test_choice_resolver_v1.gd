@@ -6,6 +6,7 @@ const ChoiceOptionScript := preload("res://scripts/stm/choices/choice_option.gd"
 const PlayerScript := preload("res://scripts/stm/player/player.gd")
 const CombatRoomScript := preload("res://scripts/stm/rooms/combat.gd")
 const RestRoomScript := preload("res://scripts/stm/rooms/rest.gd")
+const TypesScript := preload("res://scripts/stm/utils/types.gd")
 
 
 func test_submit_choice_take_card_adds_selected_card_and_completes_room() -> void:
@@ -98,5 +99,5 @@ func _entered_combat_room_with_reward_request() -> Dictionary:
 	var game_state = StmGameState.new(player)
 	var room = CombatRoomScript.new()
 	room.enter(game_state)
-	room.complete(game_state)
+	room.handle_combat_result(TypesScript.TerminalResult.COMBAT_WIN, game_state)
 	return {"game_state": game_state, "room": room}
