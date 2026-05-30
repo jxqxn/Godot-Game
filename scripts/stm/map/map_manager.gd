@@ -2,6 +2,7 @@ class_name StmMapManager
 extends RefCounted
 
 const _MapData := preload("res://scripts/stm/map/map_data.gd")
+const MapNodeScript := preload("res://scripts/stm/map/map_node.gd")
 
 var _current_floor_index: int = 0
 var _current_node_index: int = 0
@@ -21,12 +22,16 @@ func get_current_floor_info() -> Dictionary:
 	return _MapData.FLOORS[_current_floor_index].duplicate(true)
 
 
+func get_current_node():
+	return _node_at(_current_floor_index, _current_node_index)
+
+
 func get_current_node_info() -> Dictionary:
 	return _node_info(_current_floor_index, _current_node_index)
 
 
 func navigate_to_node(floor_index: int, node_index: int) -> bool:
-	if _node_info(floor_index, node_index).is_empty():
+	if _node_at(floor_index, node_index) == null:
 		return false
 	_current_floor_index = floor_index
 	_current_node_index = node_index
@@ -51,10 +56,10 @@ func navigate_to_next_floor(floor_index: int) -> bool:
 
 
 func can_navigate_to_next_node(floor_index: int, node_index: int) -> bool:
-	for option in get_available_next_nodes():
-		if int(option.get("floor_index", -1)) == floor_index and int(option.get("node_index", -1)) == node_index:
-			return true
-	return false
+	var current_node = get_current_node()
+	if current_node == null:
+		return false
+	return current_node.has_next_node(floor_index, node_index)
 
 
 func can_navigate_to_next_floor(floor_index: int) -> bool:
@@ -62,24 +67,17 @@ func can_navigate_to_next_floor(floor_index: int) -> bool:
 
 
 func get_available_next_nodes() -> Array:
-	var current_node := get_current_node_info()
-	if current_node.is_empty():
+	var current_node = get_current_node()
+	if current_node == null:
 		return []
 	var result: Array = []
-	for target in current_node.get("next_nodes", []):
+	for target in current_node.next_nodes:
 		var floor_index := int(target.get("floor_index", -1))
 		var node_index := int(target.get("node_index", -1))
-		var node_info := _node_info(floor_index, node_index)
-		if node_info.is_empty():
+		var node = _node_at(floor_index, node_index)
+		if node == null:
 			continue
-		var room_type := str(node_info.get("type", ""))
-		result.append({
-			"floor_index": floor_index,
-			"node_index": node_index,
-			"floor_name": _MapData.FLOORS[floor_index].get("name", ""),
-			"room_type": room_type,
-			"room_name": _room_type_display_name(room_type),
-		})
+		result.append(node.to_option(_floor_name(floor_index)))
 	result.sort_custom(func(a, b):
 		if int(a["floor_index"]) == int(b["floor_index"]):
 			return int(a["node_index"]) < int(b["node_index"])
@@ -93,24 +91,31 @@ func get_available_next_floors() -> Array:
 
 
 func get_available_room_types() -> Array:
-	var node_info := get_current_node_info()
-	if node_info.is_empty():
+	var node = get_current_node()
+	if node == null:
 		return []
-	return [str(node_info.get("type", ""))]
+	return [node.room_type]
 
 
 func is_final_floor() -> bool:
 	return _current_floor_index >= _MapData.FLOORS.size() - 1
 
 
-func _node_info(floor_index: int, node_index: int) -> Dictionary:
+func _node_at(floor_index: int, node_index: int):
 	if floor_index < 0 or floor_index >= _MapData.FLOORS.size():
-		return {}
+		return null
 	var floor_info: Dictionary = _MapData.FLOORS[floor_index]
 	var nodes: Array = floor_info.get("nodes", [])
 	if node_index < 0 or node_index >= nodes.size():
+		return null
+	return MapNodeScript.from_dict(floor_index, node_index, nodes[node_index])
+
+
+func _node_info(floor_index: int, node_index: int) -> Dictionary:
+	var node = _node_at(floor_index, node_index)
+	if node == null:
 		return {}
-	return nodes[node_index].duplicate(true)
+	return node.to_dict()
 
 
 func _first_next_node_for_floor(floor_index: int) -> Dictionary:
@@ -120,13 +125,7 @@ func _first_next_node_for_floor(floor_index: int) -> Dictionary:
 	return {}
 
 
-func _room_type_display_name(room_type: String) -> String:
-	match room_type:
-		"combat":
-			return "战斗房间"
-		"rest":
-			return "休息房间"
-		"boss":
-			return "Boss 房间"
-		_:
-			return room_type
+func _floor_name(floor_index: int) -> String:
+	if floor_index < 0 or floor_index >= _MapData.FLOORS.size():
+		return ""
+	return str(_MapData.FLOORS[floor_index].get("name", ""))
