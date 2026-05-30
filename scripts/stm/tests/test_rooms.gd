@@ -127,15 +127,16 @@ func test_rest_room_get_room_type_returns_rest() -> void:
 	assert_eq(room_type, "rest")
 
 
-func test_boss_room_extends_combat_room() -> void:
+func test_boss_room_provides_boss_combat_room_interface() -> void:
 	# Given：一个 BossRoom。
 	var room = BossRoomScript.new()
-	# When：检查继承链。
-	var is_combat_room = room is CombatRoomScript
-	var is_base_room = room is BaseRoomScript
-	# Then：BossRoom 是 CombatRoom 的子类，也是 Room 的子类。
-	assert_true(is_combat_room)
-	assert_true(is_base_room)
+	# Then：BossRoom 是 Room 子类，并提供战斗房间所需接口。
+	assert_true(room is BaseRoomScript)
+	assert_true(room.has_method("enter"))
+	assert_true(room.has_method("handle_combat_result"))
+	assert_true(room.has_method("get_combat"))
+	assert_true(room.has_method("get_enemy"))
+	assert_true(room.has_method("get_room_type"))
 
 
 func test_boss_room_get_room_type_returns_boss() -> void:
