@@ -329,13 +329,20 @@ func _on_enter_room_pressed() -> void:
 		return
 	var room_type = room.get_room_type()
 	if room_type == "rest":
-		game_flow.complete_current_room()
-		var before_hp: int = int(room.get("last_hp_before"))
-		var after_hp: int = int(room.get("last_hp_after"))
-		var healed: int = int(room.get("last_heal_amount"))
-		status_message = "休息房间已完成"
-		_append_log("休息房间：恢复 %d 点 HP（%d → %d）" % [healed, before_hp, after_hp], "休息房间：HP %d → %d。" % [before_hp, after_hp])
-		_on_room_completed()
+		map_panel.visible = false
+		combat = null
+		enemy = null
+		if _has_active_choice_request():
+			status_message = "选择休息行动"
+			_append_log("进入休息房", "进入休息房：请选择休息行动。")
+			_refresh_display()
+			return
+		if room.is_completed:
+			_on_room_completed()
+			return
+		status_message = "进入休息房失败"
+		_append_log(status_message)
+		_refresh_display()
 		return
 	map_panel.visible = false
 	enemy = room.get_enemy() if room.has_method("get_enemy") else null
