@@ -17,7 +17,9 @@ func _init(p_floor_index: int = 0, p_node_index: int = 0, p_room_type: String = 
 
 
 static func from_dict(p_floor_index: int, p_node_index: int, data: Dictionary):
-	return StmMapNode.new(
+	# Godot 在同一脚本的 static 方法编译期不能稳定解析自身 class_name，避免写 StmMapNode.new()。
+	var script = load("res://scripts/stm/map/map_node.gd")
+	return script.new(
 		p_floor_index,
 		p_node_index,
 		str(data.get("type", data.get("room_type", ""))),
