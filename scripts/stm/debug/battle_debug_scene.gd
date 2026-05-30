@@ -459,14 +459,31 @@ func _on_room_completed() -> void:
 		_refresh_display()
 		return
 	map_panel.visible = true
-	var next_floors: Array = game_flow.get_available_next_floors()
-	var floor_names: Array = []
-	for option in next_floors:
-		floor_names.append(str(option.get("floor_name", "")))
+	var next_nodes: Array = game_flow.get_available_next_nodes()
+	var node_names: Array = []
+	for option in next_nodes:
+		node_names.append(_next_node_display_text(option))
 	status_message = "房间完成，选择下一层"
-	_append_log("房间完成", "可选下一层：%s。" % ", ".join(floor_names))
+	_append_log("房间完成", "可选下一层：%s。" % ", ".join(node_names))
 	_clear_combat_view()
 	_show_map_panel_state()
+	_refresh_display()
+
+
+func _on_next_node_selected(floor_index: int, node_index: int) -> void:
+	if game_flow == null:
+		return
+	_disable_next_floor_buttons()
+	var display_name := _next_node_display_name_from_available(floor_index, node_index)
+	var advanced: bool = game_flow.advance_to_next_node(floor_index, node_index)
+	if not advanced:
+		status_message = "无法前往 %s" % display_name
+		_append_log(status_message, "推进失败：目标节点不可达或当前房间尚未完成。")
+		_refresh_display()
+		return
+	_clear_combat_view()
+	status_message = "已到达 %s" % display_name
+	_append_log(status_message, "推进到 %s。" % display_name)
 	_refresh_display()
 
 
@@ -554,11 +571,13 @@ func _show_map_panel_state() -> void:
 	var current_room = game_flow.get_current_room()
 	enter_room_button.disabled = game_flow.is_flow_completed() or room_names.is_empty() or current_room != null
 	_clear_next_floor_buttons()
-	var next_floors: Array = game_flow.get_available_next_floors()
-	next_floor_container.visible = not next_floors.is_empty()
-	for option in next_floors:
-		var btn = _new_button("NextFloorButton%d" % option["floor_index"], "→ %s" % option["floor_name"])
-		btn.pressed.connect(_on_next_floor_selected.bind(option["floor_index"]))
+	var next_nodes: Array = game_flow.get_available_next_nodes()
+	next_floor_container.visible = not next_nodes.is_empty()
+	for option in next_nodes:
+		var floor_idx := int(option.get("floor_index", -1))
+		var node_idx := int(option.get("node_index", -1))
+		var btn = _new_button("NextNodeButton%d_%d" % [floor_idx, node_idx], "→ %s" % _next_node_display_text(option))
+		btn.pressed.connect(_on_next_node_selected.bind(floor_idx, node_idx))
 		next_floor_container.add_child(btn)
 
 
@@ -966,6 +985,22 @@ func _refresh_log() -> void:
 
 func _get_floor_display_name(floor_index: int) -> String:
 	return "第 %d 层" % (floor_index + 1)
+
+
+func _next_node_display_text(option: Dictionary) -> String:
+	var floor_name := str(option.get("floor_name", _get_floor_display_name(int(option.get("floor_index", -1)))))
+	var room_name := str(option.get("room_name", ""))
+	if room_name.is_empty():
+		return floor_name
+	return "%s %s" % [floor_name, room_name]
+
+
+func _next_node_display_name_from_available(floor_index: int, node_index: int) -> String:
+	if game_flow != null:
+		for option in game_flow.get_available_next_nodes():
+			if int(option.get("floor_index", -1)) == floor_index and int(option.get("node_index", -1)) == node_index:
+				return _next_node_display_text(option)
+	return "%s node %d" % [_get_floor_display_name(floor_index), node_index]
 
 
 func _get_room_type_cn(room_type: String) -> String:
