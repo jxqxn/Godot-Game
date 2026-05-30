@@ -2,12 +2,11 @@ class_name StmGameFlow
 extends RefCounted
 
 const MapManagerScript := preload("res://scripts/stm/map/map_manager.gd")
-const CombatRoomScript := preload("res://scripts/stm/rooms/combat.gd")
-const RestRoomScript := preload("res://scripts/stm/rooms/rest.gd")
-const BossRoomScript := preload("res://scripts/stm/rooms/boss_room.gd")
+const RoomFactoryScript := preload("res://scripts/stm/rooms/room_factory.gd")
 const TypesScript := preload("res://scripts/stm/utils/types.gd")
 
 var _map_manager: StmMapManager = MapManagerScript.new()
+var _room_factory = RoomFactoryScript.new()
 var _current_room = null
 var _game_state = null
 var flow_completed: bool = false
@@ -57,8 +56,10 @@ func enter_current_room(room_index: int = 0) -> bool:
 	var room_types := _map_manager.get_available_room_types()
 	if room_index < 0 or room_index >= room_types.size():
 		return false
-	var room_type: String = room_types[room_index]
-	var room = _create_room(room_type)
+	var map_node = _map_manager.get_current_node()
+	if map_node == null:
+		return false
+	var room = _room_factory.create_room(map_node)
 	if room == null:
 		return false
 	_current_room = room
@@ -124,18 +125,6 @@ func leave_current_room() -> void:
 		return
 	_current_room.leave(_game_state)
 	_current_room = null
-
-
-func _create_room(room_type: String):
-	match room_type:
-		"combat":
-			return CombatRoomScript.new()
-		"rest":
-			return RestRoomScript.new()
-		"boss":
-			return BossRoomScript.new()
-		_:
-			return null
 
 
 func _is_combat_room_type(room_type: String) -> bool:
