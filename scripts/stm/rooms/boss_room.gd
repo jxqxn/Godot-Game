@@ -2,10 +2,11 @@ class_name StmBossRoom
 extends "res://scripts/stm/rooms/base.gd"
 
 const CombatScript := preload("res://scripts/stm/engine/combat.gd")
-const EnemyScript := preload("res://scripts/stm/enemies/enemy.gd")
+const EncounterFactoryScript := preload("res://scripts/stm/encounters/encounter_factory.gd")
 const FixedBattleFixtureScript := preload("res://scripts/stm/debug/fixtures/fixed_battle_fixture.gd")
 const TypesScript := preload("res://scripts/stm/utils/types.gd")
 
+var _encounter_factory = EncounterFactoryScript.new()
 var _player = null
 var _combat = null
 var _enemy = null
@@ -51,14 +52,23 @@ func get_room_type() -> String:
 func _start_boss_combat(game_state) -> bool:
 	if game_state == null:
 		return false
-	var fixture = FixedBattleFixtureScript.new()
+	var encounter_id := str(room_payload.get("encounter_id", "boss_dummy"))
+	var encounter: Dictionary = _encounter_factory.create_encounter(encounter_id)
+	if not bool(encounter.get("ok", false)):
+		return false
+	var enemies: Array = encounter.get("enemies", [])
+	if enemies.is_empty():
+		return false
+	var fixture = encounter.get("deck_fixture")
+	if fixture == null:
+		fixture = FixedBattleFixtureScript.new()
 	if game_state.player == null:
 		game_state.player = fixture.create_player()
 	else:
 		_ensure_player_has_fixture_deck(game_state.player, fixture)
 	_player = game_state.player
-	_enemy = EnemyScript.new(40, "BossEnemy", 12)
-	_combat = CombatScript.new([_enemy], "boss")
+	_enemy = enemies[0]
+	_combat = CombatScript.new([_enemy], str(encounter.get("combat_type", "boss")))
 	if _combat == null:
 		return false
 	game_state.current_combat = _combat
