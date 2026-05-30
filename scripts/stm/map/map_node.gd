@@ -17,8 +17,7 @@ func _init(p_floor_index: int = 0, p_node_index: int = 0, p_room_type: String = 
 
 
 static func from_dict(p_floor_index: int, p_node_index: int, data: Dictionary):
-	var script = load("res://scripts/stm/map/map_node.gd")
-	return script.new(
+	return StmMapNode.new(
 		p_floor_index,
 		p_node_index,
 		str(data.get("type", data.get("room_type", ""))),
