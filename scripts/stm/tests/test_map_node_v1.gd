@@ -27,6 +27,7 @@ func test_map_node_display_room_name_maps_known_room_types() -> void:
 	assert_eq(MapNodeScript.new(0, 0, "combat").display_room_name(), "战斗房间")
 	assert_eq(MapNodeScript.new(0, 0, "rest").display_room_name(), "休息房间")
 	assert_eq(MapNodeScript.new(0, 0, "boss").display_room_name(), "Boss 房间")
+	assert_eq(MapNodeScript.new(0, 0, "event").display_room_name(), "事件房间")
 	assert_eq(MapNodeScript.new(0, 0, "mystery").display_room_name(), "mystery")
 
 
