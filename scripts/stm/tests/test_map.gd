@@ -28,7 +28,7 @@ func test_layer_four_branches_to_two_fifth_floor_nodes() -> void:
 	# When：查询第 3 层（层 4）的休息节点后续路径。
 	var layer = MapDataScript.FLOORS[3]
 	var nodes = layer["nodes"]
-	# Then：层 4 是休息节点，并允许前往层 5 的战斗节点或休息节点。
+	# Then：层 4 是休息节点，并允许前往层 5 的战斗节点或事件节点。
 	assert_eq(nodes.size(), 1)
 	assert_eq(nodes[0]["type"], "rest")
 	assert_eq(nodes[0]["next_nodes"], [
@@ -37,16 +37,17 @@ func test_layer_four_branches_to_two_fifth_floor_nodes() -> void:
 	])
 
 
-func test_layer_five_has_combat_and_rest_nodes() -> void:
+func test_layer_five_has_combat_and_event_nodes() -> void:
 	# Given：固定测试地图。
 	# When：查询第 4 层（层 5）的节点列表。
 	var layer = MapDataScript.FLOORS[4]
 	var nodes = layer["nodes"]
-	# Then：层 5 有战斗和休息两个分支节点，二者都通向第 6 层 node 0。
+	# Then：层 5 有战斗和事件两个分支节点，二者都通向第 6 层 node 0。
 	assert_eq(nodes.size(), 2)
 	assert_eq(nodes[0]["type"], "combat")
 	assert_eq(nodes[0]["next_nodes"], [{"floor_index": 5, "node_index": 0}])
-	assert_eq(nodes[1]["type"], "rest")
+	assert_eq(nodes[1]["type"], "event")
+	assert_eq(nodes[1]["room_payload"].get("event_id"), "debug_fountain")
 	assert_eq(nodes[1]["next_nodes"], [{"floor_index": 5, "node_index": 0}])
 
 
@@ -79,7 +80,8 @@ func test_map_manager_navigate_to_node() -> void:
 	assert_true(changed)
 	assert_eq(manager.get_current_floor_index(), 4)
 	assert_eq(manager.get_current_node_index(), 1)
-	assert_eq(manager.get_current_node_info().get("type", ""), "rest")
+	assert_eq(manager.get_current_node_info().get("type", ""), "event")
+	assert_eq(manager.get_current_node().room_payload.get("event_id"), "debug_fountain")
 
 
 func test_map_manager_rejects_invalid_node() -> void:
@@ -99,14 +101,15 @@ func test_map_manager_available_next_nodes_from_rest_branch() -> void:
 	manager.navigate_to_node(3, 0)
 	# When：查询可用的下一节点选项。
 	var options = manager.get_available_next_nodes()
-	# Then：可以选择第 5 层战斗节点或第 5 层休息节点。
+	# Then：可以选择第 5 层战斗节点或第 5 层事件节点。
 	assert_eq(options.size(), 2)
 	assert_eq(options[0]["floor_index"], 4)
 	assert_eq(options[0]["node_index"], 0)
 	assert_eq(options[0]["room_type"], "combat")
 	assert_eq(options[1]["floor_index"], 4)
 	assert_eq(options[1]["node_index"], 1)
-	assert_eq(options[1]["room_type"], "rest")
+	assert_eq(options[1]["room_type"], "event")
+	assert_eq(options[1]["room_name"], "事件房间")
 
 
 func test_map_manager_navigate_to_next_node_only_allows_reachable_options() -> void:
