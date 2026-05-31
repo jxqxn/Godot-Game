@@ -3,17 +3,17 @@ extends GutTest
 const DEBUG_SCENE_PATH := "res://scenes/stm/battle_debug_scene.tscn"
 
 
-func test_fourth_floor_completion_shows_two_fifth_floor_node_buttons() -> void:
+func test_fourth_floor_completion_shows_combat_and_event_fifth_floor_node_buttons() -> void:
 	# Given：调试场景位于第 4 层休息房，并完成 rest_choice。
 	var scene = _scene_after_completed_fourth_floor_rest()
 	# When：读取下一节点按钮。
 	var texts := _next_node_button_texts(scene)
-	# Then：第 4 层后显示两个第 5 层节点，而不是第 5 / 第 6 层。
+	# Then：第 4 层后显示第 5 层 combat / event 两个节点。
 	assert_eq(texts.size(), 2)
 	assert_eq(_count_texts_containing(texts, "第 5 层"), 2)
 	assert_eq(_count_texts_containing(texts, "第 6 层"), 0)
 	assert_true(_any_text_contains_all(texts, ["第 5 层", "战斗房间"]))
-	assert_true(_any_text_contains_all(texts, ["第 5 层", "休息房间"]))
+	assert_true(_any_text_contains_all(texts, ["第 5 层", "事件房间"]))
 
 
 func test_clicking_fifth_floor_combat_node_enters_combat_branch() -> void:
@@ -29,19 +29,38 @@ func test_clicking_fifth_floor_combat_node_enters_combat_branch() -> void:
 	assert_not_null(scene.combat)
 
 
-func test_clicking_fifth_floor_rest_node_enters_rest_branch_choice() -> void:
+func test_clicking_fifth_floor_event_node_enters_event_branch_choice() -> void:
 	# Given：第 4 层休息完成后出现第 5 层两个节点。
 	var scene = _scene_after_completed_fourth_floor_rest()
-	# When：点击第 5 层休息房间节点。
-	_press_next_node_button(scene, ["第 5 层", "休息房间"])
+	# When：点击第 5 层事件房间节点。
+	_press_next_node_button(scene, ["第 5 层", "事件房间"])
 	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
-	# Then：进入第 5 层 node 1 rest，并显示 rest_choice。
+	# Then：进入第 5 层 node 1 event，并显示 event_choice。
 	assert_eq(scene.game_flow.get_current_floor_index(), 4)
 	assert_eq(scene.game_flow.get_current_node_index(), 1)
-	assert_eq(scene.game_flow.get_current_room().get_room_type(), "rest")
+	assert_eq(scene.game_flow.get_current_room().get_room_type(), "event")
 	assert_true(scene.game_state.has_choice_request())
-	assert_eq(scene.game_state.current_choice_request.request_type, "rest_choice")
+	assert_eq(scene.game_state.current_choice_request.request_type, "event_choice")
 	assert_true(_debug_node_or_null(scene, "Layout/ChoicePanel").visible)
+	assert_eq(_label_text(scene, "Layout/ChoicePanel/ChoiceTitleLabel"), "清泉")
+	var log_text := _label_text(scene, "Layout/LogPanel/LogLabel")
+	assert_true(log_text.contains("进入事件房"))
+	assert_false(log_text.contains("战斗开始"))
+
+
+func test_fifth_floor_event_choice_completion_shows_sixth_floor_rest_node() -> void:
+	# Given：调试场景进入第 5 层事件房。
+	var scene = _scene_after_completed_fourth_floor_rest()
+	_press_next_node_button(scene, ["第 5 层", "事件房间"])
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	# When：选择离开事件。
+	_press_choice_button(scene, "离开")
+	# Then：事件房完成后显示第 6 层 rest 节点。
+	assert_false(scene.game_state.has_choice_request())
+	assert_true(scene.game_flow.get_current_room().is_completed)
+	var texts := _next_node_button_texts(scene)
+	assert_eq(texts.size(), 1)
+	assert_true(_any_text_contains_all(texts, ["第 6 层", "休息房间"]))
 
 
 func _scene_after_completed_fourth_floor_rest():
@@ -66,6 +85,13 @@ func _instantiate_debug_scene():
 	var scene = packed_scene.instantiate()
 	add_child_autofree(scene)
 	return scene
+
+
+func _label_text(scene: Node, node_path: String) -> String:
+	var label = _debug_node_or_null(scene, node_path)
+	if label == null:
+		return ""
+	return str(label.text)
 
 
 func _press_button(scene: Node, node_path: String) -> void:
