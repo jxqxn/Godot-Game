@@ -12,19 +12,20 @@ func test_initial_position_is_first_floor_node_zero_combat() -> void:
 	assert_eq(manager.get_current_node_info().get("type", ""), "combat")
 
 
-func test_fourth_floor_rest_branches_to_two_fifth_floor_nodes() -> void:
+func test_fourth_floor_rest_branches_to_combat_and_event_fifth_floor_nodes() -> void:
 	# Given：玩家位于第 4 层 node 0 休息房。
 	var manager = MapManagerScript.new()
 	assert_true(manager.navigate_to_node(3, 0))
 	# When：查询下一节点。
 	var next_nodes: Array = manager.get_available_next_nodes()
-	# Then：出现两个第 5 层节点，而不是第 5 / 第 6 层跳转。
+	# Then：出现两个第 5 层节点，分别为 combat / event。
 	assert_eq(manager.get_current_node_info().get("type", ""), "rest")
 	assert_eq(next_nodes.size(), 2)
 	assert_not_null(_node_option(next_nodes, 4, 0))
 	assert_not_null(_node_option(next_nodes, 4, 1))
 	assert_eq(_node_option(next_nodes, 4, 0).get("room_type", ""), "combat")
-	assert_eq(_node_option(next_nodes, 4, 1).get("room_type", ""), "rest")
+	assert_eq(_node_option(next_nodes, 4, 1).get("room_type", ""), "event")
+	assert_eq(_node_option(next_nodes, 4, 1).get("room_name", ""), "事件房间")
 
 
 func test_fourth_floor_cannot_skip_directly_to_sixth_floor() -> void:
@@ -51,14 +52,15 @@ func test_fifth_floor_combat_branch_merges_to_sixth_floor_node_zero() -> void:
 	assert_eq(_node_option(next_nodes, 5, 0).get("room_type", ""), "rest")
 
 
-func test_fifth_floor_rest_branch_merges_to_sixth_floor_node_zero() -> void:
-	# Given：玩家位于第 5 层 node 1 休息分支。
+func test_fifth_floor_event_branch_merges_to_sixth_floor_node_zero() -> void:
+	# Given：玩家位于第 5 层 node 1 事件分支。
 	var manager = MapManagerScript.new()
 	assert_true(manager.navigate_to_node(4, 1))
 	# When：查询下一节点。
 	var next_nodes: Array = manager.get_available_next_nodes()
 	# Then：也只能前往第 6 层 node 0。
-	assert_eq(manager.get_current_node_info().get("type", ""), "rest")
+	assert_eq(manager.get_current_node_info().get("type", ""), "event")
+	assert_eq(manager.get_current_node().room_payload.get("event_id"), "debug_fountain")
 	assert_eq(next_nodes.size(), 1)
 	assert_not_null(_node_option(next_nodes, 5, 0))
 	assert_eq(_node_option(next_nodes, 5, 0).get("room_type", ""), "rest")
