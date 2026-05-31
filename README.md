@@ -9,10 +9,11 @@
 ```text
 固定地图节点图
 → 进入房间
-→ 战斗 / 休息 / Boss 流程
+→ 战斗 / 休息 / 事件 / Boss 流程
 → 抽牌、出牌、结算行动队列
 → 战斗胜利后选择奖励
 → 休息房选择行动
+→ 事件房选择行动
 → 地图节点推进
 → Boss 胜利通关
 ```
@@ -26,18 +27,21 @@ card_reward 战斗奖励选择
 rest_choice 休息房选择
 固定地图节点分支 v1
 Core Runtime Architecture Spine v1
+STS2 EventRoom v1
 ```
 
-Core Runtime Architecture Spine v1 已建立以下长期边界：
+Core Runtime Architecture Spine v1 之后，EventRoom v1 已验证以下长期边界：
 
 ```text
-StmChoiceResolver     处理 card_reward / rest_choice 等选择规则
-StmMapNode            表示地图节点与 next_nodes
-StmRoomFactory        根据 MapNode 创建 Combat / Rest / Boss 房间
+StmChoiceResolver     处理 card_reward / rest_choice / event_choice 等选择规则
+StmMapNode            表示地图节点、room_payload、next_nodes
+StmRoomFactory        根据 MapNode 创建 Combat / Rest / Event / Boss 房间
 StmEncounterFactory   根据 encounter_id 创建 debug_dummy / boss_dummy 遭遇
+StmGameFlow           通过 RoomFactory 进入房间，并在房间完成后推进地图节点
+BattleDebugScene      显示状态并提交玩家操作，不直接维护事件规则
 ```
 
-这些边界的目标是让后续新增 EventRoom、Smith、精英房、地图 UI、第二种敌人时，不需要反复重写 `GameState`、`GameFlow`、`MapManager` 或 `BattleDebugScene` 的职责。
+这些边界的目标是让后续新增 Smith、精英房、地图 UI、第二种敌人时，不需要反复重写 `GameState`、`GameFlow`、`MapManager` 或 `BattleDebugScene` 的职责。
 
 ## 运行入口
 
@@ -63,7 +67,7 @@ res://scenes/stm/battle_debug_scene.tscn
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-当前 `.gutconfig.json` 已覆盖 24 个测试脚本，包括：
+当前 `.gutconfig.json` 已覆盖 28 个测试脚本，包括：
 
 ```text
 core_skeleton_test.gd
@@ -90,16 +94,22 @@ test_choice_resolver_v1.gd
 test_map_node_v1.gd
 test_room_factory_v1.gd
 test_encounter_factory_v1.gd
+test_event_room_v1.gd
+test_choice_resolver_event_choice_v1.gd
+test_game_flow_event_room_v1.gd
+test_battle_debug_event_choice_v1.gd
 ```
 
-2026-05-30：人工确认完整 GUT 通过。
+2026-05-31：人工确认完整 GUT 通过。
 
 ```text
-Scripts: 24
-Tests: 187
-Passing Tests: 187
-Asserts: 880
+Scripts: 28
+Tests: 199
+Passing Tests: 199
+Asserts: 962
 ```
+
+GUT 退出时可能出现 ObjectDB / resources still in use 警告；当前功能验收以 `All tests passed` 和退出码 0 为准。
 
 后续每次变更合并前应重新运行完整测试。
 
@@ -108,16 +118,22 @@ Asserts: 880
 当前最新规格文档：
 
 ```text
-docs/superpowers/specs/2026-05-30-sts2-core-runtime-architecture-spine-v1-design.md
+docs/superpowers/specs/2026-05-30-sts2-event-room-v1-design.md
 ```
 
 当前最新实施计划：
 
 ```text
-docs/superpowers/plans/2026-05-30-sts2-core-runtime-architecture-spine-v1.md
+docs/superpowers/plans/2026-05-30-sts2-event-room-v1.md
 ```
 
-较早阶段文档仍保留在 `docs/superpowers/` 中，用于追溯 card priority、autoplay preview、choice reward、rest choice、fixed map node branch 等阶段。
+当前最新状态记录：
+
+```text
+docs/superpowers/status/2026-05-30-sts2-event-room-v1-status.md
+```
+
+较早阶段文档仍保留在 `docs/superpowers/` 中，用于追溯 card priority、autoplay preview、choice reward、rest choice、fixed map node branch、core runtime architecture spine 等阶段。
 
 ## 关键代码区域
 
@@ -128,7 +144,7 @@ scripts/stm/actions/        战斗行动与 ActionQueue
 scripts/stm/engine/         Combat / GameState / GameFlow 主干
 scripts/stm/choices/        ChoiceRequest / ChoiceOption / ChoiceResolver
 scripts/stm/map/            MapData / MapNode / MapManager
-scripts/stm/rooms/          BaseRoom / CombatRoom / RestRoom / BossRoom / RoomFactory
+scripts/stm/rooms/          BaseRoom / CombatRoom / RestRoom / EventRoom / BossRoom / RoomFactory
 scripts/stm/encounters/     EncounterFactory 与固定遭遇创建
 scripts/stm/debug/          战斗调试场景与固定测试夹具
 scripts/stm/tests/          GUT 测试
@@ -142,12 +158,13 @@ StmGameState
 → 提供 submit_choice() 公共入口，但不直接实现具体选择规则
 
 StmChoiceResolver
-→ 解析 card_reward / rest_choice
-→ 后续 event_choice / smith_choice 应优先接入这里
+→ 解析 card_reward / rest_choice / event_choice
+→ 后续 smith_choice 等新选择应优先接入这里
 
 StmMapManager
 → 维护当前 floor_index / node_index
 → 只负责地图位置与可达节点，不创建房间、不结算房间
+→ 允许 GUT 通过 debug_set_floors_for_test() 注入最小测试地图
 
 StmMapNode
 → 表示地图节点、房间类型、room_payload、next_nodes
@@ -155,15 +172,20 @@ StmMapNode
 StmGameFlow
 → 负责进入房间、完成房间、推进节点、Boss 通关判断
 → 通过 RoomFactory 创建房间
+→ 允许 GUT 通过 debug_set_map_floors_for_test() 注入最小测试地图
 
 StmRoomFactory
-→ 根据 MapNode.room_type 创建 CombatRoom / RestRoom / BossRoom
+→ 根据 MapNode.room_type 创建 CombatRoom / RestRoom / EventRoom / BossRoom
+
+StmEventRoom
+→ 进入房间时创建 event_choice
+→ 不直接修改 HP / Deck / MapManager / GameFlow
 
 StmEncounterFactory
 → 根据 encounter_id 创建 debug_dummy / boss_dummy 等战斗遭遇
 
 BattleDebugScene
-→ 只负责显示状态和提交玩家操作，不直接维护地图/房间规则
+→ 只负责显示状态和提交玩家操作，不直接维护地图/房间/事件规则
 ```
 
 ## 协作规则文档
@@ -213,26 +235,16 @@ ActionQueue / add_action / drive_actions
 
 ## 建议的下一步
 
-在进入新玩法前，建议先完成文档同步：
+EventRoom v1 已完成并通过完整 GUT。下一步建议不要立刻扩大事件系统，而是在以下方向中选择一个小步推进：
 
 ```text
-新增 Core Runtime Architecture Spine v1 status 文档
+1. 把 event 节点接入默认固定地图中的一个非关键分支，并同步更新受影响测试。
+2. 新增 Smith / upgrade 选择作为第二种非战斗选择类型。
+3. 清理 GUT 退出时的 ObjectDB / resources still in use 警告。
 ```
 
-之后建议推进一个很小的内容验证阶段：
+如果推进新的选择类型，应继续复用：
 
 ```text
-STS2 EventRoom v1
+Room → ChoiceRequest → GameState.submit_choice() → ChoiceResolver → GameFlow
 ```
-
-目标是用一个简单事件房验证当前架构边界：
-
-```text
-MapNode room_type = event
-→ RoomFactory 创建 EventRoom
-→ EventRoom 发出 event_choice
-→ ChoiceResolver 结算事件选择
-→ GameFlow 完成房间并返回地图
-```
-
-第一版事件房应保持极小，不引入随机事件系统、商店、遗物或正式地图 UI。
