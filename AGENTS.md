@@ -26,6 +26,17 @@ rest_choice 休息房选择
 固定地图节点分支 v1
 Core Runtime Architecture Spine v1
 STS2 EventRoom v1
+STS2 Fixed Map Event Node v1
+```
+
+当前默认固定地图已经包含一个事件分支：
+
+```text
+第 4 层 rest
+→ 第 5 层 node 0 combat
+→ 第 5 层 node 1 event(debug_fountain)
+→ 第 6 层 rest
+→ 第 7 层 boss
 ```
 
 当前核心架构边界：
@@ -41,7 +52,7 @@ StmEncounterFactory   根据 encounter_id 创建战斗遭遇
 BattleDebugScene      显示状态并提交玩家操作，不直接维护规则
 ```
 
-EventRoom v1 已按以下方向接入并通过完整 GUT：
+EventRoom 与默认地图事件节点已按以下方向接入并通过完整 GUT：
 
 ```text
 MapNode room_type = event
@@ -121,9 +132,9 @@ godot -s addons/gut/gut_cmdln.gd
 
 ```text
 Scripts: 28
-Tests: 199
-Passing Tests: 199
-Asserts: 962
+Tests: 200
+Passing Tests: 200
+Asserts: 986
 ```
 
 每次合并前必须重新运行完整 GUT。
