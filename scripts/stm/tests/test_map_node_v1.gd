@@ -98,5 +98,5 @@ func test_map_manager_available_next_nodes_remains_compatible() -> void:
 	assert_eq(options[0].get("room_name"), "战斗房间")
 	assert_eq(options[1].get("floor_index"), 4)
 	assert_eq(options[1].get("node_index"), 1)
-	assert_eq(options[1].get("room_type"), "rest")
-	assert_eq(options[1].get("room_name"), "休息房间")
+	assert_eq(options[1].get("room_type"), "event")
+	assert_eq(options[1].get("room_name"), "事件房间")
