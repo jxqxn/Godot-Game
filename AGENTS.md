@@ -25,19 +25,30 @@ card_reward 战斗奖励选择
 rest_choice 休息房选择
 固定地图节点分支 v1
 Core Runtime Architecture Spine v1
+STS2 EventRoom v1
 ```
 
 当前核心架构边界：
 
 ```text
 StmGameState          保存运行时状态，提供 submit_choice() 公共入口
-StmChoiceResolver     处理 card_reward / rest_choice 等选择规则
+StmChoiceResolver     处理 card_reward / rest_choice / event_choice 等选择规则
 StmMapNode            表示地图节点、room_payload、next_nodes
 StmMapManager         管理当前位置和可达节点
 StmGameFlow           管理进入房间、推进节点、Boss 通关判断
 StmRoomFactory        根据 MapNode 创建房间
 StmEncounterFactory   根据 encounter_id 创建战斗遭遇
 BattleDebugScene      显示状态并提交玩家操作，不直接维护规则
+```
+
+EventRoom v1 已按以下方向接入并通过完整 GUT：
+
+```text
+MapNode room_type = event
+→ RoomFactory 创建 EventRoom
+→ EventRoom 发出 event_choice
+→ ChoiceResolver 结算事件选择
+→ GameFlow 完成房间并返回地图
 ```
 
 ## 开发流程规则
@@ -109,15 +120,15 @@ godot -s addons/gut/gut_cmdln.gd
 当前基线：
 
 ```text
-Scripts: 24
-Tests: 187
-Passing Tests: 187
-Asserts: 880
+Scripts: 28
+Tests: 199
+Passing Tests: 199
+Asserts: 962
 ```
 
 每次合并前必须重新运行完整 GUT。
 
-GUT 退出时可能出现 ObjectDB / resources still in use 警告；当前功能验收以 `All tests passed` 为准。
+GUT 退出时可能出现 ObjectDB / resources still in use 警告；当前功能验收以 `All tests passed` 和退出码 0 为准。
 
 ## 开发红线
 
@@ -164,6 +175,8 @@ Python 参考项目
 ```text
 StmGameState.debug_apply_combat_values(values, enemy)
 StmGameState.debug_clear_current_combat()
+StmMapManager.debug_set_floors_for_test(floors)
+StmGameFlow.debug_set_map_floors_for_test(floors)
 ```
 
 规则：
@@ -174,6 +187,8 @@ BattleDebugScene 后续新增调试写状态行为时，应优先走 debug_* 入
 BattleDebugScene 不得直接修改 MapManager / Room 完成状态 / Deck 规则状态。
 不要把 debug_* 入口扩展成第二套 Combat 结算或第二套 GameFlow。
 ```
+
+其中地图注入相关 debug_* 入口只允许 GUT / 测试使用，正式调试场景不应调用。
 
 ## Python 参考项目使用规则
 
@@ -194,13 +209,12 @@ GameState 只保存状态的方向
 
 新增内容应优先复用当前主干边界。
 
-例如 EventRoom v1 应按以下方向接入：
+例如后续 Smith / upgrade / 更多 EventRoom 内容应按以下方向接入：
 
 ```text
-MapNode room_type = event
-→ RoomFactory 创建 EventRoom
-→ EventRoom 发出 event_choice
-→ ChoiceResolver 结算事件选择
+Room 发出 ChoiceRequest
+→ GameState.submit_choice(option_id)
+→ ChoiceResolver 结算选择
 → GameFlow 完成房间并返回地图
 ```
 
