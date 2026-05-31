@@ -149,7 +149,8 @@ func test_game_flow_rest_room_unlocks_branch_after_rest_choice() -> void:
 	assert_eq(options_after_choice[0]["room_type"], "combat")
 	assert_eq(options_after_choice[1]["floor_index"], 4)
 	assert_eq(options_after_choice[1]["node_index"], 1)
-	assert_eq(options_after_choice[1]["room_type"], "rest")
+	assert_eq(options_after_choice[1]["room_type"], "event")
+	assert_eq(options_after_choice[1]["room_name"], "事件房间")
 
 
 func test_game_flow_debug_navigation_rejects_active_room() -> void:
@@ -206,16 +207,16 @@ func test_game_flow_not_completed_at_non_boss_floor_after_reward_choice() -> voi
 	assert_false(is_completed)
 
 
-func test_game_flow_rest_branch_reaches_boss_and_completes_flow() -> void:
-	# Given：GameFlow 从第 1 层开始，选择第 5 层 rest 分支。
+func test_game_flow_event_branch_reaches_boss_and_completes_flow() -> void:
+	# Given：GameFlow 从第 1 层开始，选择第 5 层 event 分支。
 	var game_state = _create_minimal_game_state()
 	var flow = GameFlowScript.new(game_state)
-	# When：依次完成 1-3 层战斗，完成第 4 层休息，进入第 5 层 rest，再进入第 6 层 rest，最后进入 Boss 并胜利。
+	# When：依次完成 1-3 层战斗，完成第 4 层休息，进入第 5 层 event，再进入第 6 层 rest，最后进入 Boss 并胜利。
 	assert_true(_win_current_combat_room_and_advance_to_node(flow, 1, 0))
 	assert_true(_win_current_combat_room_and_advance_to_node(flow, 2, 0))
 	assert_true(_win_current_combat_room_and_advance_to_node(flow, 3, 0))
 	assert_true(_enter_rest_room_and_advance_to_node(flow, 4, 1))
-	assert_true(_enter_rest_room_and_advance_to_node(flow, 5, 0))
+	assert_true(_enter_event_room_and_advance_to_node(flow, 5, 0))
 	assert_true(_enter_rest_room_and_advance_to_node(flow, 6, 0))
 	assert_true(flow.enter_current_room())
 	assert_eq(flow.get_current_room().get_room_type(), "boss")
@@ -258,6 +259,18 @@ func _enter_rest_room_and_advance_to_node(flow, next_floor_index: int, next_node
 	return flow.advance_to_next_node(next_floor_index, next_node_index)
 
 
+func _enter_event_room_and_advance_to_node(flow, next_floor_index: int, next_node_index: int) -> bool:
+	if not flow.enter_current_room():
+		return false
+	if flow.get_current_room().get_room_type() != "event":
+		return false
+	if not _leave_pending_event_choice(flow):
+		return false
+	if not flow.get_current_room().is_completed:
+		return false
+	return flow.advance_to_next_node(next_floor_index, next_node_index)
+
+
 func _skip_pending_card_reward(flow) -> bool:
 	var game_state = flow.get_game_state()
 	if game_state == null or not game_state.has_choice_request():
@@ -284,3 +297,14 @@ func _skip_pending_rest_choice(flow) -> bool:
 			var result: Dictionary = game_state.submit_choice(option.id)
 			return bool(result.get("ok", false))
 	return false
+
+
+func _leave_pending_event_choice(flow) -> bool:
+	var game_state = flow.get_game_state()
+	if game_state == null or not game_state.has_choice_request():
+		return false
+	var request = game_state.current_choice_request
+	if request.request_type != "event_choice":
+		return false
+	var result: Dictionary = game_state.submit_choice("leave")
+	return bool(result.get("ok", false))
