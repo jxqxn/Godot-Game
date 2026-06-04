@@ -80,6 +80,28 @@ docs/superpowers/plans/YYYY-MM-DD-xxx.md
 
 规格和计划确认后，才进入代码实现。
 
+### 1.1 可复用协作入口
+
+如果当前 Codex 环境已安装本项目 skill，可在新对话开始时优先使用：
+
+```text
+godot-sts-card-prototype
+```
+
+该 skill 只是流程入口，项目事实仍以 `AGENTS.md`、`README.md` 和最新 status 文档为准。
+
+新功能或结构性重构开工前，可先使用：
+
+```text
+docs/superpowers/prompts/new-feature-intake.md
+```
+
+阶段完成后，可复制以下模板生成新的 status 记录：
+
+```text
+docs/superpowers/templates/status-template.md
+```
+
 ### 2. 行为驱动开发（BDD）最高优先级
 
 在编写任何正式代码之前，必须先在测试方法中写出 Given-When-Then 模式的行为注释和测试方法名。

@@ -209,6 +209,28 @@ AGENTS.md
 
 该文件记录项目协作规则、BDD/TDD 流程、架构边界、开发红线和完整 GUT 命令。后续开发前应先阅读 `AGENTS.md`。
 
+## Codex 协作复用入口
+
+后续新对话中，如果 Codex 已安装本地 skill，可优先调用：
+
+```text
+godot-sts-card-prototype
+```
+
+该 skill 只负责快速进入项目流程，不替代 `AGENTS.md` / `README.md` / 最新 status 文档。
+
+新功能或结构性重构开工前，可使用：
+
+```text
+docs/superpowers/prompts/new-feature-intake.md
+```
+
+阶段完成后，可复制以下模板生成新的 status 记录：
+
+```text
+docs/superpowers/templates/status-template.md
+```
+
 ## 开发红线
 
 当前阶段不要恢复或新增以下旧原型体系：
