@@ -146,6 +146,16 @@ docs/superpowers/status/2026-05-31-sts2-fixed-map-event-node-v1-status.md
 
 较早阶段文档仍保留在 `docs/superpowers/` 中，用于追溯 card priority、autoplay preview、choice reward、rest choice、fixed map node branch、core runtime architecture spine、event room 等阶段。
 
+## 参考材料
+
+用于后续机制抽象与外部案例迭代的参考文档位于：
+
+```text
+docs/references/disco-gunfight-cardification/README.md
+```
+
+该目录中的文档不是当前 Godot 项目的正式开发规格。若要把其中机制转入本项目，应先另写 `docs/superpowers/specs/` 与 `docs/superpowers/plans/`。
+
 ## 关键代码区域
 
 ```text

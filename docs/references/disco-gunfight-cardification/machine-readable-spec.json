@@ -1,0 +1,79 @@
+{
+  "title": "Disco Elysium Gunfight Minimal Cardification Spec",
+  "version": "0.3-codex",
+  "goal": "Implement a single-encounter prototype that converts dialogue choices into emergent thought cards, working memory, intention tracks, and automatic gunfight resolution.",
+  "non_goals": [
+    "No HP-based enemy combat",
+    "No turn-based shooting controls",
+    "No direct shoot button as primary player action",
+    "No evidence cards unless unlocked by prior investigation flags",
+    "No skill voice cards as purchasable shop goods",
+    "No cost-free refresh loop"
+  ],
+  "core_state": {
+    "phase": [
+      "pressure_node",
+      "intention_resolution",
+      "gunfight_auto_resolution",
+      "kim_warning",
+      "complete"
+    ],
+    "resources": [
+      "willpower",
+      "workingMemoryLimit"
+    ],
+    "zones": [
+      "emergencePool",
+      "workingMemory",
+      "intentionTracks",
+      "situationTracks"
+    ]
+  },
+  "intention_tracks": [
+    "continuePersuasion",
+    "shootIntervention",
+    "throwMolotov",
+    "freeze",
+    "retreatSelfPreservation",
+    "warnKim"
+  ],
+  "situation_tracks": [
+    "mercenaryInstability",
+    "revengeNarrative",
+    "titusExposure",
+    "elizabethInvolvement",
+    "kimTrust",
+    "kimAlertness",
+    "harryBodyStability",
+    "pressure",
+    "pressureLimit"
+  ],
+  "player_actions": [
+    "grasp",
+    "speak",
+    "suppress",
+    "keep",
+    "discard",
+    "refresh"
+  ],
+  "resolution_order": [
+    "shanky_escape_check",
+    "elizabeth_involvement_check",
+    "titus_target_check",
+    "execute_dominant_intention",
+    "kortenaer_down_or_unstable_check",
+    "ruud_shoots",
+    "reaction_speed_or_t500_check",
+    "kim_counterfire",
+    "de_paule_misfire",
+    "harry_is_shot_and_falls",
+    "kim_warning_window"
+  ],
+  "acceptance_tests": [
+    "Player can explain why the dominant intention fired.",
+    "Evidence only appears if prior flags unlock it.",
+    "Refresh increases pressure or other danger tracks.",
+    "Harry falling remains a high-certainty structural result.",
+    "Kim warning depends on relationship, Authority, kept cards, and body state."
+  ]
+}
