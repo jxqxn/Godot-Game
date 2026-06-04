@@ -132,9 +132,17 @@ func _hand_button_texts(scene: Node) -> Array:
 	if container == null:
 		return texts
 	for child in container.get_children():
-		if child is Button:
+		if child is Button and _is_active_debug_button(child):
 			texts.append(str(child.text))
 	return texts
+
+
+func _is_active_debug_button(button: Button) -> bool:
+	if button.is_queued_for_deletion():
+		return false
+	if not button.visible:
+		return false
+	return not str(button.text).is_empty()
 
 
 func _replace_hand(scene: Node, cards: Array) -> void:

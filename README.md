@@ -111,16 +111,16 @@ test_game_flow_event_room_v1.gd
 test_battle_debug_event_choice_v1.gd
 ```
 
-2026-05-31：人工确认完整 GUT 通过。
+2026-06-04：完整 GUT 通过，并已清理退出时的 ObjectDB / resources still in use 警告。
 
 ```text
 Scripts: 28
-Tests: 200
-Passing Tests: 200
-Asserts: 986
+Tests: 202
+Passing Tests: 202
+Asserts: 998
 ```
 
-GUT 退出时可能出现 ObjectDB / resources still in use 警告；当前功能验收以 `All tests passed` 和退出码 0 为准。
+本次完整 GUT 以 `All tests passed` 和退出码 0 结束，未再出现 ObjectDB / resources still in use 警告。
 
 后续每次变更合并前应重新运行完整测试。
 
@@ -250,8 +250,8 @@ ActionQueue / add_action / drive_actions
 
 ```text
 1. 新增 Smith / upgrade 选择作为第二种非战斗选择类型。
-2. 清理 GUT 退出时的 ObjectDB / resources still in use 警告。
-3. 新增第二个固定事件，但仍不引入随机事件池或 EventFactory。
+2. 新增第二个固定事件，但仍不引入随机事件池或 EventFactory。
+3. 为自有创新卡牌机制先拆出一个最小规格切片。
 ```
 
 如果推进新的选择类型，应继续复用：

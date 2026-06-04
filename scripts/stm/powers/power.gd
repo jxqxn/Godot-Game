@@ -10,7 +10,18 @@ var amount: int = 0
 var duration: int = -1
 var stack_type: String = STACK_INTENSITY
 var is_buff: bool = false
-var owner = null
+var _owner_ref: WeakRef = null
+var owner:
+	get:
+		if _owner_ref == null:
+			return null
+		return _owner_ref.get_ref()
+	set(value):
+		if value == null:
+			_owner_ref = null
+			return
+		var next_owner_ref: WeakRef = weakref(value)
+		_owner_ref = next_owner_ref
 
 
 func _init(p_amount: int = 0, p_duration: int = -1) -> void:

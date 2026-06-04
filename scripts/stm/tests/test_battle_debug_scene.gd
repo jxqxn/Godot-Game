@@ -183,6 +183,21 @@ func test_clicking_bash_inflame_and_shrug_it_off_from_hand() -> void:
 	assert_true(_label_text(scene, "Layout/PilesPanel/HandLabel").contains("打击"))
 
 
+func test_refreshing_dynamic_debug_buttons_does_not_leave_orphans() -> void:
+	# Given：调试战斗已经创建手牌按钮。
+	var scene = _instantiate_debug_scene()
+	assert_not_null(scene)
+	if scene == null:
+		return
+	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
+	assert_true(_hand_card_button_count(scene) > 0)
+	# When：多次刷新显示并重建动态按钮。
+	scene._refresh_display()
+	scene._refresh_display()
+	# Then：被替换的按钮不会作为 orphan 留在测试进程中。
+	assert_no_new_orphans()
+
+
 func _instantiate_debug_scene():
 	if not ResourceLoader.exists(DEBUG_SCENE_PATH):
 		return null

@@ -590,7 +590,7 @@ func _clear_next_floor_buttons() -> void:
 		if button_node is Button:
 			button_node.disabled = true
 		button_node.visible = false
-		button_node.queue_free()
+		_dispose_dynamic_child(button_node)
 
 
 func _disable_next_floor_buttons() -> void:
@@ -646,8 +646,7 @@ func _refresh_hand_buttons(player = null) -> void:
 	if hand_buttons_container == null:
 		return
 	for button_node in hand_buttons_container.get_children():
-		hand_buttons_container.remove_child(button_node)
-		button_node.queue_free()
+		_dispose_dynamic_child(button_node)
 	if player == null or player.card_manager == null:
 		return
 	var has_choice := _has_active_choice_request()
@@ -681,8 +680,7 @@ func _refresh_choice_panel() -> void:
 	if choice_panel == null or choice_title_label == null or choice_options_container == null:
 		return
 	for child in choice_options_container.get_children():
-		choice_options_container.remove_child(child)
-		child.queue_free()
+		_dispose_dynamic_child(child)
 	if not _has_active_choice_request():
 		choice_panel.visible = false
 		choice_title_label.text = ""
@@ -695,6 +693,19 @@ func _refresh_choice_panel() -> void:
 		button.disabled = not bool(option.get("enabled"))
 		button.pressed.connect(_on_choice_option_pressed.bind(str(option.get("id"))))
 		choice_options_container.add_child(button)
+
+
+func _dispose_dynamic_child(child: Node) -> void:
+	if child == null:
+		return
+	if child.is_queued_for_deletion():
+		return
+	if child is Button:
+		child.disabled = true
+		child.text = ""
+	if child is CanvasItem:
+		child.visible = false
+	child.queue_free()
 
 
 func _choice_option_button_text(option) -> String:

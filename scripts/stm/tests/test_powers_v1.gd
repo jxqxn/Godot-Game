@@ -78,7 +78,18 @@ class CardCapturePower:
 class BlockCapturePower:
 	extends "res://scripts/stm/powers/power.gd"
 
-	var seen_source = null
+	var _seen_source_ref: WeakRef = null
+	var seen_source:
+		get:
+			if _seen_source_ref == null:
+				return null
+			return _seen_source_ref.get_ref()
+		set(value):
+			if value == null:
+				_seen_source_ref = null
+				return
+			var next_source_ref: WeakRef = weakref(value)
+			_seen_source_ref = next_source_ref
 	var seen_card = null
 
 	func _init() -> void:
@@ -236,6 +247,20 @@ func test_apply_power_stacks_intensity_or_duration() -> void:
 	assert_eq(enemy.get_power("vulnerable").duration, 5)
 	assert_true(player.power_summary_text().contains("力量 5"))
 	assert_true(enemy.power_summary_text().contains("易伤 5"))
+
+
+func test_power_owner_reference_does_not_keep_creature_alive() -> void:
+	# Given：玩家拥有一个状态效果，且状态效果仍能通过 owner 读回拥有者。
+	var player = PlayerScript.new([])
+	player.add_power(StrengthScript.new(2))
+	var power = player.get_power("strength")
+	var player_ref: WeakRef = weakref(player)
+	assert_eq(power.owner, player)
+	# When：外部不再强引用玩家和状态效果。
+	power = null
+	player = null
+	# Then：owner 回链不应阻止 RefCounted 玩家释放。
+	assert_null(player_ref.get_ref())
 
 
 func test_strength_increases_attack_damage() -> void:

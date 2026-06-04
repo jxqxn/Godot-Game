@@ -39,6 +39,18 @@ README.md
 AGENTS.md
 ```
 
+2026-06-04 清理补充：
+
+```text
+scripts/stm/debug/battle_debug_scene.gd
+scripts/stm/powers/power.gd
+scripts/stm/tests/test_battle_debug_scene.gd
+scripts/stm/tests/test_battle_debug_priority_autoplay_v1.gd
+scripts/stm/tests/test_powers_v1.gd
+README.md
+AGENTS.md
+```
+
 ## 测试结果
 
 2026-05-31 人工确认完整 GUT 通过：
@@ -50,20 +62,22 @@ Passing Tests: 200
 Asserts: 986
 ```
 
+2026-06-04 清理后重新确认完整 GUT 通过且干净退出：
+
+```text
+Scripts: 28
+Tests: 202
+Passing Tests: 202
+Asserts: 998
+```
+
 完整测试命令：
 
 ```powershell
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-GUT 退出时仍可能出现：
-
-```text
-ObjectDB instances leaked at exit
-resources still in use at exit
-```
-
-当前功能验收以 `All tests passed` 和退出码 0 为准。
+当前验证基线以 `All tests passed`、退出码 0 和无 ObjectDB / resources still in use 警告为准。
 
 ## 规格审查结论
 
@@ -89,6 +103,8 @@ GameFlow 默认路径通过 submit_choice("leave") 完成 event_choice：通过
 BattleDebugScene 不解析 event payload：通过
 BattleDebugScene 不直接修改 HP / room completion：通过
 BattleDebugScene 进入事件房不记录“战斗开始”：通过
+BattleDebugScene 动态按钮刷新不留下 orphan：通过
+Power.owner 不再强引用 Creature：通过
 ```
 
 ## 已知技术债
@@ -97,7 +113,6 @@ BattleDebugScene 进入事件房不记录“战斗开始”：通过
 1. 当前仍只有 debug_fountain 一个固定事件。
 2. 尚未引入 EventFactory；本阶段仍不需要。
 3. 尚未引入随机事件池、正式地图 UI、事件插画或复杂叙事分支。
-4. GUT 退出时仍有 ObjectDB / resources still in use 警告，后续可单独清理。
 ```
 
 ## 下一步建议
@@ -106,8 +121,8 @@ BattleDebugScene 进入事件房不记录“战斗开始”：通过
 
 ```text
 1. 新增 Smith / upgrade 选择，验证第二种非战斗选择类型。
-2. 清理 GUT 退出时的 ObjectDB / resources still in use 警告。
-3. 新增第二个固定事件，但仍不引入随机事件池或 EventFactory。
+2. 新增第二个固定事件，但仍不引入随机事件池或 EventFactory。
+3. 为自有创新卡牌机制先拆出一个最小规格切片。
 ```
 
 如果继续扩展事件系统，应先另写规格和计划，不要直接扩大本阶段范围。

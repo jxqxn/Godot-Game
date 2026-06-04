@@ -128,18 +128,18 @@ docs/superpowers/plans/YYYY-MM-DD-xxx.md
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-当前基线：
+当前基线（2026-06-04）：
 
 ```text
 Scripts: 28
-Tests: 200
-Passing Tests: 200
-Asserts: 986
+Tests: 202
+Passing Tests: 202
+Asserts: 998
 ```
 
 每次合并前必须重新运行完整 GUT。
 
-GUT 退出时可能出现 ObjectDB / resources still in use 警告；当前功能验收以 `All tests passed` 和退出码 0 为准。
+当前验证基线为完整 GUT 通过且干净退出；若后续再次出现 ObjectDB / resources still in use 警告，应作为待清理技术债记录。
 
 ## 开发红线
 
