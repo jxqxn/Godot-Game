@@ -49,10 +49,34 @@ docs/superpowers/specs/2026-06-04-pressure-encounter-v1-design.md
 不恢复 AGENTS.md 禁止的旧原型体系
 ```
 
+---
+
+## 0. 执行前歧义总自检
+
+本计划已经按项目最新状态做过逐步歧义修正。以下规则优先于各步骤中的简写描述：
+
+```text
+1. GameState 文件路径是 scripts/stm/engine/game_state.gd，不是 scripts/stm/core/game_state.gd。
+2. BattleDebugScene 脚本路径是 scripts/stm/debug/battle_debug_scene.gd，不是 scripts/stm/scenes/battle_debug_scene.gd。
+3. 步骤 1 只做 PressureEncounterState 直接状态测试；EventRoom 进入测试放到步骤 2。
+4. pressure_encounter_choice 必须带 context.room，完成时复用 ChoiceResolver 现有 _complete_choice_context_room(game_state, request) 路径。
+5. ChoiceResolver 只桥接，不维护 working_memory / chain_counts / final_result。
+6. option_id 必须稳定可测：grasp_<card_id> / express_<card_id> / quiet_<card_id> / keep_<card_id> / discard_<card_id> / refresh。
+7. refresh 不使用随机池；v1 使用当前节点候选卡的确定性轮换或重建，测试只依赖“focus -1、pressure +1、emergence_pool 有效”。
+8. 工作记忆满格时，grasp 选项应 disabled，或 handle_pressure_action 返回 WORKING_MEMORY_FULL；二者择一后测试固定。
+9. 节点推进规则固定：每个 pressure_node 初始 focus_points = 3；每次消耗专注点后若 focus_points <= 0，则自动进入下一节点；若已完成第 3 节点或 pressure >= pressure_limit，则进入固定自动结算管线。
+10. keep 的效果只是在下一节点开始时继续占用 working_memory；v1 不实现完整冻结 UI。
+11. quiet 对 emotion_unquieted 的处理必须可测：quiet 后该卡不再推进 panic_spiral，并至少 hands_shaking 能产生 steady_response +1 或等价日志价值。
+12. choice_result 可以非破坏性追加 detail 与 state_summary；不得改变 ok / code / message / request_type / selected_option_id 的既有语义。
+13. v1 不接入默认地图；所有压力遭遇测试通过手动构造 EventRoom(debug_pressure_encounter) 或直接构造 PressureEncounterState 完成。
+```
+
+---
+
 ## 实施顺序
 
 ```text
-1. 新增 PressureEncounterState 的空壳与首个进入测试。
+1. 新增 PressureEncounterState 空壳与直接状态测试。
 2. 接入 GameState.current_pressure_encounter 与 EventRoom debug_pressure_encounter 启动分支。
 3. 生成 pressure_encounter_choice 的最小 ChoiceRequest。
 4. 接入 ChoiceResolver 的 pressure_encounter_choice 转发分支。
@@ -60,7 +84,7 @@ docs/superpowers/specs/2026-06-04-pressure-encounter-v1-design.md
 6. 实现 express / quiet / keep 的最小状态变化。
 7. 固定 3 条行动倾向轨与 2 条局势轨。
 8. 实现 observation_window 与 panic_spiral 两个 core_trigger。
-9. 实现 emotion_unquieted 与 quiet 的真实信息价值。
+9. 补齐 3 个压力节点与 8-12 张静态候选卡。
 10. 实现固定自动结算管线。
 11. 实现可解释日志与 choice_result detail / state_summary 的非破坏性输出。
 12. 补齐 BattleDebugScene 显示测试。
@@ -71,7 +95,7 @@ docs/superpowers/specs/2026-06-04-pressure-encounter-v1-design.md
 
 ---
 
-## 步骤 1：新增 PressureEncounterState 空壳与首个进入测试
+## 步骤 1：新增 PressureEncounterState 空壳与直接状态测试
 
 新增文件：
 
@@ -80,36 +104,36 @@ scripts/stm/encounters/pressure/pressure_encounter_state.gd
 scripts/stm/tests/test_pressure_encounter_v1.gd
 ```
 
-首个测试：
+首个测试改为直接测试状态对象，不依赖 EventRoom：
 
 ```gdscript
-func test_pressure_event_enter_creates_first_pressure_encounter_choice_request() -> void:
+func test_pressure_state_builds_initial_choice_request() -> void:
 ```
 
 Given / When / Then：
 
 ```gdscript
-# Given 一个手动构造的 event_id 为 debug_pressure_encounter 的 EventRoom
-# When enter(game_state)
-# Then game_state.current_pressure_encounter 不为空
-# And current_pressure_encounter 是独立 PressureEncounterState
-# And current_choice_request.request_type == "pressure_encounter_choice"
+# Given 一个新建的 PressureEncounterState
+# When initialize("debug_pressure_encounter") 后 build_choice_request()
+# Then request.request_type == "pressure_encounter_choice"
 # And title 包含压力节点信息
+# And options 至少包含 grasp_observed_instability / discard_observed_instability / refresh
 ```
 
 最小实现：
 
 ```text
-PressureEncounterState 可以先只包含 init / build_choice_request / is_completed。
-不要在此步骤实现全部卡牌与结算。
+PressureEncounterState 可以先只包含 initialize / build_choice_request / is_completed。
+不要在此步骤实现全部卡牌、EventRoom 接入或结算。
 ```
 
 歧义自检：
 
 ```text
+是否在步骤 1 就要求 EventRoom 进入测试通过：否，放到步骤 2。
 是否把 PressureEncounterState 放进 scripts/stm/events/：否。
 是否把 focus_points 等字段摊平进 GameState：否。
-是否通过默认地图进入：否，测试手动构造 EventRoom。
+是否通过默认地图进入：否。
 是否有歧义：无。
 ```
 
@@ -120,8 +144,15 @@ PressureEncounterState 可以先只包含 init / build_choice_request / is_compl
 修改文件：
 
 ```text
-scripts/stm/core/game_state.gd
+scripts/stm/engine/game_state.gd
 scripts/stm/rooms/event_room.gd
+scripts/stm/tests/test_pressure_encounter_v1.gd
+```
+
+新增测试：
+
+```gdscript
+func test_pressure_event_enter_creates_first_pressure_encounter_choice_request() -> void:
 ```
 
 改动：
@@ -138,12 +169,14 @@ var current_pressure_encounter = null
 2. 初始化压力遭遇。
 3. 写入 game_state.current_pressure_encounter。
 4. 从状态对象生成 pressure_encounter_choice。
-5. 写入 current_choice_request。
+5. request.context 必须包含 {"room": self, "event_id": "debug_pressure_encounter"}。
+6. 写入 current_choice_request。
 ```
 
 歧义自检：
 
 ```text
+GameState 路径是否为 scripts/stm/core/game_state.gd：否，正确路径是 scripts/stm/engine/game_state.gd。
 是否新增第二套 room / game flow：否。
 是否让 EventRoom 保存完整玩法状态：否。
 是否继续保留 debug_fountain 行为：是。
@@ -167,6 +200,10 @@ scripts/stm/encounters/pressure/pressure_encounter_state.gd
 request_type == "pressure_encounter_choice"
 title 包含：压力遭遇 / 当前节点
 options 至少包含：grasp / discard / refresh
+option_id 稳定格式：
+- grasp_<card_id>
+- discard_<card_id>
+- refresh
 每个 option payload 使用：
 {
   "action": "pressure_action",
@@ -175,7 +212,7 @@ options 至少包含：grasp / discard / refresh
 }
 ```
 
-建议先实现 Node 1 的最小浮现池：
+Node 1 最小浮现池：
 
 ```text
 observed_instability
@@ -189,6 +226,7 @@ basic_procedure
 ```text
 是否使用 pressure_event_choice：否。
 是否使用 encounter_choice：否，v1 暂不过早泛化。
+option_id 是否允许随 UI 文案变化：否，必须稳定可测。
 是否让玩家直接点击最终行动：否。
 是否有歧义：无。
 ```
@@ -215,16 +253,25 @@ scripts/stm/choices/choice_resolver.gd
 ```text
 1. 校验 option payload。
 2. 读取 game_state.current_pressure_encounter。
-3. 调用 current_pressure_encounter.handle_pressure_action(...)
-4. 如果未完成，刷新 current_choice_request。
-5. 如果完成，清理 current_choice_request 与 current_pressure_encounter，并完成当前 room。
+3. 调用 current_pressure_encounter.handle_pressure_action(payload)。
+4. 如果未完成，使用 current_pressure_encounter.build_choice_request() 刷新 current_choice_request。
+5. 如果完成，clear_choice_request()，清理 current_pressure_encounter，并复用 _complete_choice_context_room(game_state, request) 完成 room。
 6. 返回 choice_result。
+```
+
+错误处理建议：
+
+```text
+current_pressure_encounter == null → PRESSURE_ENCOUNTER_NOT_FOUND
+payload 缺 action 或 pressure_action → INVALID_PAYLOAD
+card_id 不存在 → PRESSURE_CARD_NOT_FOUND
 ```
 
 歧义自检：
 
 ```text
 是否在 ChoiceResolver 内维护工作记忆 / 连锁 / 结算：否。
+是否新增 room 引用路径：否，复用 request.context.room 与 _complete_choice_context_room。
 是否绕过 GameState.submit_choice()：否。
 是否让 BattleDebugScene 直接调用 PressureEncounterState：否。
 是否有歧义：无。
@@ -247,37 +294,49 @@ scripts/stm/tests/test_pressure_encounter_v1.gd
 func test_pressure_choice_grasp_card_moves_card_to_working_memory() -> void:
 func test_pressure_choice_refresh_increases_pressure() -> void:
 func test_pressure_choice_discard_releases_working_memory_slot() -> void:
+func test_pressure_grasp_is_blocked_when_working_memory_is_full() -> void:
 ```
 
 状态规则：
 
 ```text
 grasp：
-- focus_points -1
-- 从 emergence_pool 移入 working_memory
-- 应用该卡 grasp effects
-- 记录日志
+- 若 working_memory 已满：不移动卡，并返回 WORKING_MEMORY_FULL，或对应 option disabled。
+- focus_points -1。
+- 从 emergence_pool 移入 working_memory。
+- 应用该卡 grasp effects。
+- 记录日志。
 
 discard：
-- 从 working_memory 或 emergence_pool 移除指定卡
-- 成本 0
-- 释放工作记忆格
-- 记录日志
+- 从 working_memory 或 emergence_pool 移除指定卡。
+- 成本 0。
+- 释放工作记忆格。
+- 记录日志。
 
 refresh：
-- focus_points -1
-- situation_tracks.pressure +1
-- 重新生成 emergence_pool
-- 记录日志
+- focus_points -1。
+- situation_tracks.pressure +1。
+- 不使用 RNG。
+- 使用当前节点候选卡的确定性轮换或重建，确保 emergence_pool 仍有效。
+- 记录日志。
+```
+
+节点推进规则从本步骤开始生效：
+
+```text
+每个 pressure_node 初始 focus_points = 3。
+任何消耗 focus_points 的操作后，如果 focus_points <= 0，则自动进入下一节点。
+如果已完成第 3 节点，或 pressure >= pressure_limit，则进入固定自动结算管线。
 ```
 
 歧义自检：
 
 ```text
-refresh 是否无代价：否，必须压力 +1。
+refresh 是否无代价：否，必须 pressure +1。
+refresh 是否引入随机池：否。
 working_memory 是否只是已选列表：否，必须有容量限制。
+working_memory 满时是否还能 grasp：否。
 discard 是否能释放格子：是。
-是否实现复杂随机池：否，先用静态池 / 固定轮换。
 是否有歧义：无。
 ```
 
@@ -296,26 +355,27 @@ scripts/stm/tests/test_pressure_encounter_v1.gd
 
 ```text
 express：
-- 来源为 working_memory
-- focus_points -1
-- 应用 express effects
-- 将卡加入 used_cards
-- 记录日志
+- 来源为 working_memory。
+- focus_points -1。
+- 应用 express effects。
+- 将卡加入 used_cards。
+- 记录日志。
 
 quiet：
-- 来源为 emotion / 干扰类 working_memory 卡
-- focus_points -1
-- 阻止或移除该卡对 emotion_unquieted 的推进
-- 至少 hands_shaking 的 quiet 产生 steady_response +1 或等价日志价值
-- 加入 quieted_cards
-- 记录 insight log
+- 来源为 emotion / 干扰类 working_memory 卡。
+- focus_points -1。
+- 阻止或移除该卡对 emotion_unquieted 的推进。
+- 至少 hands_shaking 的 quiet 产生 steady_response +1 或等价日志价值。
+- 加入 quieted_cards。
+- 记录 insight log。
 
 keep：
-- 来源为 working_memory
-- focus_points -1
-- 加入 kept_cards
-- 下个 pressure_node 保留
-- 记录日志
+- 来源为 working_memory。
+- focus_points -1。
+- 加入 kept_cards。
+- 下一 pressure_node 开始时继续放在 working_memory，并继续占用工作记忆格。
+- 不实现完整冻结 UI。
+- 记录日志。
 ```
 
 新增测试：
@@ -323,6 +383,7 @@ keep：
 ```gdscript
 func test_pressure_quiet_prevents_panic_spiral_progress() -> void:
 func test_pressure_quiet_emotion_can_create_insight_value() -> void:
+func test_pressure_keep_carries_card_to_next_node() -> void:
 ```
 
 歧义自检：
@@ -330,6 +391,7 @@ func test_pressure_quiet_emotion_can_create_insight_value() -> void:
 ```text
 quiet 是否只是删除 debuff：否，必须体现真实信息价值。
 keep 是否需要完整冻结 UI：否，v1 只需要状态保留。
+keep 是否释放工作记忆格：否，下一节点继续占格。
 是否新增情绪洞察轨：否。
 是否有歧义：无。
 ```
@@ -398,17 +460,19 @@ func test_pressure_unquieted_emotion_triggers_panic_spiral() -> void:
 
 ```text
 observation_window：
-- chain_counts.observation >= 2 时触发
-- triggered_cores 添加 observation_window
-- forceful_response +1
-- 记录日志
+- chain_counts.observation >= 2 时触发。
+- triggered_cores 添加 observation_window。
+- forceful_response +1。
+- 记录日志。
 
 panic_spiral：
-- chain_counts.emotion_unquieted >= 2 时触发
-- triggered_cores 添加 panic_spiral
-- freeze_response +1
-- 记录日志
+- chain_counts.emotion_unquieted >= 2 时触发。
+- triggered_cores 添加 panic_spiral。
+- freeze_response +1。
+- 记录日志。
 ```
+
+测试允许直接设置 chain_counts 以验证核心触发；不要求先通过完整 3 节点流程凑齐标签。
 
 注意：
 
@@ -423,6 +487,7 @@ quiet 后的 emotion 卡不应继续推进 emotion_unquieted。
 是否只做正向核心：否，必须有污染核心。
 是否做第三个 trust_anchor：否。
 是否让 panic_spiral 无法处理：否，quiet 必须能影响它。
+测试是否必须先跑完 3 节点才能测核心：否，可直接设置 chain_counts。
 是否有歧义：无。
 ```
 
@@ -518,12 +583,19 @@ result_forceful
 result_freeze
 ```
 
+完成条件：
+
+```text
+node_index 已完成 3 个节点，或 pressure >= pressure_limit。
+```
+
 歧义自检：
 
 ```text
 是否只输出一行最终结果：否。
 是否允许玩家直接选择最终结果：否。
 是否实现自由战斗式结算：否。
+完成条件是否依赖默认地图：否。
 是否有歧义：无。
 ```
 
@@ -542,7 +614,7 @@ scripts/stm/encounters/pressure/pressure_encounter_state.gd
 
 ```text
 不破坏既有 choice_result 的 ok / code / message / request_type / selected_option_id 语义。
-可额外附加 detail 或 state_summary，供 BattleDebugScene 日志面板显示。
+可额外附加 detail 和 state_summary，供 BattleDebugScene 日志面板显示。
 ```
 
 建议字段：
@@ -554,10 +626,18 @@ scripts/stm/encounters/pressure/pressure_encounter_state.gd
 }
 ```
 
+实现方式：
+
+```text
+先用现有 _choice_result(...) 生成基础 Dictionary，再按需追加 detail / state_summary key。
+不要修改 _choice_result 的既有必填字段含义。
+```
+
 歧义自检：
 
 ```text
 是否破坏既有测试对 choice_result 的断言：否。
+是否必须二选一只做 detail 或 state_summary：否，二者都可追加为空字符串或有效字符串。
 是否把 UI 逻辑写进 PressureEncounterState：否。
 是否有歧义：无。
 ```
@@ -575,7 +655,7 @@ scripts/stm/tests/test_battle_debug_pressure_encounter_v1.gd
 可选修改文件：
 
 ```text
-scripts/stm/scenes/battle_debug_scene.gd
+scripts/stm/debug/battle_debug_scene.gd
 ```
 
 测试目标：
@@ -590,6 +670,7 @@ BattleDebugScene 不直接修改 PressureEncounterState。
 歧义自检：
 
 ```text
+BattleDebugScene 脚本路径是否是 scripts/stm/scenes/battle_debug_scene.gd：否，正确路径是 scripts/stm/debug/battle_debug_scene.gd。
 是否新增独立 DebugScene：否。
 是否让 BattleDebugScene 解析并修改 payload：否。
 是否需要正式 UI 重做：否。
