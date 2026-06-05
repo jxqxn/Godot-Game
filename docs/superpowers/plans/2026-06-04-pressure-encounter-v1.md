@@ -62,8 +62,8 @@ docs/superpowers/specs/2026-06-04-pressure-encounter-v1-design.md
 4. pressure_encounter_choice 必须带 context.room，完成时复用 ChoiceResolver 现有 _complete_choice_context_room(game_state, request) 路径。
 5. ChoiceResolver 只桥接，不维护 working_memory / chain_counts / final_result。
 6. option_id 必须稳定可测：grasp_<card_id> / express_<card_id> / quiet_<card_id> / keep_<card_id> / discard_<card_id> / refresh。
-7. refresh 不使用随机池；v1 使用当前节点候选卡的确定性轮换或重建，测试只依赖“focus -1、pressure +1、emergence_pool 有效”。
-8. 工作记忆满格时，grasp 选项应 disabled，或 handle_pressure_action 返回 WORKING_MEMORY_FULL；二者择一后测试固定。
+7. refresh 不使用 RNG，不新增随机池；v1 固定重建当前节点基础候选池，并过滤掉仍在 working_memory 中的卡。
+8. 工作记忆满格时，grasp 对应 ChoiceOption 必须 disabled；如果仍被强制调用 handle_pressure_action，则返回 WORKING_MEMORY_FULL 且不改变状态。
 9. 节点推进规则固定：每个 pressure_node 初始 focus_points = 3；每次消耗专注点后若 focus_points <= 0，则自动进入下一节点；若已完成第 3 节点或 pressure >= pressure_limit，则进入固定自动结算管线。
 10. keep 的效果只是在下一节点开始时继续占用 working_memory；v1 不实现完整冻结 UI。
 11. quiet 对 emotion_unquieted 的处理必须可测：quiet 后该卡不再推进 panic_spiral，并至少 hands_shaking 能产生 steady_response +1 或等价日志价值。
@@ -294,15 +294,17 @@ scripts/stm/tests/test_pressure_encounter_v1.gd
 func test_pressure_choice_grasp_card_moves_card_to_working_memory() -> void:
 func test_pressure_choice_refresh_increases_pressure() -> void:
 func test_pressure_choice_discard_releases_working_memory_slot() -> void:
-func test_pressure_grasp_is_blocked_when_working_memory_is_full() -> void:
+func test_pressure_grasp_option_is_disabled_when_working_memory_is_full() -> void:
+func test_pressure_forced_grasp_returns_working_memory_full_when_full() -> void:
 ```
 
 状态规则：
 
 ```text
 grasp：
-- 若 working_memory 已满：不移动卡，并返回 WORKING_MEMORY_FULL，或对应 option disabled。
-- focus_points -1。
+- 若 working_memory 已满：build_choice_request() 中该卡的 grasp option 必须 disabled。
+- 若 working_memory 已满且 handle_pressure_action 仍被强制调用：返回 WORKING_MEMORY_FULL，不消耗 focus，不移动卡，不应用 effects。
+- 正常情况下 focus_points -1。
 - 从 emergence_pool 移入 working_memory。
 - 应用该卡 grasp effects。
 - 记录日志。
@@ -317,8 +319,8 @@ refresh：
 - focus_points -1。
 - situation_tracks.pressure +1。
 - 不使用 RNG。
-- 使用当前节点候选卡的确定性轮换或重建，确保 emergence_pool 仍有效。
-- 记录日志。
+- 固定重建当前节点基础候选池，并过滤掉仍在 working_memory 中的卡。
+- 如果过滤后为空，emergence_pool 可为空，但必须记录日志且不报错。
 ```
 
 节点推进规则从本步骤开始生效：
@@ -335,7 +337,7 @@ refresh：
 refresh 是否无代价：否，必须 pressure +1。
 refresh 是否引入随机池：否。
 working_memory 是否只是已选列表：否，必须有容量限制。
-working_memory 满时是否还能 grasp：否。
+working_memory 满时是否还能 grasp：否，UI disabled，强制调用也返回 WORKING_MEMORY_FULL。
 discard 是否能释放格子：是。
 是否有歧义：无。
 ```
