@@ -157,8 +157,8 @@ GUT
 1. StmEventRoom 只负责识别 debug_pressure_encounter、创建并启动 PressureEncounterState。
 2. PressureEncounterState 维护 focus_points / working_memory / tracks / chain_counts / resolution_log 等玩法状态。
 3. StmGameState 只保存 current_pressure_encounter 引用，不摊平保存 Pressure Encounter 的内部字段。
-4. StmChoiceResolver 负责解析 pressure_event_choice，并把 pressure_action 转发给 current_pressure_encounter。
-5. BattleDebugScene 只显示状态、按钮和日志，只提交 option_id，不直接修改压力事件状态。
+4. StmChoiceResolver 负责解析 pressure_encounter_choice，并把 pressure_action 转发给 current_pressure_encounter。
+5. BattleDebugScene 只显示状态、按钮和日志，只提交 option_id，不直接修改压力遭遇状态。
 6. GameFlow 仍只负责进入房间、完成房间、推进地图节点。
 ```
 
@@ -202,7 +202,7 @@ scripts/stm/tests/test_pressure_encounter_v1.gd
 首个测试方法名建议：
 
 ```gdscript
-func test_pressure_event_enter_creates_first_pressure_choice_request() -> void:
+func test_pressure_event_enter_creates_first_pressure_encounter_choice_request() -> void:
 ```
 
 Given / When / Then 行为注释：
@@ -211,9 +211,9 @@ Given / When / Then 行为注释：
 # Given 一个 room_payload.event_id 为 debug_pressure_encounter 的 EventRoom
 # When 房间 enter(game_state)
 # Then game_state.current_pressure_encounter 不为空
-# And game_state.current_choice_request 应为 pressure_event_choice
+# And game_state.current_choice_request 应为 pressure_encounter_choice
 # And 选择标题应显示第一个压力节点
-# And 选项中至少包含抓住 / 放弃 / 重新浮现等压力事件操作
+# And 选项中至少包含抓住 / 放弃 / 重新浮现等压力遭遇操作
 ```
 
 第一条预期失败：
@@ -379,7 +379,7 @@ EventRoom
 = v1 暂时启动 debug_pressure_encounter 的入口。
 
 ChoiceResolver
-= 把 pressure_event_choice 的 pressure_action 转发给 current_pressure_encounter。
+= 把 pressure_encounter_choice 的 pressure_action 转发给 current_pressure_encounter。
 
 BattleDebugScene
 = 只显示 ChoiceRequest 和日志。
@@ -389,7 +389,7 @@ BattleDebugScene
 
 ```text
 PressureEncounterState 不应依赖清泉事件等具体 EventRoom 语义。
-pressure_event_choice 的 payload 不应写死普通事件选项语义。
+pressure_encounter_choice 的 payload 不应写死普通事件选项语义。
 resolution_log 不应只服务于事件房 UI。
 ```
 
@@ -517,7 +517,7 @@ EventRoom 创建 PressureEncounterState
 ↓
 GameState.current_pressure_encounter 指向该状态
 ↓
-PressureEncounterState 生成第一个 pressure_event_choice
+PressureEncounterState 生成第一个 pressure_encounter_choice
 ↓
 进入压力节点 1
 ↓
@@ -606,7 +606,7 @@ var final_result: Dictionary = {}
 
 ```text
 1. 初始化压力遭遇。
-2. 生成当前 pressure_event_choice 所需的标题、选项和 detail。
+2. 生成当前 pressure_encounter_choice 所需的标题、选项和 detail。
 3. 处理 pressure_action。
 4. 维护工作记忆、专注点、行动倾向轨、局势轨、连锁与日志。
 5. 判断是否进入临界结算。
@@ -997,18 +997,19 @@ MVP 不需要实现复杂分支树，只需要在 `final_result` 与 `resolution
 建议新增：
 
 ```text
-pressure_event_choice
+pressure_encounter_choice
 ```
 
 原因：
 
 ```text
-1. 与现有 event_choice 区分，避免把结构化压力规则塞进普通清泉事件。
-2. 仍复用 StmGameState.submit_choice() 与 StmChoiceResolver。
-3. 不新增第二套 ChoiceRequest，只是新增一种 request_type。
+1. 不把该玩法锁死为 EventRoom 的特殊事件选择。
+2. 与 PressureEncounterState / current_pressure_encounter 命名一致。
+3. 仍复用 StmGameState.submit_choice() 与 StmChoiceResolver。
+4. 不新增第二套 ChoiceRequest，只是新增一种 request_type。
 ```
 
-长期看，`pressure_event_choice` 可能会被更通用的 `pressure_encounter_choice` 或 `encounter_choice` 取代；v1 使用该命名是为了降低和现有事件系统的冲突。
+暂不使用更泛化的 `encounter_choice`，避免过早占用未来所有遭遇类型的总接口名。
 
 ### 11.2 ChoiceOption payload
 
@@ -1036,11 +1037,11 @@ pressure_event_choice
 `StmChoiceResolver` 新增分支：
 
 ```gdscript
-"pressure_event_choice":
-    return _resolve_pressure_event_choice(game_state, request, option)
+"pressure_encounter_choice":
+    return _resolve_pressure_encounter_choice(game_state, request, option)
 ```
 
-`_resolve_pressure_event_choice()` 应只做：
+`_resolve_pressure_encounter_choice()` 应只做：
 
 ```text
 1. 校验 payload。
@@ -1071,7 +1072,7 @@ debug_pressure_encounter
 1. 创建 PressureEncounterState。
 2. 调用其初始化逻辑。
 3. 写入 game_state.current_pressure_encounter。
-4. 从 PressureEncounterState 获取第一个 pressure_event_choice。
+4. 从 PressureEncounterState 获取第一个 pressure_encounter_choice。
 5. 交给 GameState 保存为 current_choice_request。
 ```
 
@@ -1165,23 +1166,23 @@ MVP 可以复用现有 choice panel，不新增复杂 UI。
 
 ```text
 scripts/stm/tests/test_pressure_encounter_v1.gd
-scripts/stm/tests/test_choice_resolver_pressure_event_v1.gd
-scripts/stm/tests/test_battle_debug_pressure_event_v1.gd
+scripts/stm/tests/test_choice_resolver_pressure_encounter_v1.gd
+scripts/stm/tests/test_battle_debug_pressure_encounter_v1.gd
 ```
 
 若范围过大，MVP 第一阶段只新增前两个。
 
 ### 14.2 必测行为
 
-#### 测试 1：EventRoom 可创建压力事件选择并挂载独立状态
+#### 测试 1：EventRoom 可创建压力遭遇选择并挂载独立状态
 
 ```gdscript
-func test_pressure_event_enter_creates_first_pressure_choice_request() -> void:
+func test_pressure_event_enter_creates_first_pressure_encounter_choice_request() -> void:
     # Given 一个 event_id 为 debug_pressure_encounter 的 EventRoom
     # When enter(game_state)
     # Then game_state.current_pressure_encounter 不为空
     # And current_pressure_encounter 是独立 PressureEncounterState
-    # And current_choice_request.request_type == "pressure_event_choice"
+    # And current_choice_request.request_type == "pressure_encounter_choice"
     # And title 包含压力节点信息
 ```
 
@@ -1380,7 +1381,7 @@ B. 后续计划阶段再决定是否把 debug_pressure_encounter 接入默认固
 ```text
 1. 完整 GUT 通过。
 2. debug_pressure_encounter 可创建 PressureEncounterState，并挂到 game_state.current_pressure_encounter。
-3. debug_pressure_encounter 可创建 pressure_event_choice。
+3. debug_pressure_encounter 可创建 pressure_encounter_choice。
 4. 玩家可以通过 submit_choice 执行 grasp / express / quiet / discard / refresh 中的最小子集。
 5. ChoiceResolver 将 pressure_action 转发给 current_pressure_encounter，而不是自己维护玩法规则。
 6. focus_points、working_memory、action_tendency_tracks、situation_tracks 会按规则变化。
@@ -1390,7 +1391,7 @@ B. 后续计划阶段再决定是否把 debug_pressure_encounter 接入默认固
 10. 最终结果由最高 action_tendency_track 自动生成，而不是玩家直接点击最终结果。
 11. 结果日志能解释为什么生成该结果，并解释候选池、工作记忆、连锁和局势的作用。
 12. EventRoom 完成后 GameFlow 可继续推进，并清理 current_pressure_encounter。
-13. BattleDebugScene 不直接维护压力事件规则。
+13. BattleDebugScene 不直接维护压力遭遇规则。
 14. 不引入 AGENTS.md 禁止的旧原型体系或平行系统。
 15. 规格表达必须承认：Pressure Encounter 是未来统一框架种子，而不是普通事件旁支。
 ```
@@ -1431,17 +1432,29 @@ B. 后续计划阶段再决定是否把 debug_pressure_encounter 接入默认固
 
 以下问题用于规格审查和头脑风暴，帮助发现项目方向偏差。
 
-### 20.1 关于项目方向
+重要原则：后续每一个问题都必须基于**最新已确认的最小规格状态**提出。已经确认并写入规格的结论，不应继续作为开放问题反复追问；若新结论使旧问题失效，应及时删除或改写旧问题。
+
+### 20.1 当前已确认的最小状态
+
+```text
+1. Pressure Encounter 长期目标是统一承载整个游戏，而不是普通事件旁支。
+2. v1 仍通过 EventRoom 启动，因为它是当前最安全入口。
+3. PressureEncounterState 是独立遭遇运行状态，不属于 EventRoom 字段集合。
+4. GameState 保存 current_pressure_encounter 引用，但不摊平保存内部玩法字段。
+5. request_type 使用 pressure_encounter_choice，不使用 pressure_event_choice，也暂不使用 encounter_choice。
+6. ChoiceResolver 只桥接并转发 pressure_action，不维护具体玩法规则。
+7. v1 不进入 Combat，不替换所有房间类型，不做完整后期经济引擎。
+```
+
+### 20.2 关于项目方向
 
 ```text
 1. 这个切片是否仍然服务于“先稳定中期循环”的目标，而不是过早进入完整叙事系统？
-2. Pressure Encounter v1 是否应该继续先作为 EventRoom 原型承载，而不是直接进入 Combat？
-3. 如果长期目标是替代普通事件并最终容纳整个游戏，v1 应该保留哪些抽象边界，避免被写死成普通事件？
-4. 这套结构是否能迁移到原创题材，而不是依赖参考案例的枪战语境？
-5. 未来统一框架是否还需要保留 Combat / Rest / Event / Boss 这些房间类型作为外壳，还是最终只保留不同 pressure encounter 模板？
+2. 这套结构是否能迁移到原创题材，而不是依赖参考案例的枪战语境？
+3. 未来统一框架是否还需要保留 Combat / Rest / Event / Boss 这些房间类型作为外壳，还是最终只保留不同 pressure encounter 模板？
 ```
 
-### 20.2 关于玩家体验
+### 20.3 关于玩家体验
 
 ```text
 1. 玩家是否能明确感到：自己不是在选事件选项，而是在进行候选池搜索、工作记忆占格、专注点经济、候选卡连锁、行动倾向成型与自动结算回放？
@@ -1453,18 +1466,17 @@ B. 后续计划阶段再决定是否把 debug_pressure_encounter 接入默认固
 7. 同标签累计和 core_trigger 是否足够让玩家感到“构筑成型”，还是会显得过于抽象？
 ```
 
-### 20.3 关于实现边界
+### 20.4 关于实现边界
 
 ```text
 1. PressureEncounterState 放在 scripts/stm/encounters/pressure/ 是否合适，还是应该先放在 scripts/stm/encounters/？
 2. GameState 新增 current_pressure_encounter 是否足够，还是应直接抽象 current_encounter？
-3. 是否新增 request_type = pressure_event_choice，还是直接命名为 pressure_encounter_choice？
-4. BattleDebugScene 目前 choice panel 是否足够显示该玩法，还是需要先增强 ChoiceOption.detail？
-5. 是否需要为 choice_result 增加 detail / state_summary 字段？这会不会影响现有测试？
-6. 是否先不接入默认地图，只用 GUT 和手动构造验证？
+3. BattleDebugScene 目前 choice panel 是否足够显示该玩法，还是需要先增强 ChoiceOption.detail？
+4. 是否需要为 choice_result 增加 detail / state_summary 字段？这会不会影响现有测试？
+5. 是否先不接入默认地图，只用 GUT 和手动构造验证？
 ```
 
-### 20.4 关于 MVP 范围
+### 20.5 关于 MVP 范围
 
 ```text
 1. 3 个压力节点是否已经足够验证循环？
@@ -1475,13 +1487,13 @@ B. 后续计划阶段再决定是否把 debug_pressure_encounter 接入默认固
 6. v1 是否只需要 1 个 core_trigger，还是应至少包含一个正向核心和一个污染核心？
 ```
 
-### 20.5 关于长期风险
+### 20.6 关于长期风险
 
 ```text
 1. 这个机制是否会变成复杂对话 UI，而不是自走棋式构筑体验？
 2. 如果玩家觉得“没刷到关键卡所以输了”，如何通过前期 flag 与日志纠正这种感受？
 3. 如果后续加入更多节点，如何避免每个事件都要手写大量特殊逻辑？
-4. 什么时候才值得引入 PressureEventFactory / PressureEncounterFactory？当前阶段是否明确不需要？
+4. 什么时候才值得引入 PressureEncounterFactory？当前阶段是否明确不需要？
 5. 当前术语是否足够避开旧原型禁区，同时又能承接真正想验证的机制？
 6. 如果后续要表现后期经济流派的高密度操作感，哪些内容必须留到 v2，而不是塞进 v1？
 7. 如果长期统一所有玩法，如何避免过早抽象导致性能、可维护性和测试复杂度失控？
@@ -1497,7 +1509,7 @@ B. 后续计划阶段再决定是否把 debug_pressure_encounter 接入默认固
 1. 新增最小 PressureEncounterState。
 2. 新增 GameState.current_pressure_encounter 引用。
 3. 新增 debug_pressure_encounter EventRoom 启动分支。
-4. 新增 pressure_event_choice 解析，并转发给 current_pressure_encounter。
+4. 新增 pressure_encounter_choice 解析，并转发给 current_pressure_encounter。
 5. 新增 3 个压力节点与 8-12 张静态候选卡。
 6. 新增工作记忆占格与 discard 释放格子。
 7. 新增 refresh 压力代价。
