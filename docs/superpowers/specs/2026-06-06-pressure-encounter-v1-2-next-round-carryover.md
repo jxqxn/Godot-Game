@@ -220,6 +220,39 @@ Python 项目中，Anger 这类具体卡牌是注册到统一 card registry 的 
 但 v1.2 仍需要兼容 v1.1 调试数据，避免一次性破坏旧节点。
 ```
 
+### 3.7 缺失 candidate_id 处理
+
+已确认：v1.2 对缺失 `candidate_id` 采用“运行时安全降级 + 开发期严格暴露”的策略。
+
+```text
+运行时 / 调试场景：
+- 缺失 candidate_id 不应导致整个遭遇崩溃。
+- 跳过该候选。
+- 写入 resolution_log。
+- 记录到 missing_candidate_ids。
+
+开发期 / 测试：
+- 所有 stock_ids 必须能在 candidate_definitions 中找到。
+- 所有 stock_add_ids 必须能在 candidate_definitions 中找到。
+- missing_candidate_ids 必须为空。
+- 如果不为空，GUT 应失败。
+```
+
+参考 Python 项目：
+
+```text
+registry.get_registered(...) 找不到时返回 None。
+registry.get_registered_instance(...) 找不到时也返回 None。
+底层查找不直接炸掉；调用方决定如何处理缺失。
+```
+
+玩家体验理由：
+
+```text
+玩家不应该因为一个数据 id 写错，整个压力遭遇卡死。
+但开发者必须立刻知道是哪一个 id 没有定义。
+```
+
 ---
 
 ## 4. v1.2 非目标
@@ -244,6 +277,7 @@ candidate_family 出现倾向实现
 事件内联完整 candidate 数据
 节点内联完整 candidate 数据作为新结构
 单独 carryover_candidate_definitions
+缺失 candidate_id 时硬崩溃
 ```
 
 v1.2 只验证：
@@ -439,6 +473,41 @@ v1.2 第一批实际使用字段：
 9. 记录 source_event_ids，供调试、解释与测试使用。
 ```
 
+### 6.4 缺失候选解析结果
+
+建议解析函数返回结构化结果，而不是只返回候选字典。
+
+```gdscript
+{
+  "ok": true,
+  "candidate": {
+    "id": "true_shooter_seen",
+    "name": "真正先开火的人",
+    "detail": "你没能阻止枪声，但你看清了第一个扣下扳机的人。",
+    "chain_tag": "evidence"
+  }
+}
+```
+
+缺失时：
+
+```gdscript
+{
+  "ok": false,
+  "candidate": {},
+  "missing_id": "true_shooter_seen"
+}
+```
+
+缺失时必须：
+
+```text
+写入 resolution_log：MISSING_CANDIDATE_DEFINITION:<id>
+写入 missing_candidate_ids。
+跳过该候选。
+不中断整个 encounter。
+```
+
 v1.2 预留但不应用字段：
 
 ```gdscript
@@ -463,6 +532,9 @@ v1.2 预留但不应用字段：
 旧 cards 只作为兼容输入，不作为新数据结构。
 候选定义表负责定义候选内容。
 stock / candidate_piles 负责位置流动。
+缺失 candidate_id 运行时不崩溃，但必须记录。
+GUT 必须覆盖 missing_candidate_ids 为空的正常路径。
+GUT 必须覆盖缺失 id 时会记录 MISSING_CANDIDATE_DEFINITION。
 ```
 
 ---
@@ -509,19 +581,22 @@ v1.2 的目标不是让枪战变成长期数值养成，而是让压力释放后
 下一个需要确认的问题：
 
 ```text
-v1.2 解析 stock_ids / stock_add_ids 时，如果某个 candidate_id 在 candidate_definitions 中找不到，系统应该怎么处理？
+v1.2 的 carryover_delta 应该什么时候应用？
 ```
 
-建议倾向：开发期强提示，运行期安全降级。
+候选方案：
 
 ```text
-开发期 / 测试：记录明确错误，并让对应测试失败。
-运行期 / 调试场景：跳过缺失候选，不崩溃，但写入 resolution_log。
+方案 A：自动执行结束时立刻修改下一 pressure_node 数据。
+方案 B：自动执行结束时只记录 pending_carryover；进入下一 pressure_node 初始化时再应用。
 ```
 
-玩家体验理由：
+建议倾向：方案 B。
+
+理由：
 
 ```text
-玩家不应该因为一个缺失候选 id 卡死遭遇。
-但开发者必须立刻知道是哪一个 id 没有定义，避免隐藏数据问题。
+自动执行阶段只负责产出结果。
+下一节点初始化阶段负责读取 pending_carryover 并生成下一轮 stock / situation_tracks。
+这更符合 Python 项目中 action 产出意图、管理器处理位置流动的分层，也避免提前污染尚未进入的节点。
 ```
