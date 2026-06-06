@@ -157,9 +157,9 @@ godot -s addons/gut/gut_cmdln.gd
 
 ```text
 Scripts: 31
-Tests: 234
-Passing Tests: 234
-Asserts: 1179
+Tests: 235
+Passing Tests: 235
+Asserts: 1182
 ```
 
 每次合并前必须重新运行完整 GUT。

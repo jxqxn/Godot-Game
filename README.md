@@ -118,9 +118,9 @@ test_battle_debug_pressure_encounter_v1.gd
 
 ```text
 Scripts: 31
-Tests: 234
-Passing Tests: 234
-Asserts: 1179
+Tests: 235
+Passing Tests: 235
+Asserts: 1182
 ```
 
 本次完整 GUT 以 `All tests passed` 和退出码 0 结束，未再出现 ObjectDB / resources still in use 警告。

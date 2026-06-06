@@ -83,6 +83,20 @@ func test_pressure_v1_1_auto_execution_generates_action_rate_events_and_summarie
 	assert_false(_object_dictionary(pressure_state, "value_summary").is_empty())
 
 
+func test_pressure_v1_1_dominant_action_tie_keeps_v1_priority() -> void:
+	# Given：三条行动倾向数值相同。
+	var pressure_state = _create_pressure_state()
+	pressure_state.action_tendency_tracks["steady_response"] = 2
+	pressure_state.action_tendency_tracks["forceful_response"] = 2
+	pressure_state.action_tendency_tracks["freeze_response"] = 2
+	# When：进入自动执行。
+	pressure_state.resolve_auto_resolution()
+	# Then：dominant_action 继续沿用 v1 的 freeze > forceful > steady 平局优先级。
+	assert_eq(pressure_state.final_result.get("dominant_action"), "freeze_response")
+	assert_eq(pressure_state.final_result.get("dominant_tendency"), "freeze_response")
+	assert_eq(pressure_state.final_result.get("id"), "result_freeze")
+
+
 func test_pressure_v1_1_outcome_rate_uses_pressure_and_ally_trust_and_clamps() -> void:
 	# Given：两个 dominant_action 相同但局势压力不同的压力遭遇。
 	var supported_state = _create_pressure_state()
