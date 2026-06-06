@@ -7,6 +7,7 @@ var current_act: int = 1
 var floor_in_act: int = 1
 var player = null
 var current_combat = null
+var current_pressure_encounter = null
 var current_choice_request = null
 var action_queue = null
 var _pending_actions: Array = []

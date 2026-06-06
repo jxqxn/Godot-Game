@@ -729,7 +729,14 @@ func _on_choice_option_pressed(option_id: String) -> void:
 
 
 func _choice_result_log_text(result: Dictionary) -> String:
-	return str(result.get("message", "选择已处理"))
+	var parts: Array[String] = [str(result.get("message", "选择已处理"))]
+	var detail := str(result.get("detail", ""))
+	if not detail.is_empty():
+		parts.append(detail)
+	var state_summary := str(result.get("state_summary", ""))
+	if not state_summary.is_empty():
+		parts.append(state_summary)
+	return "；".join(parts)
 
 
 func _auto_play_preview_text(preview: Dictionary) -> String:

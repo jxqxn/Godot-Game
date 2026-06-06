@@ -15,6 +15,8 @@ func resolve(game_state, request, option) -> Dictionary:
 			return _resolve_rest_choice(game_state, request, option)
 		"event_choice":
 			return _resolve_event_choice(game_state, request, option)
+		"pressure_encounter_choice":
+			return _resolve_pressure_encounter_choice(game_state, request, option)
 		_:
 			return _choice_result(false, "UNSUPPORTED_REQUEST_TYPE", "暂不支持该选择类型", request_type, str(option.get("id")))
 
@@ -113,6 +115,48 @@ func _resolve_event_choice(game_state, request, option) -> Dictionary:
 			return _choice_result(true, "EVENT_LEFT", "离开清泉", request_type, option_id)
 		_:
 			return _choice_result(false, "INVALID_PAYLOAD", "事件选项无效", request_type, option_id)
+
+
+func _resolve_pressure_encounter_choice(game_state, request, option) -> Dictionary:
+	var request_type: String = str(request.get("request_type"))
+	var option_id: String = str(option.get("id"))
+	var payload_variant = option.get("payload")
+	if not payload_variant is Dictionary:
+		return _choice_result(false, "INVALID_PAYLOAD", "压力遭遇选项无效", request_type, option_id)
+	var payload: Dictionary = payload_variant
+	if str(payload.get("action", "")) != "pressure_action" or str(payload.get("pressure_action", "")).is_empty():
+		return _choice_result(false, "INVALID_PAYLOAD", "压力遭遇选项无效", request_type, option_id)
+	if game_state == null or game_state.current_pressure_encounter == null:
+		return _choice_result(false, "PRESSURE_ENCOUNTER_NOT_FOUND", "当前没有压力遭遇", request_type, option_id)
+	var pressure_encounter = game_state.current_pressure_encounter
+	if not pressure_encounter.has_method("handle_pressure_action"):
+		return _choice_result(false, "INVALID_PAYLOAD", "压力遭遇状态无效", request_type, option_id)
+	var pressure_result: Dictionary = pressure_encounter.handle_pressure_action(payload)
+	var result := _choice_result(
+		bool(pressure_result.get("ok", false)),
+		str(pressure_result.get("code", "PRESSURE_ACTION_HANDLED")),
+		str(pressure_result.get("message", "压力行动已处理")),
+		request_type,
+		option_id
+	)
+	_append_pressure_result_details(result, pressure_result)
+	if not bool(result.get("ok", false)):
+		return result
+	if pressure_encounter.has_method("is_completed") and pressure_encounter.is_completed():
+		game_state.clear_choice_request()
+		game_state.current_pressure_encounter = null
+		_complete_choice_context_room(game_state, request)
+		return result
+	var context: Dictionary = request.get("context") if request.get("context") is Dictionary else {}
+	game_state.set_choice_request(pressure_encounter.build_choice_request(context))
+	return result
+
+
+func _append_pressure_result_details(result: Dictionary, pressure_result: Dictionary) -> void:
+	if pressure_result.has("detail"):
+		result["detail"] = str(pressure_result.get("detail", ""))
+	if pressure_result.has("state_summary"):
+		result["state_summary"] = str(pressure_result.get("state_summary", ""))
 
 
 func _record_rest_result(request, before_hp: int, after_hp: int) -> void:
