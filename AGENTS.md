@@ -27,6 +27,8 @@ rest_choice 休息房选择
 Core Runtime Architecture Spine v1
 STS2 EventRoom v1
 STS2 Fixed Map Event Node v1
+Pressure Encounter v1
+Pressure Encounter v1.1
 ```
 
 当前默认固定地图已经包含一个事件分支：
@@ -50,6 +52,7 @@ StmGameFlow           管理进入房间、推进节点、Boss 通关判断
 StmRoomFactory        根据 MapNode 创建房间
 StmEncounterFactory   根据 encounter_id 创建战斗遭遇
 BattleDebugScene      显示状态并提交玩家操作，不直接维护规则
+StmPressureEncounterState 维护压力遭遇候选库存、工作记忆、自动执行与结果日志
 ```
 
 EventRoom 与默认地图事件节点已按以下方向接入并通过完整 GUT：
@@ -150,13 +153,13 @@ docs/superpowers/templates/status-template.md
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-当前基线（2026-06-04）：
+当前基线（2026-06-06）：
 
 ```text
-Scripts: 28
-Tests: 202
-Passing Tests: 202
-Asserts: 998
+Scripts: 31
+Tests: 235
+Passing Tests: 235
+Asserts: 1182
 ```
 
 每次合并前必须重新运行完整 GUT。

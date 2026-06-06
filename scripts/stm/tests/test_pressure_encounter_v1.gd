@@ -26,7 +26,7 @@ func test_pressure_state_builds_initial_choice_request() -> void:
 	assert_eq(request.request_type, "pressure_encounter_choice")
 	assert_true(str(request.title).contains("压力节点"))
 	assert_not_null(request.get_option("grasp_observed_instability"))
-	assert_not_null(request.get_option("discard_observed_instability"))
+	assert_null(request.get_option("discard_observed_instability"))
 	assert_not_null(request.get_option("refresh"))
 
 
@@ -47,7 +47,7 @@ func test_pressure_event_enter_creates_first_pressure_encounter_choice_request()
 	assert_eq(request.context.get("event_id"), "debug_pressure_encounter")
 	assert_true(str(request.title).contains("压力节点"))
 	assert_not_null(request.get_option("grasp_observed_instability"))
-	assert_not_null(request.get_option("discard_observed_instability"))
+	assert_null(request.get_option("discard_observed_instability"))
 	assert_not_null(request.get_option("refresh"))
 
 
@@ -65,10 +65,7 @@ func test_pressure_choice_request_uses_stable_node_one_pool_and_payloads() -> vo
 	assert_eq(grasp.payload.get("action"), "pressure_action")
 	assert_eq(grasp.payload.get("pressure_action"), "grasp")
 	assert_eq(grasp.payload.get("card_id"), "observed_instability")
-	var discard = request.get_option("discard_observed_instability")
-	assert_eq(discard.payload.get("action"), "pressure_action")
-	assert_eq(discard.payload.get("pressure_action"), "discard")
-	assert_eq(discard.payload.get("card_id"), "observed_instability")
+	assert_null(request.get_option("discard_observed_instability"))
 	var refresh = request.get_option("refresh")
 	assert_eq(refresh.payload.get("action"), "pressure_action")
 	assert_eq(refresh.payload.get("pressure_action"), "refresh")
@@ -99,21 +96,19 @@ func test_pressure_choice_grasp_card_moves_card_to_working_memory() -> void:
 	# Given：首节点浮现池中有 observed_instability。
 	var pressure_state = _create_pressure_state()
 	var before_focus: int = pressure_state.focus_points
-	var before_observation: int = int(pressure_state.chain_counts.get("observation", 0))
-	var before_forceful: int = int(pressure_state.action_tendency_tracks.get("forceful_response", 0))
 	# When：处理 grasp_observed_instability。
 	var result: Dictionary = pressure_state.handle_pressure_action({
 		"pressure_action": "grasp",
 		"card_id": "observed_instability",
 	})
-	# Then：该卡进入工作记忆，离开浮现池，消耗 1 点专注，并立刻形成观察压力。
+	# Then：该卡进入工作记忆，离开浮现池，消耗 1 点专注；普通观察卡 grasp 时不立刻触发强数值。
 	assert_true(bool(result.get("ok", false)))
 	assert_eq(result.get("code"), "PRESSURE_ACTION_HANDLED")
 	assert_eq(pressure_state.focus_points, before_focus - 1)
 	assert_true(_card_ids(pressure_state.working_memory).has("observed_instability"))
 	assert_false(_card_ids(pressure_state.emergence_pool).has("observed_instability"))
-	assert_eq(int(pressure_state.chain_counts.get("observation", 0)), before_observation + 1)
-	assert_eq(int(pressure_state.action_tendency_tracks.get("forceful_response", 0)), before_forceful + 1)
+	assert_eq(int(pressure_state.chain_counts.get("observation", 0)), 0)
+	assert_eq(int(pressure_state.action_tendency_tracks.get("forceful_response", 0)), 0)
 
 
 func test_pressure_choice_refresh_increases_pressure() -> void:
@@ -219,22 +214,28 @@ func test_pressure_grasp_emotion_adds_unquieted_risk_until_quieted() -> void:
 	assert_eq(int(pressure_state.action_tendency_tracks.get("freeze_response", 0)), before_freeze + 1)
 
 
-func test_pressure_keep_carries_card_to_next_node() -> void:
-	# Given：ally_waiting 已在工作记忆中，并且当前节点只剩 1 点专注。
+func test_pressure_keep_does_not_spend_focus_and_carries_card_to_next_node() -> void:
+	# Given：ally_waiting 已在工作记忆中。
 	var pressure_state = _create_pressure_state()
 	pressure_state.handle_pressure_action({"pressure_action": "grasp", "card_id": "ally_waiting"})
-	pressure_state.focus_points = 1
+	var before_focus: int = pressure_state.focus_points
 	# When：保留该候选。
 	var result: Dictionary = pressure_state.handle_pressure_action({
 		"pressure_action": "keep",
 		"card_id": "ally_waiting",
 	})
-	# Then：进入下一压力节点，并且该候选继续占用工作记忆。
+	# Then：keep 不消耗专注，候选继续占用工作记忆。
 	assert_true(bool(result.get("ok", false)))
+	assert_eq(pressure_state.focus_points, before_focus)
+	assert_true(_card_ids(pressure_state.working_memory).has("ally_waiting"))
+	assert_true(_card_ids(pressure_state.kept_cards).has("ally_waiting"))
+	# When：后续通过消耗专注推进到下一压力节点。
+	pressure_state.focus_points = 1
+	pressure_state.handle_pressure_action({"pressure_action": "refresh"})
+	# Then：被 keep 的候选进入下一压力积攒环节时仍然可见。
 	assert_eq(pressure_state.node_index, 1)
 	assert_eq(pressure_state.focus_points, 3)
 	assert_true(_card_ids(pressure_state.working_memory).has("ally_waiting"))
-	assert_true(_card_ids(pressure_state.kept_cards).has("ally_waiting"))
 
 
 func test_pressure_express_card_moves_card_to_used_cards() -> void:

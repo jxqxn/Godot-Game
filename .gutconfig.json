@@ -26,6 +26,7 @@
     "res://scripts/stm/tests/test_encounter_factory_v1.gd",
     "res://scripts/stm/tests/test_event_room_v1.gd",
     "res://scripts/stm/tests/test_pressure_encounter_v1.gd",
+    "res://scripts/stm/tests/test_pressure_encounter_v1_1.gd",
     "res://scripts/stm/tests/test_choice_resolver_event_choice_v1.gd",
     "res://scripts/stm/tests/test_game_flow_event_room_v1.gd",
     "res://scripts/stm/tests/test_battle_debug_event_choice_v1.gd",
