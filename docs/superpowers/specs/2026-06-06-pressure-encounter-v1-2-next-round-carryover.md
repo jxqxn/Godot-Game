@@ -10,6 +10,7 @@
 前置 PR：#3 feat: add pressure encounter v1.1 loop quality
 目标版本：v1.2
 最高优先级玩法参照：炉石传说酒馆战棋
+参考架构：slay-the-model-main/player/card_manager.py
 ```
 
 ---
@@ -150,6 +151,33 @@ family_bias: { "emotion": 1 }
 candidate_family / family_bias 更接近权重池系统，长期有价值，但 v1.2 只预留字段，不进入第一批实现。
 ```
 
+### 3.4 stock_add 数据架构
+
+已确认：参考 Python 项目的 `CardManager`，v1.2 采用“候选定义与位置流动分离”的数据架构。
+
+```text
+stock_add 不携带完整 candidate 数据。
+stock_add 使用 stock_add_ids。
+完整候选定义放在 encounter 级 candidate definition table。
+应用回流时，根据 candidate_id 查表、复制/实例化，再加入下一 pressure_node 的 stock。
+```
+
+玩家体验解释：
+
+```text
+事件告诉玩家：为什么这个新念头出现。
+候选定义表告诉系统：这个新念头具体是什么。
+库存系统告诉程序：它现在进入下一轮 stock。
+```
+
+设计原因：
+
+```text
+参考 Python 项目时，CardManager 统一管理 piles，move_to / discard / exhaust 只处理位置流动。
+卡牌/候选的定义不应该塞进每个事件里。
+事件只引用 candidate_id，可以降低重复数据、便于平衡、本地化和复用。
+```
+
 ---
 
 ## 4. v1.2 非目标
@@ -171,13 +199,14 @@ candidate_family 出现倾向实现
 多轮跨遭遇剧情记忆
 行动倾向回流
 强制工作记忆回流
+事件内联完整 candidate 数据
 ```
 
 v1.2 只验证：
 
 ```text
 上一轮 auto_execution_events / value_summary / next_round_delta
-是否能通过 situation_delta 和 stock_add
+是否能通过 situation_delta 和 stock_add_ids
 安全、可理解地影响下一 pressure_node 的初始化。
 ```
 
@@ -225,7 +254,7 @@ situation_delta 在下一 pressure_node 初始化时应用。
 第一批只做新增具体关键候选：
 
 ```text
-stock_add
+stock_add_ids
 ```
 
 玩家体验：
@@ -238,25 +267,32 @@ stock_add
 规则方向：
 
 ```text
-auto_execution_events 可以产生 stock_add。
-stock_add 在下一 pressure_node 初始化时加入候选库存。
-新增候选需要有明确 card_id、name、chain_tag、detail。
+auto_execution_events 可以产生 stock_add_ids。
+stock_add_ids 在下一 pressure_node 初始化时解析为候选定义。
+完整候选数据从 encounter 的 candidate_definitions / carryover_candidate_definitions 查找。
+查表成功后，复制/实例化候选并加入下一节点 stock。
 新增候选只进入下一节点 stock，不直接进入 working_memory。
 ```
 
-示例：
+carryover 示例：
 
 ```gdscript
 {
-  "stock_add": [
-    {
-      "id": "true_shooter_seen",
-      "name": "真正先开火的人",
-      "chain_tag": "evidence",
-      "detail": "你没能阻止枪声，但你看清了第一个扣下扳机的人。"
-    }
-  ],
+  "stock_add_ids": ["true_shooter_seen"],
   "source_event_ids": ["failed_but_saw_true_shooter"]
+}
+```
+
+候选定义表示例：
+
+```gdscript
+{
+  "true_shooter_seen": {
+    "id": "true_shooter_seen",
+    "name": "真正先开火的人",
+    "chain_tag": "evidence",
+    "detail": "你没能阻止枪声，但你看清了第一个扣下扳机的人。"
+  }
 }
 ```
 
@@ -294,25 +330,45 @@ v1.2 第一批实际使用字段：
     "pressure": 1,
     "ally_trust": 1
   },
-  "stock_add": [
-    {
+  "stock_add_ids": ["true_shooter_seen"],
+  "source_event_ids": ["cost_or_setup_pressure"]
+}
+```
+
+encounter 级候选定义：
+
+```gdscript
+{
+  "carryover_candidate_definitions": {
+    "true_shooter_seen": {
       "id": "true_shooter_seen",
       "name": "真正先开火的人",
       "chain_tag": "evidence",
       "detail": "你没能阻止枪声，但你看清了第一个扣下扳机的人。"
     }
-  ],
-  "source_event_ids": ["cost_or_setup_pressure"]
+  }
 }
+```
+
+应用流程：
+
+```text
+1. 读取 next_round_delta / carryover_delta。
+2. 应用 situation_delta 到下一 pressure_node 初始化状态。
+3. 读取 stock_add_ids。
+4. 从 encounter 级 candidate definition table 查找完整候选定义。
+5. 复制/实例化候选。
+6. 将候选加入下一节点 stock。
+7. 记录 source_event_ids，供调试、解释与测试使用。
 ```
 
 v1.2 预留但不应用字段：
 
 ```gdscript
 {
-  "stock_remove": [],
+  "stock_remove_ids": [],
   "family_bias": {},
-  "working_memory_add": [],
+  "working_memory_add_ids": [],
   "tendency_delta": {}
 }
 ```
@@ -325,6 +381,9 @@ v1.2 预留但不应用字段：
 回流不能直接污染全局系统。
 回流只影响下一 pressure_node。
 新增候选只进入下一轮 stock，不直接进入 working_memory。
+事件/回流只引用 candidate_id，不内联完整 candidate 数据。
+候选定义表负责定义候选内容。
+stock / candidate_piles 负责位置流动。
 ```
 
 ---
@@ -353,7 +412,8 @@ v1.2 的目标不是让枪战变成长期数值养成，而是让压力释放后
 ```text
 上一轮：你没能阻止枪声。
 过程收益：你看清真正先开火的人。
-下一轮回流：stock 新增【真正先开火的人】。
+下一轮回流：stock_add_ids = ["true_shooter_seen"]。
+下一轮 stock 新增【真正先开火的人】。
 ```
 
 玩家体验：
@@ -370,14 +430,14 @@ v1.2 的目标不是让枪战变成长期数值养成，而是让压力释放后
 下一个需要确认的问题：
 
 ```text
-v1.2 的 stock_add 新增候选，应该由谁定义？
+v1.2 的 carryover_candidate_definitions 应该放在哪里？
 ```
 
 候选方案：
 
 ```text
-方案 A：由 auto_execution_event 直接携带完整 candidate 数据。
-方案 B：由 auto_execution_event 只携带 candidate_id，再从 encounter 的候选定义表查找。
+方案 A：放在每个 pressure_node 内。
+方案 B：放在 encounter 级定义表中，由各 node 通过 id 引用。
 ```
 
 建议倾向：方案 B。
@@ -385,7 +445,7 @@ v1.2 的 stock_add 新增候选，应该由谁定义？
 理由：
 
 ```text
-事件只说明“为什么新增”。
-候选定义表说明“新增的是什么”。
-这样更像卡牌游戏的数据结构，也更适合后续复用、平衡和本地化。
+新增候选可能由多个自动执行事件触发。
+候选定义应该集中，事件和节点只引用 id。
+这更符合 Python 参考项目“定义/逻辑/位置分离”的方向，也更方便后续复用、平衡和本地化。
 ```
