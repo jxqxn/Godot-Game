@@ -8,15 +8,19 @@ func test_battle_debug_scene_shows_pressure_encounter_choice_panel() -> void:
 	var scene = _scene_at_pressure_event_room()
 	# When：点击进入事件房。
 	_press_button(scene, "Layout/MainPanel/MapPanel/EnterRoomButton")
-	# Then：显示 pressure_encounter_choice 和压力遭遇操作选项。
+	# Then：显示 pressure_encounter_choice 和压力遭遇操作选项；未 grasp 的浮现候选不能直接 discard。
 	assert_true(scene.game_state.has_choice_request())
 	assert_eq(scene.game_state.current_choice_request.request_type, "pressure_encounter_choice")
 	assert_not_null(scene.game_state.current_pressure_encounter)
 	assert_true(_debug_node_or_null(scene, "Layout/ChoicePanel").visible)
 	assert_true(_label_text(scene, "Layout/ChoicePanel/ChoiceTitleLabel").contains("压力节点"))
 	assert_true(_choice_button_texts(scene).any(func(text): return text.contains("抓住")))
-	assert_true(_choice_button_texts(scene).any(func(text): return text.contains("放弃")))
+	assert_false(_choice_button_texts(scene).any(func(text): return text.contains("放弃")))
 	assert_true(_choice_button_texts(scene).any(func(text): return text.contains("重新浮现")))
+	# When：抓住一个候选后刷新面板。
+	_press_choice_button(scene, "抓住")
+	# Then：已进入 working_memory 的候选才显示放弃操作。
+	assert_true(_choice_button_texts(scene).any(func(text): return text.contains("放弃")))
 
 
 func test_battle_debug_scene_logs_pressure_state_summary_after_choice() -> void:
