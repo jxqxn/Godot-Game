@@ -50,9 +50,13 @@ v1.1 的目标不是扩大系统，而是回答：
 10. v1 固定 2 条局势轨：pressure / ally_trust。
 11. v1 固定 2 个 core_trigger：observation_window / panic_spiral。
 12. v1 已有固定自动结算管线。
+13. v1.1 明确以“酒馆战棋 10 费回合基础体验”为优先目标，而不是特殊流派。
+14. v1.1 中大多数普通候选卡 grasp = 暂存 + 占格，不是买入即触发。
+15. v1.1 中少数特殊候选卡可以有即时正负影响，例如 emotion 污染。
+16. v1.1 中 keep = 冻结关键件，不消耗 focus；成本是继续占用 working_memory。
 ```
 
-后续问题必须基于当前项目最新状态提出。已经合入并通过测试的结构，不作为 v1.1 开放问题反复追问。
+后续问题必须基于当前项目最新状态提出。已经确认并写入规格的结构，不作为 v1.1 开放问题反复追问。
 
 ---
 
@@ -104,7 +108,7 @@ Combat / Rest / Event / Boss 替换
 
 ---
 
-## 4. 核心修正：从“两阶段全卡生效”改为“10 费基础回合”
+## 4. 核心原则：10 费基础回合优先
 
 上一版草案曾提出：
 
@@ -112,7 +116,7 @@ Combat / Rest / Event / Boss 替换
 每类候选卡 grasp 时都有一个小的即时身份效果，express 时有主要效果。
 ```
 
-该方向现在暂不采用。
+该方向现在不采用。
 
 原因：
 
@@ -121,7 +125,7 @@ Combat / Rest / Event / Boss 替换
 这更像酒馆战棋中的特定经济或养成流派，而不是 10 费回合的基础体验。
 ```
 
-v1.1 改为以下原则：
+v1.1 采用以下原则：
 
 ```text
 大多数普通候选卡：
@@ -150,16 +154,139 @@ v1.1 不系统化特殊流派，只保留少量必要的即时影响来支撑压
 working_memory = 手牌 / 场面占格
 focus_points = 金币
 refresh = 刷酒馆
+grasp = 买入 / 抓住一个念头
+discard = 卖掉 / 放弃一个念头，腾格子
 keep = 冻结关键件
 express = 把暂存件转化为当前局势收益
-discard = 卖掉 / 腾格子
 core_trigger = 核心成型
 自动结算管线 = 自动战斗回放
 ```
 
 ---
 
-## 5. v1 实现观察
+## 5. 已确认操作语义
+
+### 5.1 grasp
+
+```text
+grasp = 买入 / 抓住一个念头 / 暂存进工作记忆。
+```
+
+v1.1 原则：
+
+```text
+大多数普通卡 grasp 时不立刻触发强数值效果。
+grasp 的基础成本是 focus 与 working_memory 占格。
+少数特殊卡可以在 grasp 时产生正负即时影响，例如 emotion 进入意识后污染。
+```
+
+### 5.2 keep
+
+```text
+keep = 冻结关键件。
+```
+
+v1.1 固定规则：
+
+```text
+keep 不消耗 focus。
+keep 来源为 working_memory 中的卡。
+keep 后该卡进入 kept_cards。
+下一 pressure_node 开始时，该卡仍留在 working_memory。
+该卡继续占用 working_memory。
+keep 不触发额外收益。
+```
+
+策划理由：
+
+```text
+酒馆战棋冻结不花金币；
+冻结的成本不是金币，而是牺牲下一轮部分候选空间。
+Pressure Encounter 中对应的成本就是继续占用工作记忆格。
+```
+
+这会形成清晰取舍：
+
+```text
+好处：我保住一个关键件，不怕下一节点刷不到。
+代价：它继续占格，影响我抓新候选。
+```
+
+---
+
+## 6. 待收敛操作语义
+
+### 6.1 express
+
+待确认：
+
+```text
+express 是否应对应“把暂存组件转化为当前局势收益”？
+```
+
+建议方向：是。
+
+可能规则：
+
+```text
+express 消耗 focus。
+express 主要改变 action_tendency_tracks / situation_tracks。
+express 后该卡加入 used_cards。
+express 是否从 working_memory 移除，需后续确认。
+```
+
+### 6.2 discard
+
+待确认：
+
+```text
+discard 是否应对应“卖掉 / 放弃一个念头，腾格子”？
+```
+
+建议方向：是。
+
+可能规则：
+
+```text
+discard 不消耗 focus。
+discard 从 working_memory 或 emergence_pool 移除卡。
+discard 释放 working_memory 格。
+discard 不产生金币返还，因为 v1.1 仍不新增第二资源。
+```
+
+### 6.3 refresh
+
+待确认：
+
+```text
+refresh 如何模拟“刷酒馆找核心”？
+```
+
+当前 v1 规则：
+
+```text
+refresh = focus -1, pressure +1, 重建当前节点基础候选池并过滤 working_memory 中的卡。
+```
+
+当前问题：
+
+```text
+因为候选池固定，refresh 可能更像重置按钮，而不像搜索。
+```
+
+v1.1 可选方向：
+
+```text
+A. 保持 v1：refresh 重建当前节点基础候选池。
+B. 在不引入随机池的前提下，使用固定候选序列轮换，形成确定性搜索感。
+C. 让 refresh 同时推进 pressure，并在日志中强调“你又浪费了一秒搜索可能性”。
+```
+
+建议倾向：B + C。
+
+---
+
+## 7. v1 实现观察
 
 当前 v1 的实现形态可以概括为：
 
@@ -168,7 +295,7 @@ core_trigger = 核心成型
 2. express 处理 evidence / technique / relationship 的主要效果。
 3. quiet 主要处理 emotion，并在 hands_shaking 上提供 steady_response +1。
 4. refresh 有 pressure +1 代价，并重建当前节点基础候选池。
-5. keep 可以把工作记忆卡保留到下一节点，但决策价值还比较薄。
+5. keep 可以把工作记忆卡保留到下一节点，但当前仍消耗 focus；v1.1 已确认应改为 0 focus。
 6. resolution_log 已有固定管线标签，但仍偏 debug summary。
 ```
 
@@ -180,9 +307,9 @@ core_trigger = 核心成型
 
 ---
 
-## 6. 审查维度
+## 8. 审查维度
 
-### 6.1 候选卡基础身份
+### 8.1 候选卡基础身份
 
 目标不是让每张卡买入即触发，而是让每类卡在“为什么值得买 / 为什么值得留 / 什么时候表达 / 什么时候放弃”上有身份。
 
@@ -194,7 +321,7 @@ core_trigger = 核心成型
 | technique | 程序件；主要服务 steady_response、压力控制或表达效率 |
 | evidence | 事实件；主要在 express 后改变行动倾向或 pressure |
 
-### 6.2 操作差异
+### 8.2 操作差异
 
 需要审查：
 
@@ -207,7 +334,7 @@ discard 是否像“卖掉腾格子”，而不是无意义删除？
 refresh 是否像“刷酒馆找核心”，而不是重置按钮？
 ```
 
-### 6.3 经济压力
+### 8.3 经济压力
 
 当前经济参数：
 
@@ -215,6 +342,7 @@ refresh 是否像“刷酒馆找核心”，而不是重置按钮？
 每节点 focus_points = 3
 working_memory = 3
 refresh = focus -1, pressure +1
+keep = 0 focus，但继续占 working_memory
 3 个 pressure_node
 pressure_limit = 6
 ```
@@ -225,12 +353,12 @@ pressure_limit = 6
 3 点 focus 是否足够像一个压缩后的 10 费回合？
 working_memory 3 格是否足够制造占格压力？
 refresh + pressure 是否足够像“花钱刷核心但局势恶化”？
-keep 花 1 focus 是否太贵或太弱？
+keep 免费但占格，是否足够像冻结？
 ```
 
 v1.1 应优先通过参数和效果表微调，不引入新资源。
 
-### 6.4 自动结算回放
+### 8.4 自动结算回放
 
 当前已有固定步骤：
 
@@ -258,7 +386,7 @@ v1.1 可以优化日志结构和文本，但不做完整 UI 重做。
 
 ---
 
-## 7. v1.1 可接受改动范围
+## 9. v1.1 可接受改动范围
 
 v1.1 可以做：
 
@@ -286,17 +414,17 @@ v1.1 不应做：
 
 ---
 
-## 8. 问答式审查问题池
+## 10. 问答式审查问题池
 
 以下问题不是一次性全部回答，而是按优先级逐个收敛。
 
-### 8.1 第一优先级：基础回合目标
+### 10.1 已确认：基础回合目标
 
 ```text
 Q1：v1.1 是否明确以“酒馆战棋 10 费回合基础体验”为目标，而不是做特殊流派？
 ```
 
-建议结论：是。
+结论：是。
 
 含义：
 
@@ -306,85 +434,74 @@ Q1：v1.1 是否明确以“酒馆战棋 10 费回合基础体验”为目标，
 少数特殊卡可以有正面或负面入场影响，但这不是 v1.1 主体。
 ```
 
-### 8.2 第二优先级：普通卡 grasp 是否应弱化
+### 10.2 已确认：keep 的价值
 
 ```text
-Q2：是否将大多数普通卡的 grasp 定义为“暂存 + 占格 + 轻日志”，而不是即时加轨道数值？
+Q2：keep 是否需要更像“冻结关键件”？
 ```
 
-可能方向：
+结论：是。
+
+规则：
 
 ```text
-A. 大多数普通卡 grasp 不加行动倾向，只进入 working_memory。
-B. 大多数普通卡 grasp 给极小数值，例如 +0 或日志，不改变主轨道。
-C. 保留 v1：observation / emotion grasp 有明显影响，其他类型主要 express 生效。
+keep 不消耗 focus。
+keep 的成本是继续占用 working_memory。
 ```
 
-建议倾向：A 或 C 的折中。
-
-建议解释：
+### 10.3 待确认：refresh 搜索感
 
 ```text
-observation 可以保留轻度 grasp 价值，因为“看见行动窗口”本身会影响判断；
-emotion 可以保留负面 grasp 价值，因为污染必须能成型；
-relationship / technique / evidence 更适合 express 后生效。
-```
-
-### 8.3 第三优先级：keep 的价值
-
-```text
-Q3：keep 是否需要更像“冻结关键件”？
-```
-
-当前风险：
-
-```text
-keep 消耗 1 focus，并让卡继续占工作记忆格；
-如果没有额外收益，玩家可能觉得它只是亏动作。
-```
-
-可能方向：
-
-```text
-A. keep 仍只做保留，不加收益。
-B. keep 下个节点开始时给该卡一次小折扣或日志强化。
-C. keep 不消耗 focus。
-```
-
-建议倾向：C。
-
-理由：
-
-```text
-酒馆战棋冻结不花金币；
-如果 keep 对应“冻结关键件”，v1.1 可以考虑 keep 不消耗 focus，但继续占工作记忆格，成本来自占格而不是金币。
-```
-
-### 8.4 第四优先级：refresh 搜索感
-
-```text
-Q4：refresh 现在的代价是否足够像“刷酒馆”？
+Q3：refresh 如何更像“刷酒馆找核心”？
 ```
 
 当前规则：
 
 ```text
-refresh = focus -1, pressure +1, 重建当前节点候选池并过滤工作记忆。
+refresh = focus -1, pressure +1, 重建当前节点候选池并过滤 working_memory。
 ```
 
-需要确认：
+待确认方向：
 
 ```text
-这是否足够像“刷酒馆找核心”？
-还是因为当前候选池固定，refresh 缺乏搜索感？
+是否改成确定性候选序列轮换，而不是简单重建？
 ```
 
-v1.1 不能引入随机池，但可以让 refresh 在当前节点的固定候选序列中轮换显示，形成确定性的搜索感。
+建议方向：是。
 
-### 8.5 第五优先级：日志是否像回放
+理由：
 
 ```text
-Q5：resolution_log 是先优化结构，还是先等机制效果补强后再优化？
+v1.1 不引入随机池；
+但可以通过固定序列轮换，让 refresh 产生“继续找下一批候选”的搜索感。
+```
+
+### 10.4 待确认：express 是否消耗后移除
+
+```text
+Q4：express 后卡是否应从 working_memory 移除？
+```
+
+待确认方向：
+
+```text
+A. express 后移除，类似把手牌打出 / 卖出组件。
+B. express 后仍留在 working_memory，但标记 used。
+```
+
+建议倾向：A。
+
+理由：
+
+```text
+如果 express 后仍占格，玩家会不清楚 express 与 keep 的差异；
+如果 express 后移除，表达就是“把暂存件转化为收益并释放格子”，更接近 10 费回合的经济节奏。
+```
+
+### 10.5 待确认：日志是否像回放
+
+```text
+Q5：resolution_log 是先优化结构，还是先等操作语义补强后再优化？
 ```
 
 建议倾向：先补基础回合操作，再优化日志。
@@ -397,51 +514,19 @@ Q5：resolution_log 是先优化结构，还是先等机制效果补强后再优
 
 ---
 
-## 9. 首轮建议结论
+## 11. 下一步问答入口
 
-v1.1 第一轮建议只处理一个核心方向：
-
-```text
-把目标从“所有候选卡两阶段生效”改为“还原酒馆战棋 10 费回合基础体验”。
-```
-
-暂不处理：
+下一个需要确认的问题：
 
 ```text
-默认地图接入
-特殊流派
-参数大改
-日志大改
-新增核心
-新增轨道
-```
-
-当前应先收敛：
-
-```text
-基础回合里，grasp / express / keep / discard / refresh 各自对应什么策划动作？
-```
-
----
-
-## 10. 下一步问答入口
-
-第一个需要确认的问题：
-
-```text
-v1.1 是否明确采用“10 费基础回合优先”原则？
+refresh 是否从“重建当前节点候选池”改成“确定性候选序列轮换”？
 
 也就是：
-- 大多数普通候选卡 grasp 时只是暂存与占格；
-- 少数卡可以有即时正负影响，但这属于特殊卡或必要压力机制；
-- v1.1 不急着做类似养酒馆流派的入场触发玩法；
-- 优先还原 refresh / grasp / keep / discard / express 的基础取舍。
+- 不引入随机池；
+- 每个 pressure_node 有固定候选序列；
+- 每次 refresh 消耗 focus、增加 pressure，并展示序列中的下一批候选；
+- 仍过滤 working_memory 中已有卡；
+- 这样形成基础搜索感，而不是重置按钮。
 ```
 
 建议答案：是。
-
-如果确认，下一轮规格将继续收敛：
-
-```text
-grasp / express / keep / discard / refresh 在 Pressure Encounter 里分别对应酒馆战棋 10 费回合中的哪个玩家动作？
-```
