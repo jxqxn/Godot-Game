@@ -222,6 +222,14 @@ AGENTS.md
 
 该文件记录项目协作规则、BDD/TDD 流程、架构边界、开发红线和完整 GUT 命令。后续开发前应先阅读 `AGENTS.md`。
 
+遇到架构、数据流、职责边界、卡牌或候选位置语义问题时，还应阅读：
+
+```text
+docs/superpowers/rules/python-reference-architecture-rule.md
+```
+
+该文件要求先参考 `slay-the-model-main/` 中的 Python 项目，再提出 Godot 侧方案，避免重复提醒。
+
 ## Codex 协作复用入口
 
 后续新对话中，如果 Codex 已安装本地 skill，可优先调用：
