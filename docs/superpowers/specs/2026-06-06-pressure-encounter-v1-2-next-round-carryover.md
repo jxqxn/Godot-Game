@@ -10,7 +10,7 @@
 前置 PR：#3 feat: add pressure encounter v1.1 loop quality
 目标版本：v1.2
 最高优先级玩法参照：炉石传说酒馆战棋
-参考架构：slay-the-model-main/player/card_manager.py
+参考架构：slay-the-model-main/player/card_manager.py；slay-the-model-main/cards/base.py；slay-the-model-main/utils/registry.py
 ```
 
 ---
@@ -153,12 +153,12 @@ candidate_family / family_bias 更接近权重池系统，长期有价值，但 
 
 ### 3.4 stock_add 数据架构
 
-已确认：参考 Python 项目的 `CardManager`，v1.2 采用“候选定义与位置流动分离”的数据架构。
+已确认：参考 Python 项目，v1.2 采用“候选定义与位置流动分离”的数据架构。
 
 ```text
 stock_add 不携带完整 candidate 数据。
 stock_add 使用 stock_add_ids。
-完整候选定义放在 encounter 级 candidate definition table。
+完整候选定义放在 encounter 级统一 candidate_definitions。
 应用回流时，根据 candidate_id 查表、复制/实例化，再加入下一 pressure_node 的 stock。
 ```
 
@@ -173,9 +173,32 @@ stock_add 使用 stock_add_ids。
 设计原因：
 
 ```text
-参考 Python 项目时，CardManager 统一管理 piles，move_to / discard / exhaust 只处理位置流动。
-卡牌/候选的定义不应该塞进每个事件里。
-事件只引用 candidate_id，可以降低重复数据、便于平衡、本地化和复用。
+Python 项目里：
+- Card 子类负责定义卡牌内容；
+- registry 负责按 id / class name 找到定义并实例化；
+- CardManager 统一管理 piles，只处理运行时位置流动。
+
+Pressure Encounter v1.2 应对应为：
+- candidate_definitions 负责定义候选内容；
+- stock_add_ids / stock_ids 负责引用候选 id；
+- candidate_piles / stock 负责运行时位置流动。
+```
+
+### 3.5 候选定义表位置
+
+已确认：v1.2 不新增单独的 `carryover_candidate_definitions`，而是使用 encounter 级统一 `candidate_definitions`。
+
+```text
+不要：每个 pressure_node 内联完整 candidate 数据。
+不要：专门为回流候选做 carryover_candidate_definitions。
+要：encounter.candidate_definitions 统一定义所有候选。
+```
+
+设计原因：
+
+```text
+Python 项目中，Anger 这类具体卡牌是注册到统一 card registry 的 Card 子类，不是嵌在某个房间节点里的临时字典。
+回流、初始牌堆、奖励、生成物都应该引用同一个候选定义来源。
 ```
 
 ---
@@ -200,6 +223,8 @@ candidate_family 出现倾向实现
 行动倾向回流
 强制工作记忆回流
 事件内联完整 candidate 数据
+节点内联完整 candidate 数据
+单独 carryover_candidate_definitions
 ```
 
 v1.2 只验证：
@@ -269,7 +294,7 @@ stock_add_ids
 ```text
 auto_execution_events 可以产生 stock_add_ids。
 stock_add_ids 在下一 pressure_node 初始化时解析为候选定义。
-完整候选数据从 encounter 的 candidate_definitions / carryover_candidate_definitions 查找。
+完整候选数据从 encounter.candidate_definitions 查找。
 查表成功后，复制/实例化候选并加入下一节点 stock。
 新增候选只进入下一节点 stock，不直接进入 working_memory。
 ```
@@ -280,19 +305,6 @@ carryover 示例：
 {
   "stock_add_ids": ["true_shooter_seen"],
   "source_event_ids": ["failed_but_saw_true_shooter"]
-}
-```
-
-候选定义表示例：
-
-```gdscript
-{
-  "true_shooter_seen": {
-    "id": "true_shooter_seen",
-    "name": "真正先开火的人",
-    "chain_tag": "evidence",
-    "detail": "你没能阻止枪声，但你看清了第一个扣下扳机的人。"
-  }
 }
 ```
 
@@ -315,11 +327,62 @@ v1.2 不实现权重算法，也不影响 refresh。
 
 ---
 
-## 6. 架构原则
+## 6. 数据结构建议
 
-v1.2 不应该把回流写成零散硬编码文本。
+### 6.1 encounter 级候选定义表
 
-建议把 v1.1 的 `next_round_delta` 发展成可解释的 carryover 数据。
+v1.2 建议把当前 pressure_node 内联的 `cards` 数据上提为 encounter 级统一 `candidate_definitions`。
+
+```gdscript
+{
+  "candidate_definitions": {
+    "observed_instability": {
+      "id": "observed_instability",
+      "name": "对方快失控了",
+      "detail": "观察",
+      "chain_tag": "observation"
+    },
+    "ally_waiting": {
+      "id": "ally_waiting",
+      "name": "同伴在等你的判断",
+      "detail": "关系",
+      "chain_tag": "relationship"
+    },
+    "true_shooter_seen": {
+      "id": "true_shooter_seen",
+      "name": "真正先开火的人",
+      "detail": "你没能阻止枪声，但你看清了第一个扣下扳机的人。",
+      "chain_tag": "evidence"
+    }
+  }
+}
+```
+
+### 6.2 pressure_node 改为引用 id
+
+v1.2 建议将 pressure_node 从内联 `cards` 逐步迁移为 `stock_ids`。
+
+```gdscript
+{
+  "title": "看清局面",
+  "stock_ids": [
+    "observed_instability",
+    "ally_waiting",
+    "hands_shaking",
+    "basic_procedure"
+  ]
+}
+```
+
+应用时：
+
+```text
+读取 pressure_node.stock_ids
+→ 从 encounter.candidate_definitions 查完整定义
+→ 复制/实例化为 candidate_stock
+```
+
+### 6.3 carryover_delta
 
 v1.2 第一批实际使用字段：
 
@@ -335,31 +398,18 @@ v1.2 第一批实际使用字段：
 }
 ```
 
-encounter 级候选定义：
-
-```gdscript
-{
-  "carryover_candidate_definitions": {
-    "true_shooter_seen": {
-      "id": "true_shooter_seen",
-      "name": "真正先开火的人",
-      "chain_tag": "evidence",
-      "detail": "你没能阻止枪声，但你看清了第一个扣下扳机的人。"
-    }
-  }
-}
-```
-
 应用流程：
 
 ```text
 1. 读取 next_round_delta / carryover_delta。
 2. 应用 situation_delta 到下一 pressure_node 初始化状态。
-3. 读取 stock_add_ids。
-4. 从 encounter 级 candidate definition table 查找完整候选定义。
-5. 复制/实例化候选。
-6. 将候选加入下一节点 stock。
-7. 记录 source_event_ids，供调试、解释与测试使用。
+3. 读取当前 pressure_node.stock_ids。
+4. 读取 carryover_delta.stock_add_ids。
+5. 合并 stock_ids 与 stock_add_ids。
+6. 从 encounter.candidate_definitions 查找完整候选定义。
+7. 复制/实例化候选。
+8. 将候选加入下一节点 stock。
+9. 记录 source_event_ids，供调试、解释与测试使用。
 ```
 
 v1.2 预留但不应用字段：
@@ -382,6 +432,7 @@ v1.2 预留但不应用字段：
 回流只影响下一 pressure_node。
 新增候选只进入下一轮 stock，不直接进入 working_memory。
 事件/回流只引用 candidate_id，不内联完整 candidate 数据。
+节点也尽量只引用 candidate_id，不内联完整 candidate 数据。
 候选定义表负责定义候选内容。
 stock / candidate_piles 负责位置流动。
 ```
@@ -430,22 +481,19 @@ v1.2 的目标不是让枪战变成长期数值养成，而是让压力释放后
 下一个需要确认的问题：
 
 ```text
-v1.2 的 carryover_candidate_definitions 应该放在哪里？
+v1.2 是否应该在本版本内把 pressure_nodes.cards 全部迁移为 pressure_nodes.stock_ids？
 ```
 
-候选方案：
-
-```text
-方案 A：放在每个 pressure_node 内。
-方案 B：放在 encounter 级定义表中，由各 node 通过 id 引用。
-```
-
-建议倾向：方案 B。
+建议倾向：是，但要做兼容迁移。
 
 理由：
 
 ```text
-新增候选可能由多个自动执行事件触发。
-候选定义应该集中，事件和节点只引用 id。
-这更符合 Python 参考项目“定义/逻辑/位置分离”的方向，也更方便后续复用、平衡和本地化。
+如果只给回流候选做 id 查表，而初始节点仍内联完整 cards，系统会出现两种候选定义来源。
+这会削弱 Python 参考项目那种“定义集中、运行时位置流动”的架构优势。
+
+但为了降低风险，v1.2 可以允许兼容：
+- 优先读取 stock_ids；
+- 如果旧节点只有 cards，则临时从 cards 初始化 stock；
+- 新增测试覆盖 stock_ids 与旧 cards 兼容。
 ```
