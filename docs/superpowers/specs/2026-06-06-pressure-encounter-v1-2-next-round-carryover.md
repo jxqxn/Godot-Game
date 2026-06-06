@@ -5,6 +5,7 @@
 ```text
 文档类型：机制规格 / 问答式迭代草案
 创建日期：2026-06-06
+修订日期：2026-06-06
 前置版本：Pressure Encounter v1.1 已合入 main
 前置 PR：#3 feat: add pressure encounter v1.1 loop quality
 目标版本：v1.2
@@ -95,6 +96,60 @@ Kim 跟上了我，下一轮 ally_trust 是否提高？
 不要立刻扩大到全局系统，避免影响地图、事件、战斗和长期存档结构。
 ```
 
+### 3.2 v1.2 第一批回流通道
+
+已确认：v1.2 第一批只做 2 类回流通道。
+
+```text
+1. 局势轨回流：pressure / ally_trust。
+2. 候选池回流：向下一轮 stock 新增具体关键候选。
+```
+
+暂不做：
+
+```text
+行动倾向回流。
+强制工作记忆回流。
+candidate_family 权重池。
+跨遭遇长期记忆。
+复杂回流连锁。
+```
+
+玩家体验解释：
+
+```text
+上一轮压力团战结束后，
+玩家首先应该感受到两件事：
+1. 局势变了：压力更高或关系更稳。
+2. 想法变了：下一轮脑子里多了一个具体的新判断。
+```
+
+### 3.3 候选池回流方式
+
+已确认：v1.2 的候选池回流先做“新增具体关键候选”，不做“提高某类候选出现倾向”。
+
+正确方向：
+
+```text
+上一轮失败但看清真正先开火的人
+→ 下一轮 stock 新增【真正先开火的人】。
+```
+
+暂不实现：
+
+```text
+family_bias: { "emotion": 1 }
+复杂权重池
+同类候选出现概率调整
+```
+
+设计原因：
+
+```text
+新增具体关键候选最直观，玩家容易理解，也最适合 Codex 实现。
+candidate_family / family_bias 更接近权重池系统，长期有价值，但 v1.2 只预留字段，不进入第一批实现。
+```
+
 ---
 
 ## 4. v1.2 非目标
@@ -109,31 +164,34 @@ v1.2 暂不做：
 默认地图接入
 正式 UI 面板
 复杂权重池
+candidate_family 出现倾向实现
 完整 Tavern Tier / 稀有度系统
 完整自动战斗连锁系统
 类复仇 / 类亡语 / 成长流派完整实现
 多轮跨遭遇剧情记忆
+行动倾向回流
+强制工作记忆回流
 ```
 
 v1.2 只验证：
 
 ```text
 上一轮 auto_execution_events / value_summary / next_round_delta
-是否能安全、可理解地影响下一 pressure_node 的初始化。
+是否能通过 situation_delta 和 stock_add
+安全、可理解地影响下一 pressure_node 的初始化。
 ```
 
 ---
 
-## 5. 建议的最小回流通道
-
-v1.2 可以先讨论并选择以下 4 类回流通道。
+## 5. v1.2 第一批回流通道
 
 ### 5.1 局势轨回流
+
+第一批只允许影响已有局势轨：
 
 ```text
 pressure
 ally_trust
-其他已有 situation_tracks
 ```
 
 玩家体验：
@@ -143,12 +201,31 @@ ally_trust
 上一轮 Kim 跟上了我，所以下一轮我更敢相信他。
 ```
 
-### 5.2 候选池回流
+规则方向：
 
 ```text
-向下一轮 stock 加入关键候选。
-从下一轮 stock 移除某些候选。
-提高某类 candidate_family 的出现倾向。
+auto_execution_events 可以产生 situation_delta。
+situation_delta 在下一 pressure_node 初始化时应用。
+只作用于当前 Pressure Encounter 内的下一节点。
+```
+
+示例：
+
+```gdscript
+{
+  "situation_delta": {
+    "pressure": 1
+  },
+  "source_event_ids": ["cost_or_setup_pressure"]
+}
+```
+
+### 5.2 候选池回流
+
+第一批只做新增具体关键候选：
+
+```text
+stock_add
 ```
 
 玩家体验：
@@ -158,35 +235,46 @@ ally_trust
 所以下一轮脑子里会浮现一个新的关键判断。
 ```
 
-### 5.3 工作记忆回流
+规则方向：
 
 ```text
-kept_cards 继续占用 working_memory。
-某些代价可能强制留下负面念头。
-某些收益可能保留关键判断。
+auto_execution_events 可以产生 stock_add。
+stock_add 在下一 pressure_node 初始化时加入候选库存。
+新增候选需要有明确 card_id、name、chain_tag、detail。
+新增候选只进入下一节点 stock，不直接进入 working_memory。
 ```
 
-玩家体验：
+示例：
 
-```text
-我不是重新开一局。
-上一轮我执意保留的念头，还在占着我的脑子。
-上一轮留下的恐惧，也可能继续挤占空间。
+```gdscript
+{
+  "stock_add": [
+    {
+      "id": "true_shooter_seen",
+      "name": "真正先开火的人",
+      "chain_tag": "evidence",
+      "detail": "你没能阻止枪声，但你看清了第一个扣下扳机的人。"
+    }
+  ],
+  "source_event_ids": ["failed_but_saw_true_shooter"]
+}
 ```
 
-### 5.4 行动倾向回流
+### 5.3 预留但不实现：候选家族倾向
 
-```text
-下一轮 steady_response / forceful_response / freeze_response 初始值受到上一轮影响。
+v1.2 可以在 carryover 数据中预留 `family_bias` 字段，但第一批不应用。
+
+```gdscript
+{
+  "family_bias": {}
+}
 ```
 
-玩家体验：
+说明：
 
 ```text
-上一轮我靠强硬压住了局面，
-下一轮我可能更自然地继续强硬。
-上一轮我被恐惧拖住，
-下一轮我更容易先僵住。
+family_bias 未来用于反刍、情绪占据、同类念头反复浮现。
+v1.2 不实现权重算法，也不影响 refresh。
 ```
 
 ---
@@ -195,7 +283,9 @@ kept_cards 继续占用 working_memory。
 
 v1.2 不应该把回流写成零散硬编码文本。
 
-建议把 v1.1 的 `next_round_delta` 发展成可解释的 carryover 数据：
+建议把 v1.1 的 `next_round_delta` 发展成可解释的 carryover 数据。
+
+v1.2 第一批实际使用字段：
 
 ```gdscript
 {
@@ -204,49 +294,98 @@ v1.2 不应该把回流写成零散硬编码文本。
     "pressure": 1,
     "ally_trust": 1
   },
-  "stock_add": ["true_shooter_seen"],
-  "stock_remove": [],
-  "family_bias": {
-    "emotion": 1
-  },
-  "working_memory_add": [],
-  "tendency_delta": {
-    "freeze_response": 1
-  },
+  "stock_add": [
+    {
+      "id": "true_shooter_seen",
+      "name": "真正先开火的人",
+      "chain_tag": "evidence",
+      "detail": "你没能阻止枪声，但你看清了第一个扣下扳机的人。"
+    }
+  ],
   "source_event_ids": ["cost_or_setup_pressure"]
 }
 ```
 
-v1.2 不一定一次实现所有字段，但规格上应明确：
+v1.2 预留但不应用字段：
+
+```gdscript
+{
+  "stock_remove": [],
+  "family_bias": {},
+  "working_memory_add": [],
+  "tendency_delta": {}
+}
+```
+
+规格要求：
 
 ```text
 回流需要可追溯来源。
 回流需要能解释给玩家。
 回流不能直接污染全局系统。
+回流只影响下一 pressure_node。
+新增候选只进入下一轮 stock，不直接进入 working_memory。
 ```
 
 ---
 
-## 7. 下一步问答入口
+## 7. 极乐迪斯科枪战类比
+
+v1.2 的目标不是让枪战变成长期数值养成，而是让压力释放后的下一轮思考发生变化。
+
+例子：
+
+```text
+上一轮：你强硬干预，成功压住第一波。
+过程代价：现场气氛更紧。
+下一轮回流：pressure +1。
+```
+
+玩家体验：
+
+```text
+我赢了，但这不是干净的胜利。
+下一轮现场更紧，我要在更差的压力下继续思考。
+```
+
+另一个例子：
+
+```text
+上一轮：你没能阻止枪声。
+过程收益：你看清真正先开火的人。
+下一轮回流：stock 新增【真正先开火的人】。
+```
+
+玩家体验：
+
+```text
+我失败了，但不是白失败。
+下一轮我的脑子里多了一个新的关键判断。
+```
+
+---
+
+## 8. 下一步问答入口
 
 下一个需要确认的问题：
 
 ```text
-从玩家体验看，v1.2 的第一批回流通道应该先做哪几个？
+v1.2 的 stock_add 新增候选，应该由谁定义？
 ```
 
-建议倾向：先做 2 个。
+候选方案：
 
 ```text
-1. 局势轨回流：pressure / ally_trust。
-2. 候选池回流：下一轮新增关键候选或提高某类候选出现倾向。
+方案 A：由 auto_execution_event 直接携带完整 candidate 数据。
+方案 B：由 auto_execution_event 只携带 candidate_id，再从 encounter 的候选定义表查找。
 ```
+
+建议倾向：方案 B。
 
 理由：
 
 ```text
-局势轨回流最容易让玩家感到上一轮赚亏有后果。
-候选池回流最接近酒馆战棋“团战后影响下一回合选择空间”的体验。
-工作记忆回流已有 kept_cards 基础，可以稍后扩展。
-行动倾向回流容易造成滚雪球，需要谨慎。
+事件只说明“为什么新增”。
+候选定义表说明“新增的是什么”。
+这样更像卡牌游戏的数据结构，也更适合后续复用、平衡和本地化。
 ```
