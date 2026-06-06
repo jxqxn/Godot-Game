@@ -3,6 +3,7 @@ extends "res://scripts/stm/rooms/base.gd"
 
 const ChoiceOptionScript := preload("res://scripts/stm/choices/choice_option.gd")
 const ChoiceRequestScript := preload("res://scripts/stm/choices/choice_request.gd")
+const PressureEncounterStateScript := preload("res://scripts/stm/encounters/pressure/pressure_encounter_state.gd")
 
 var last_hp_before: int = 0
 var last_hp_after: int = 0
@@ -17,6 +18,13 @@ func enter(game_state) -> void:
 	if game_state == null:
 		return
 	var event_id := str(room_payload.get("event_id", "debug_fountain"))
+	if event_id == "debug_pressure_encounter":
+		var pressure_encounter = PressureEncounterStateScript.new()
+		pressure_encounter.initialize(event_id)
+		game_state.current_pressure_encounter = pressure_encounter
+		game_state.set_choice_request(pressure_encounter.build_choice_request({"room": self, "event_id": event_id}))
+		return
+	game_state.current_pressure_encounter = null
 	game_state.set_choice_request(_create_event_choice_request(event_id))
 
 

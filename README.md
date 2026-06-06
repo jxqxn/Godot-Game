@@ -78,7 +78,7 @@ res://scenes/stm/battle_debug_scene.tscn
 godot -s addons/gut/gut_cmdln.gd
 ```
 
-当前 `.gutconfig.json` 已覆盖 28 个测试脚本，包括：
+当前 `.gutconfig.json` 已覆盖 30 个测试脚本，包括：
 
 ```text
 core_skeleton_test.gd
@@ -106,18 +106,20 @@ test_map_node_v1.gd
 test_room_factory_v1.gd
 test_encounter_factory_v1.gd
 test_event_room_v1.gd
+test_pressure_encounter_v1.gd
 test_choice_resolver_event_choice_v1.gd
 test_game_flow_event_room_v1.gd
 test_battle_debug_event_choice_v1.gd
+test_battle_debug_pressure_encounter_v1.gd
 ```
 
-2026-06-04：完整 GUT 通过，并已清理退出时的 ObjectDB / resources still in use 警告。
+2026-06-05：完整 GUT 通过，并已清理退出时的 ObjectDB / resources still in use 警告。
 
 ```text
-Scripts: 28
-Tests: 202
-Passing Tests: 202
-Asserts: 998
+Scripts: 30
+Tests: 226
+Passing Tests: 226
+Asserts: 1133
 ```
 
 本次完整 GUT 以 `All tests passed` 和退出码 0 结束，未再出现 ObjectDB / resources still in use 警告。
@@ -129,19 +131,19 @@ Asserts: 998
 当前最新规格文档：
 
 ```text
-docs/superpowers/specs/2026-05-31-sts2-fixed-map-event-node-v1-design.md
+docs/superpowers/specs/2026-06-04-pressure-encounter-v1-design.md
 ```
 
 当前最新实施计划：
 
 ```text
-docs/superpowers/plans/2026-05-31-sts2-fixed-map-event-node-v1.md
+docs/superpowers/plans/2026-06-04-pressure-encounter-v1.md
 ```
 
 当前最新状态记录：
 
 ```text
-docs/superpowers/status/2026-05-31-sts2-fixed-map-event-node-v1-status.md
+docs/superpowers/status/2026-06-04-pressure-encounter-v1-status.md
 ```
 
 较早阶段文档仍保留在 `docs/superpowers/` 中，用于追溯 card priority、autoplay preview、choice reward、rest choice、fixed map node branch、core runtime architecture spine、event room 等阶段。
