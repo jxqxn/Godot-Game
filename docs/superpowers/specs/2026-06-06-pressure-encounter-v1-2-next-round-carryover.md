@@ -11,6 +11,7 @@
 目标版本：v1.2
 最高优先级玩法参照：炉石传说酒馆战棋
 参考架构：slay-the-model-main/player/card_manager.py；slay-the-model-main/cards/base.py；slay-the-model-main/utils/registry.py
+项目规章：docs/superpowers/rules/python-reference-architecture-rule.md
 ```
 
 ---
@@ -253,6 +254,70 @@ registry.get_registered_instance(...) 找不到时也返回 None。
 但开发者必须立刻知道是哪一个 id 没有定义。
 ```
 
+### 3.8 carryover_delta 应用时机
+
+已确认：v1.2 采用方案 B。
+
+```text
+auto_execution 结束时：
+只记录 pending_carryover。
+
+进入下一 pressure_node 初始化时：
+读取 pending_carryover，应用 situation_delta / stock_add_ids。
+```
+
+禁止方向：
+
+```text
+不要在 auto_execution 结束时直接修改下一 pressure_node 原始数据。
+```
+
+设计原因：
+
+```text
+Python 项目中，Action 表达操作意图，CardManager / piles 在执行阶段处理位置流动。
+对应到 Pressure Encounter：
+- auto_execution 只产出结果意图；
+- pending_carryover 保存待应用回流；
+- 下一 pressure_node 初始化阶段负责真正生成下一轮 stock / situation_tracks。
+
+这样可以避免提前污染尚未进入的节点，也方便调试、跳转、重进节点和解释上一轮留下的影响。
+```
+
+玩家体验解释：
+
+```text
+团战结束时，玩家看到上一轮打出了什么结果。
+进入下一轮时，玩家再看到这些结果如何改变下一轮压力和候选池。
+```
+
+### 3.9 pending_carryover 消费方式
+
+已确认：v1.2 的 `pending_carryover` 必须一次性消费。
+
+```text
+进入下一 pressure_node 初始化时应用一次。
+应用成功后，从 pending_carryover 移到 applied_carryover_log 或等价历史记录。
+不得在 refresh、重绘 UI、重复进入初始化函数时反复叠加。
+```
+
+设计原因：
+
+```text
+如果 pending_carryover 可重复消费，可能导致：
+- pressure +1 被重复叠加；
+- ally_trust +1 被重复叠加；
+- 同一个 stock_add_id 被重复加入 stock；
+- 调试重进节点时结果失真。
+```
+
+玩家体验解释：
+
+```text
+上一轮团战的结果只结算到下一轮一次。
+它会改变下一轮，但不会因为刷新、重开 UI 或重复初始化而反复生效。
+```
+
 ---
 
 ## 4. v1.2 非目标
@@ -278,14 +343,16 @@ candidate_family 出现倾向实现
 节点内联完整 candidate 数据作为新结构
 单独 carryover_candidate_definitions
 缺失 candidate_id 时硬崩溃
+auto_execution 直接修改下一 pressure_node 原始数据
+pending_carryover 重复消费
 ```
 
 v1.2 只验证：
 
 ```text
-上一轮 auto_execution_events / value_summary / next_round_delta
+上一轮 auto_execution_events / value_summary / pending_carryover
 是否能通过 situation_delta 和 stock_add_ids
-安全、可理解地影响下一 pressure_node 的初始化。
+安全、可理解、一次性地影响下一 pressure_node 的初始化。
 ```
 
 ---
@@ -312,7 +379,8 @@ ally_trust
 
 ```text
 auto_execution_events 可以产生 situation_delta。
-situation_delta 在下一 pressure_node 初始化时应用。
+situation_delta 写入 pending_carryover。
+situation_delta 在下一 pressure_node 初始化时一次性应用。
 只作用于当前 Pressure Encounter 内的下一节点。
 ```
 
@@ -346,6 +414,7 @@ stock_add_ids
 
 ```text
 auto_execution_events 可以产生 stock_add_ids。
+stock_add_ids 写入 pending_carryover。
 stock_add_ids 在下一 pressure_node 初始化时解析为候选定义。
 完整候选数据从 encounter.candidate_definitions 查找。
 查表成功后，复制/实例化候选并加入下一节点 stock。
@@ -443,7 +512,7 @@ v1.2 必须将 pressure_node 从内联 `cards` 迁移为 `stock_ids`，同时保
 3. 新增/更新测试覆盖 stock_ids 新路径与 cards 旧路径。
 ```
 
-### 6.3 carryover_delta
+### 6.3 pending_carryover
 
 v1.2 第一批实际使用字段：
 
@@ -455,22 +524,28 @@ v1.2 第一批实际使用字段：
     "ally_trust": 1
   },
   "stock_add_ids": ["true_shooter_seen"],
-  "source_event_ids": ["cost_or_setup_pressure"]
+  "source_event_ids": ["cost_or_setup_pressure"],
+  "consumed": false
 }
 ```
 
-应用流程：
+生成与应用流程：
 
 ```text
-1. 读取 next_round_delta / carryover_delta。
-2. 应用 situation_delta 到下一 pressure_node 初始化状态。
-3. 读取当前 pressure_node.stock_ids。
-4. 读取 carryover_delta.stock_add_ids。
-5. 合并 stock_ids 与 stock_add_ids。
-6. 从 encounter.candidate_definitions 查找完整候选定义。
-7. 复制/实例化候选。
-8. 将候选加入下一节点 stock。
-9. 记录 source_event_ids，供调试、解释与测试使用。
+1. auto_execution_events / value_summary 生成 carryover 意图。
+2. auto_execution 结束时写入 pending_carryover。
+3. 不修改下一 pressure_node 原始数据。
+4. 进入下一 pressure_node 初始化时，读取 pending_carryover。
+5. 如果 target_node_offset 指向当前节点，并且 consumed == false，则应用。
+6. 应用 situation_delta 到下一 pressure_node 初始化状态。
+7. 读取当前 pressure_node.stock_ids。
+8. 读取 pending_carryover.stock_add_ids。
+9. 合并 stock_ids 与 stock_add_ids。
+10. 从 encounter.candidate_definitions 查找完整候选定义。
+11. 复制/实例化候选。
+12. 将候选加入下一节点 stock。
+13. 将该 pending_carryover 标记 consumed 或移动到 applied_carryover_log。
+14. 记录 source_event_ids，供调试、解释与测试使用。
 ```
 
 ### 6.4 缺失候选解析结果
@@ -508,6 +583,33 @@ v1.2 第一批实际使用字段：
 不中断整个 encounter。
 ```
 
+### 6.5 applied_carryover_log
+
+v1.2 可以使用 `applied_carryover_log` 或等价历史记录，保存已经消费过的回流。
+
+建议最小字段：
+
+```gdscript
+{
+  "source_event_ids": ["cost_or_setup_pressure"],
+  "applied_to_node_index": 1,
+  "situation_delta": {
+    "pressure": 1
+  },
+  "stock_add_ids": ["true_shooter_seen"]
+}
+```
+
+用途：
+
+```text
+防止重复消费。
+给调试面板解释“为什么下一轮多了这张候选 / 为什么 pressure 变了”。
+给 GUT 验证 pending_carryover 已应用且不会重复应用。
+```
+
+### 6.6 预留字段
+
 v1.2 预留但不应用字段：
 
 ```gdscript
@@ -533,8 +635,11 @@ v1.2 预留但不应用字段：
 候选定义表负责定义候选内容。
 stock / candidate_piles 负责位置流动。
 缺失 candidate_id 运行时不崩溃，但必须记录。
+pending_carryover 必须一次性消费。
+auto_execution 不得直接修改下一 pressure_node 原始数据。
 GUT 必须覆盖 missing_candidate_ids 为空的正常路径。
 GUT 必须覆盖缺失 id 时会记录 MISSING_CANDIDATE_DEFINITION。
+GUT 必须覆盖 pending_carryover 不会重复应用。
 ```
 
 ---
@@ -548,7 +653,8 @@ v1.2 的目标不是让枪战变成长期数值养成，而是让压力释放后
 ```text
 上一轮：你强硬干预，成功压住第一波。
 过程代价：现场气氛更紧。
-下一轮回流：pressure +1。
+自动执行结束：pending_carryover 记录 pressure +1。
+下一轮初始化：pressure +1 被一次性应用。
 ```
 
 玩家体验：
@@ -563,8 +669,8 @@ v1.2 的目标不是让枪战变成长期数值养成，而是让压力释放后
 ```text
 上一轮：你没能阻止枪声。
 过程收益：你看清真正先开火的人。
-下一轮回流：stock_add_ids = ["true_shooter_seen"]。
-下一轮 stock 新增【真正先开火的人】。
+自动执行结束：pending_carryover 记录 stock_add_ids = ["true_shooter_seen"]。
+下一轮初始化：stock 新增【真正先开火的人】。
 ```
 
 玩家体验：
@@ -581,22 +687,22 @@ v1.2 的目标不是让枪战变成长期数值养成，而是让压力释放后
 下一个需要确认的问题：
 
 ```text
-v1.2 的 carryover_delta 应该什么时候应用？
+v1.2 是否已经足够进入实施计划？
 ```
 
-候选方案：
+建议倾向：是。
+
+原因：
 
 ```text
-方案 A：自动执行结束时立刻修改下一 pressure_node 数据。
-方案 B：自动执行结束时只记录 pending_carryover；进入下一 pressure_node 初始化时再应用。
-```
+当前已确认：
+1. 回流范围只到下一 pressure_node。
+2. 第一批只做 situation_delta 与 stock_add_ids。
+3. 候选定义集中到 encounter.candidate_definitions。
+4. pressure_node 迁移为 stock_ids，并兼容旧 cards。
+5. 缺失 candidate_id 运行时不崩溃，但测试必须暴露。
+6. auto_execution 只记录 pending_carryover。
+7. pending_carryover 在下一节点初始化时一次性消费。
 
-建议倾向：方案 B。
-
-理由：
-
-```text
-自动执行阶段只负责产出结果。
-下一节点初始化阶段负责读取 pending_carryover 并生成下一轮 stock / situation_tracks。
-这更符合 Python 项目中 action 产出意图、管理器处理位置流动的分层，也避免提前污染尚未进入的节点。
+这些已经足够拆成 Codex 可执行的 v1.2 实施计划。
 ```
