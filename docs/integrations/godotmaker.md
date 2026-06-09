@@ -31,7 +31,21 @@ GodotMaker 主执行器：Claude Code
 2. 安装 CLI：`npm install -g godotmaker-cli`。
 3. 复制 `.claude/godotmaker.yaml.example` 为 `.claude/godotmaker.yaml`。
 4. 把 `godot_path` 改成本机 Godot 可执行文件路径；如果 `godot` 已在 PATH，可保留为 `"godot"`。
-5. 需要完整 `/gm-*` 工作流时，再运行 `godotmaker` 或从 GodotMaker 仓库执行 `python tools/publish.py --agent claude-code <本项目路径>`。
+5. 在单独 Git 分支或干净 worktree 中运行 GodotMaker。需要完整 `/gm-*` 工作流时，再运行 `godotmaker` 或从 GodotMaker 仓库执行 `python tools/publish.py --agent claude-code <本项目路径>`。
+6. 运行后先审查 diff 和测试结果，再决定是否提交任何生成文件。
+
+## 与官方 first-game 教程的差异
+
+GodotMaker 官方“你的第一款游戏”教程面向空目录的新游戏项目：教程会先 `mkdir my-first-game`，再在该空目录运行 `godotmaker`，并允许 CLI 在需要时创建 Godot 脚手架、整理 `GDD.md`、生成 `PLAN.md` / `STRUCTURE.md` / `SCENES.md` / `ASSETS.md` 等工作流产物。
+
+本仓库不是空目录首跑项目，而是已有 Godot 游戏项目。因此不要把官方 first-game 教程逐字套用到本仓库：
+
+- 不要新建 `my-first-game` 后把本仓库内容复制进去。
+- 不要让 GodotMaker 重新解释或替代本项目已有的 `project.godot`、`README.md`、`AGENTS.md`、`docs/superpowers/` 规格和计划体系。
+- 不要把官方教程生成的 `GDD.md` / `PLAN.md` / `STRUCTURE.md` / `SCENES.md` / `ASSETS.md` 当作本项目玩法规格的唯一来源。
+- 若运行 `godotmaker`，目标应是让它基于本项目现状补充 GodotMaker 工作流入口、视觉 QA 或受控的 `/gm-*` 阶段，而不是重新脚手架化整个项目。
+
+本项目的设计、计划和状态文档仍以 `docs/superpowers/specs/`、`docs/superpowers/plans/`、`docs/superpowers/status/` 为准；GodotMaker 生成文档只能作为辅助产物，提交前必须人工审查并与既有文档对齐。
 
 ## 兼容边界
 
