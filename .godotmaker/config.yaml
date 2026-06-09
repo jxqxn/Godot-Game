@@ -1,0 +1,18 @@
+# GodotMaker project configuration
+# 本仓库把 GodotMaker 作为本地工作流层使用，不作为 Godot 运行时依赖。
+# 默认主执行器使用 Claude Code；Codex 可作为视觉检查或素材生成补充。
+
+agent: claude-code
+
+vqa_model: native
+vqa_fallback_model: codex
+
+asset_image_model: codex
+asset_video_model: none
+
+worker_model: sonnet
+verifier_model: sonnet
+reviewer_model: sonnet
+analyst_model: sonnet
+auditor_model: sonnet
+decomposer_model: sonnet
