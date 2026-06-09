@@ -252,6 +252,25 @@ docs/superpowers/prompts/new-feature-intake.md
 docs/superpowers/templates/status-template.md
 ```
 
+## GodotMaker / Claude Code 入口
+
+本仓库已加入 GodotMaker 项目级兼容配置，但 GodotMaker 只作为本地工作流层使用，不是 Godot 运行时 addon。
+
+```text
+.godotmaker/config.yaml
+.claude/godotmaker.yaml.example
+CLAUDE.md
+docs/integrations/godotmaker.md
+```
+
+默认配置以 Claude Code 作为 GodotMaker 主执行器，并保留 Codex 作为视觉 QA 备用与图片生成入口。首次本机使用前，先复制 `.claude/godotmaker.yaml.example` 为 `.claude/godotmaker.yaml`，再填入本机 Godot 可执行文件路径。
+
+具体边界与升级检查见：
+
+```text
+docs/integrations/godotmaker.md
+```
+
 ## 开发红线
 
 当前阶段不要恢复或新增以下旧原型体系：

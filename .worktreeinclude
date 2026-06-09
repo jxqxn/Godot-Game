@@ -1,0 +1,4 @@
+# Claude Code worktree 继承规则，语法与 .gitignore 一致。
+# GodotMaker 的子 agent worktree 需要读取本机 .claude/ 配置与已发布 skill。
+.claude/
+!.claude/worktrees/

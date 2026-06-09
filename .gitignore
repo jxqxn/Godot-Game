@@ -2,3 +2,19 @@
 .godot/
 /android/
 .superpowers/
+
+# GodotMaker / Claude Code local runtime state
+.claude/*
+!.claude/
+!.claude/godotmaker.yaml.example
+.godotmaker/state.json
+.godotmaker/metrics.jsonl
+.godotmaker/metrics_current.jsonl
+.godotmaker/traces/
+.godotmaker/applied_migrations.json
+.godotmaker/cache/
+.godotmaker/tmp/
+.godotmaker/reports/
+reports/
+__pycache__/
+*.pyc

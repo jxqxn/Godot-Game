@@ -105,6 +105,30 @@ docs/superpowers/prompts/new-feature-intake.md
 docs/superpowers/templates/status-template.md
 ```
 
+### 1.2 GodotMaker / Claude Code 兼容边界
+
+本项目可以使用 GodotMaker 作为本地工作流层，但它不是 Godot 运行时依赖，不应放进 `addons/`，也不应替代当前 `AGENTS.md`、`README.md` 与 `docs/superpowers/` 流程。
+
+当前已提交的兼容入口：
+
+```text
+.godotmaker/config.yaml
+.claude/godotmaker.yaml.example
+.worktreeinclude
+CLAUDE.md
+docs/integrations/godotmaker.md
+```
+
+规则：
+
+```text
+Claude Code 进入仓库时先读 CLAUDE.md，再按其中要求读取 AGENTS.md / README.md
+.claude/godotmaker.yaml 是本机路径配置，不提交
+GodotMaker 发布脚本可能生成 .claude/skills、.godotmaker/hooks、tools 等文件，提交前必须审查 diff
+不得让 GodotMaker 的 Codex 发布流程覆盖本项目 AGENTS.md
+不得用 GodotMaker 流程绕过本项目规格 / 计划 / BDD / TDD / GUT 要求
+```
+
 ### 2. 行为驱动开发（BDD）最高优先级
 
 在编写任何正式代码之前，必须先在测试方法中写出 Given-When-Then 模式的行为注释和测试方法名。
